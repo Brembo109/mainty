@@ -1,0 +1,11 @@
+body {
+  min-height: 100vh;
+}
+
+.navbar-brand {
+  letter-spacing: 0.04em;
+}
+
+.card {
+  border-radius: 1rem;
+}
