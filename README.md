@@ -14,6 +14,7 @@ Internal browser-based web application scaffold for managing machines, equipment
 - HTMX
 - Bootstrap 5
 - Django Groups based role model
+- Domain model foundation for assets, maintenance, qualification, and tasks
 
 ## Project Structure
 
@@ -93,8 +94,9 @@ Internal browser-based web application scaffold for managing machines, equipment
 
 - Django uses server-rendered templates.
 - HTMX and Bootstrap 5 are already included in the base template.
-- The `core` and `accounts` apps are prepared as the foundation for future modules.
+- The `core`, `accounts`, `assets`, `maintenance`, `qualification`, and `tasks` apps are prepared as the foundation for future modules.
 - The protected example pages `/dashboard/`, `/editor/`, `/admin-area/`, and `/accounts/profile/` demonstrate the role checks.
+- Domain data models are available in Django admin for internal maintenance of master data.
 
 ## Roles and Permissions
 
@@ -118,6 +120,8 @@ docker compose logs -f
 docker compose exec web python manage.py test
 docker compose exec web python manage.py collectstatic --noinput
 docker compose exec web python manage.py bootstrap_roles
+docker compose exec web python manage.py makemigrations
+docker compose exec web python manage.py migrate
 ```
 
 ## Production-Oriented Notes
@@ -128,6 +132,7 @@ docker compose exec web python manage.py bootstrap_roles
 - Static files are provided through a shared Docker volume.
 - For real deployment, add backups, monitoring, TLS for the internal network, and proper secret management.
 - Use explicit role assignment after user creation. Authentication alone does not grant internal access.
+- Domain CRUD screens are intentionally not implemented yet. Data administration is currently handled through Django admin.
 
 ## Intentionally Not Included Yet
 
