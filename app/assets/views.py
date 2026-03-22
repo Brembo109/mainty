@@ -7,6 +7,7 @@ from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from accounts.mixins import RoleRequiredMixin
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 from audit.services import get_audit_entries_for_instance
+from core.ui import count_active_filters
 
 from .forms import AssetForm
 from .models import Asset
@@ -82,6 +83,8 @@ class AssetListView(AssetAccessMixin, ListView):
                 "location_choices": filters_source.exclude(location="").order_by("location").values_list("location", flat=True).distinct(),
                 "department_choices": filters_source.exclude(department="").order_by("department").values_list("department", flat=True).distinct(),
                 "result_count": self.get_queryset().count(),
+                "active_filter_count": count_active_filters(self.request.GET, ignored_keys={"sort"}),
+                "has_active_filters": count_active_filters(self.request.GET, ignored_keys={"sort"}) > 0,
                 "sort_choices": [
                     ("asset_id", _("Asset-ID aufsteigend")),
                     ("-asset_id", _("Asset-ID absteigend")),

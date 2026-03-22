@@ -11,16 +11,16 @@
     </div>
   </div>
 
-  <div class="card border-0 shadow-sm mb-4">
+  <div class="card border-0 shadow-sm mb-4 filter-panel">
     <div class="card-body p-4">
       <form method="get" class="row g-3 align-items-end">
         <div class="col-12 col-xl-4">
           <label class="form-label" for="searchInput">{% trans "Suche" %}</label>
-          <input class="form-control" id="searchInput" type="search" name="q" value="{{ search_query }}" placeholder="{% trans 'Objekt oder Objekt-ID ...' %}" />
+          <input class="form-control {% if search_query %}filter-active{% endif %}" id="searchInput" type="search" name="q" value="{{ search_query }}" placeholder="{% trans 'Suche nach Objekt oder Objekt-ID ...' %}" />
         </div>
         <div class="col-sm-6 col-xl-3">
           <label class="form-label" for="modelSelect">{% trans "Modell" %}</label>
-          <select class="form-select" id="modelSelect" name="model">
+          <select class="form-select {% if current_model %}filter-active{% endif %}" id="modelSelect" name="model">
             <option value="">{% trans "Alle" %}</option>
             {% for model_name in model_choices %}
               <option value="{{ model_name }}" {% if current_model == model_name %}selected{% endif %}>{{ model_name }}</option>
@@ -29,7 +29,7 @@
         </div>
         <div class="col-sm-6 col-xl-3">
           <label class="form-label" for="userSelect">{% trans "Benutzer" %}</label>
-          <select class="form-select" id="userSelect" name="user">
+          <select class="form-select {% if current_user %}filter-active{% endif %}" id="userSelect" name="user">
             <option value="">{% trans "Alle" %}</option>
             {% for user_id, username in user_choices %}
               <option value="{{ user_id }}" {% if current_user == user_id|stringformat:"s" %}selected{% endif %}>{{ username }}</option>
@@ -38,7 +38,7 @@
         </div>
         <div class="col-sm-6 col-xl-2">
           <label class="form-label" for="actionSelect">{% trans "Aktion" %}</label>
-          <select class="form-select" id="actionSelect" name="action">
+          <select class="form-select {% if current_action %}filter-active{% endif %}" id="actionSelect" name="action">
             <option value="">{% trans "Alle" %}</option>
             {% for value, label in action_choices %}
               <option value="{{ value }}" {% if current_action == value %}selected{% endif %}>{{ label }}</option>
@@ -53,12 +53,8 @@
     </div>
   </div>
 
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <p class="text-secondary mb-0">{% blocktrans count count=result_count %}{{ count }} Audit-Eintrag gefunden{% plural %}{{ count }} Audit-Einträge gefunden{% endblocktrans %}</p>
-    {% if page_obj %}
-      <p class="text-secondary mb-0">{% blocktrans with page=page_obj.number pages=page_obj.paginator.num_pages %}Seite {{ page }} von {{ pages }}{% endblocktrans %}</p>
-    {% endif %}
-  </div>
+  {% blocktrans count count=result_count asvar result_text %}{{ count }} Audit-Eintrag gefunden{% plural %}{{ count }} Audit-Einträge gefunden{% endblocktrans %}
+  {% include "includes/list_meta.html" with result_text=result_text %}
 
   <div class="card border-0 shadow-sm">
     <div class="table-responsive">
@@ -106,27 +102,6 @@
     </div>
   </div>
 
-  {% if is_paginated %}
-    <nav class="mt-4" aria-label="{% trans 'Audit Seiten' %}">
-      <ul class="pagination">
-        {% if page_obj.has_previous %}
-          <li class="page-item"><a class="page-link" href="?{% querystring page=page_obj.previous_page_number %}">{% trans "Zurück" %}</a></li>
-        {% else %}
-          <li class="page-item disabled"><span class="page-link">{% trans "Zurück" %}</span></li>
-        {% endif %}
-        {% for page_number in page_obj.paginator.page_range %}
-          {% if page_number == page_obj.number %}
-            <li class="page-item active"><span class="page-link">{{ page_number }}</span></li>
-          {% elif page_number >= page_obj.number|add:-2 and page_number <= page_obj.number|add:2 %}
-            <li class="page-item"><a class="page-link" href="?{% querystring page=page_number %}">{{ page_number }}</a></li>
-          {% endif %}
-        {% endfor %}
-        {% if page_obj.has_next %}
-          <li class="page-item"><a class="page-link" href="?{% querystring page=page_obj.next_page_number %}">{% trans "Weiter" %}</a></li>
-        {% else %}
-          <li class="page-item disabled"><span class="page-link">{% trans "Weiter" %}</span></li>
-        {% endif %}
-      </ul>
-    </nav>
-  {% endif %}
+  {% trans "Audit Seiten" as pagination_aria_label %}
+  {% include "includes/pagination.html" with aria_label=pagination_aria_label %}
 {% endblock %}

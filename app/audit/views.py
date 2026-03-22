@@ -2,6 +2,7 @@ from django.views.generic import ListView
 
 from accounts.mixins import RoleRequiredMixin
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
+from core.ui import count_active_filters
 
 from .models import AuditLog
 from .services import get_audit_filter_choices, get_audit_list_queryset
@@ -25,6 +26,7 @@ class AuditLogListView(RoleRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         filter_choices = get_audit_filter_choices()
+        active_filter_count = count_active_filters(self.request.GET)
         context.update(
             {
                 "search_query": self.request.GET.get("q", "").strip(),
@@ -35,6 +37,8 @@ class AuditLogListView(RoleRequiredMixin, ListView):
                 "user_choices": filter_choices["user_choices"],
                 "action_choices": AuditLog.ACTION_CHOICES,
                 "result_count": self.get_queryset().count(),
+                "active_filter_count": active_filter_count,
+                "has_active_filters": active_filter_count > 0,
             }
         )
         return context

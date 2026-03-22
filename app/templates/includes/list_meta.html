@@ -1,0 +1,12 @@
+{% load i18n %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+  <div class="d-flex flex-wrap align-items-center gap-2">
+    <p class="text-secondary mb-0">{{ result_text }}</p>
+    {% if has_active_filters %}
+      <span class="badge text-bg-primary">{{ active_filter_count }} {% trans "aktive Filter" %}</span>
+    {% endif %}
+  </div>
+  {% if page_obj %}
+    <p class="text-secondary mb-0">{% blocktrans with page=page_obj.number pages=page_obj.paginator.num_pages %}Seite {{ page }} von {{ pages }}{% endblocktrans %}</p>
+  {% endif %}
+</div>

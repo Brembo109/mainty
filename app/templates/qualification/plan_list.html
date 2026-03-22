@@ -14,16 +14,16 @@
     {% endif %}
   </div>
 
-  <div class="card border-0 shadow-sm mb-4">
+  <div class="card border-0 shadow-sm mb-4 filter-panel">
     <div class="card-body p-4">
       <form method="get" class="row g-3 align-items-end">
         <div class="col-12 col-xl-4">
           <label class="form-label" for="searchInput">{% trans "Suche" %}</label>
-          <input class="form-control" id="searchInput" type="search" name="q" value="{{ search_query }}" placeholder="{% trans 'Titel, Asset, Verantwortlich ...' %}" />
+          <input class="form-control {% if search_query %}filter-active{% endif %}" id="searchInput" type="search" name="q" value="{{ search_query }}" placeholder="{% trans 'Suche nach Titel, Asset oder Verantwortlich ...' %}" />
         </div>
         <div class="col-sm-6 col-xl-2">
           <label class="form-label" for="dueStatusSelect">{% trans "Fälligkeitsstatus" %}</label>
-          <select class="form-select" id="dueStatusSelect" name="due_status">
+          <select class="form-select {% if current_due_status %}filter-active{% endif %}" id="dueStatusSelect" name="due_status">
             <option value="">{% trans "Alle" %}</option>
             <option value="ok" {% if current_due_status == "ok" %}selected{% endif %}>{% trans "OK" %}</option>
             <option value="warning" {% if current_due_status == "warning" %}selected{% endif %}>{% trans "Fällig bald" %}</option>
@@ -34,7 +34,7 @@
         </div>
         <div class="col-sm-6 col-xl-2">
           <label class="form-label" for="activeSelect">{% trans "Aktivität" %}</label>
-          <select class="form-select" id="activeSelect" name="active">
+          <select class="form-select {% if current_active %}filter-active{% endif %}" id="activeSelect" name="active">
             <option value="">{% trans "Alle" %}</option>
             <option value="active" {% if current_active == "active" %}selected{% endif %}>{% trans "Aktiv" %}</option>
             <option value="inactive" {% if current_active == "inactive" %}selected{% endif %}>{% trans "Inaktiv" %}</option>
@@ -42,7 +42,7 @@
         </div>
         <div class="col-sm-6 col-xl-2">
           <label class="form-label" for="assetSelect">{% trans "Asset" %}</label>
-          <select class="form-select" id="assetSelect" name="asset">
+          <select class="form-select {% if current_asset %}filter-active{% endif %}" id="assetSelect" name="asset">
             <option value="">{% trans "Alle" %}</option>
             {% for asset_pk, asset_code, asset_name in asset_choices %}
               <option value="{{ asset_pk }}" {% if current_asset == asset_pk|stringformat:"s" %}selected{% endif %}>{{ asset_code }} - {{ asset_name }}</option>
@@ -51,7 +51,7 @@
         </div>
         <div class="col-sm-6 col-xl-1">
           <label class="form-label" for="locationSelect">{% trans "Standort" %}</label>
-          <select class="form-select" id="locationSelect" name="location">
+          <select class="form-select {% if current_location %}filter-active{% endif %}" id="locationSelect" name="location">
             <option value="">{% trans "Alle" %}</option>
             {% for location in location_choices %}
               <option value="{{ location }}" {% if current_location == location %}selected{% endif %}>{{ location }}</option>
@@ -60,7 +60,7 @@
         </div>
         <div class="col-sm-6 col-xl-1">
           <label class="form-label" for="departmentSelect">{% trans "Abteilung" %}</label>
-          <select class="form-select" id="departmentSelect" name="department">
+          <select class="form-select {% if current_department %}filter-active{% endif %}" id="departmentSelect" name="department">
             <option value="">{% trans "Alle" %}</option>
             {% for department in department_choices %}
               <option value="{{ department }}" {% if current_department == department %}selected{% endif %}>{{ department }}</option>
@@ -83,12 +83,8 @@
     </div>
   </div>
 
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <p class="text-secondary mb-0">{% blocktrans count count=result_count %}{{ count }} Plan gefunden{% plural %}{{ count }} Plaene gefunden{% endblocktrans %}</p>
-    {% if page_obj %}
-      <p class="text-secondary mb-0">{% blocktrans with page=page_obj.number pages=page_obj.paginator.num_pages %}Seite {{ page }} von {{ pages }}{% endblocktrans %}</p>
-    {% endif %}
-  </div>
+  {% blocktrans count count=result_count asvar result_text %}{{ count }} Plan gefunden{% plural %}{{ count }} Plaene gefunden{% endblocktrans %}
+  {% include "includes/list_meta.html" with result_text=result_text %}
 
   <div class="card border-0 shadow-sm">
     <div class="table-responsive">
@@ -109,13 +105,13 @@
         </thead>
         <tbody>
           {% for plan in plans %}
-            <tr>
+            <tr class="{{ plan.due_status.code|due_row_class }}">
               <td class="fw-semibold">{{ plan.asset.asset_id }} - {{ plan.asset.name }}</td>
               <td>{{ plan.title }}</td>
               <td>{{ plan.interval_value }} {{ plan.get_interval_unit_display }}</td>
               <td>{{ plan.warning_days }}</td>
               <td>{{ plan.latest_event.performed_on|date:"d.m.Y"|default:"-" }}</td>
-              <td>{{ plan.next_due_date|date:"d.m.Y"|default:"-" }}</td>
+              <td class="{% if plan.due_status.code == 'overdue' %}fw-semibold text-danger{% elif plan.due_status.code == 'warning' %}fw-semibold text-warning-emphasis{% endif %}">{{ plan.next_due_date|date:"d.m.Y"|default:"-" }}</td>
               <td><span class="badge {{ plan.due_status.code|due_badge_class }}">{{ plan.due_status.label }}</span></td>
               <td>{{ plan.responsible_person|default:"-" }}</td>
               <td>{% if plan.is_active %}{% trans "Ja" %}{% else %}{% trans "Nein" %}{% endif %}</td>
@@ -138,27 +134,6 @@
     </div>
   </div>
 
-  {% if is_paginated %}
-    <nav class="mt-4" aria-label="{% trans 'Qualifizierungsplanung Seiten' %}">
-      <ul class="pagination">
-        {% if page_obj.has_previous %}
-          <li class="page-item"><a class="page-link" href="?{% querystring page=page_obj.previous_page_number %}">{% trans "Zurück" %}</a></li>
-        {% else %}
-          <li class="page-item disabled"><span class="page-link">{% trans "Zurück" %}</span></li>
-        {% endif %}
-        {% for page_number in page_obj.paginator.page_range %}
-          {% if page_number == page_obj.number %}
-            <li class="page-item active"><span class="page-link">{{ page_number }}</span></li>
-          {% elif page_number >= page_obj.number|add:-2 and page_number <= page_obj.number|add:2 %}
-            <li class="page-item"><a class="page-link" href="?{% querystring page=page_number %}">{{ page_number }}</a></li>
-          {% endif %}
-        {% endfor %}
-        {% if page_obj.has_next %}
-          <li class="page-item"><a class="page-link" href="?{% querystring page=page_obj.next_page_number %}">{% trans "Weiter" %}</a></li>
-        {% else %}
-          <li class="page-item disabled"><span class="page-link">{% trans "Weiter" %}</span></li>
-        {% endif %}
-      </ul>
-    </nav>
-  {% endif %}
+  {% trans "Qualifizierungsplanung Seiten" as pagination_aria_label %}
+  {% include "includes/pagination.html" with aria_label=pagination_aria_label %}
 {% endblock %}

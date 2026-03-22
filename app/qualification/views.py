@@ -7,6 +7,7 @@ from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from accounts.mixins import RoleRequiredMixin
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 from audit.services import get_audit_entries_for_instance
+from core.ui import count_active_filters
 
 from .forms import QualificationEventForm, QualificationPlanForm
 from .models import QualificationEvent, QualificationPlan
@@ -78,6 +79,7 @@ class QualificationPlanListView(QualificationAccessMixin, ListView):
         context = super().get_context_data(**kwargs)
         assets = QualificationPlan.objects.select_related("asset").values_list("asset_id", "asset__asset_id", "asset__name").distinct()
         base_assets = QualificationPlan.objects.select_related("asset")
+        active_filter_count = count_active_filters(self.request.GET, ignored_keys={"sort"})
         context.update(
             {
                 "search_query": self.request.GET.get("q", "").strip(),
@@ -88,6 +90,8 @@ class QualificationPlanListView(QualificationAccessMixin, ListView):
                 "current_department": self.request.GET.get("department", "").strip(),
                 "current_sort": self.request.GET.get("sort", "asset"),
                 "result_count": context["paginator"].count if context.get("paginator") else len(context["plans"]),
+                "active_filter_count": active_filter_count,
+                "has_active_filters": active_filter_count > 0,
                 "asset_choices": assets,
                 "location_choices": base_assets.exclude(asset__location="").order_by("asset__location").values_list("asset__location", flat=True).distinct(),
                 "department_choices": base_assets.exclude(asset__department="").order_by("asset__department").values_list("asset__department", flat=True).distinct(),

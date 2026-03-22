@@ -1,6 +1,8 @@
 # mainty
 
-Internal browser-based web application scaffold for managing machines, equipment, maintenance, and qualifications. This repository currently provides the technical foundation for a production-oriented Django setup together with a first server-side authentication and authorization model.
+> Disclaimer: Dieses Projekt ist vollständig mit Codex vibecoded.
+
+Internal browser-based Django application for managing assets, maintenance, qualification cycles, operational tasks, and traceable audit history. The repository provides a production-oriented setup with PostgreSQL, Docker, Nginx, Gunicorn, role-based access, a dashboard, and a read-only audit trail.
 
 ## Stack
 
@@ -14,7 +16,7 @@ Internal browser-based web application scaffold for managing machines, equipment
 - HTMX
 - Bootstrap 5
 - Django Groups based role model
-- Domain model foundation for assets, maintenance, qualification, and tasks
+- Assets, maintenance, qualification, tasks, dashboard, and audit trail
 
 ## Project Structure
 
@@ -30,12 +32,17 @@ Internal browser-based web application scaffold for managing machines, equipment
 |-- nginx/
 |   `-- default.conf
 `-- app/
+    |-- audit/
     |-- manage.py
     |-- gunicorn.conf.py
     |-- accounts/
+    |-- assets/
     |-- config/
     |-- core/
+    |-- maintenance/
+    |-- qualification/
     |-- static/
+    |-- tasks/
     `-- templates/
 ```
 
@@ -95,9 +102,24 @@ Internal browser-based web application scaffold for managing machines, equipment
 
 - Django uses server-rendered templates.
 - HTMX and Bootstrap 5 are already included in the base template.
-- The `core`, `accounts`, `assets`, `maintenance`, `qualification`, and `tasks` apps are prepared as the foundation for future modules.
-- The protected example pages `/dashboard/`, `/editor/`, `/admin-area/`, and `/accounts/profile/` demonstrate the role checks.
+- The `core`, `accounts`, `assets`, `maintenance`, `qualification`, `tasks`, and `audit` apps are active parts of the application.
+- The protected pages `/dashboard/`, `/audit/`, `/editor/`, `/admin-area/`, and `/accounts/profile/` demonstrate role checks and internal navigation.
 - Domain data models are available in Django admin for internal maintenance of master data.
+- The UI uses shared template helpers for consistent badges, filters, pagination, and detail-page layout.
+
+## Current Functional Scope
+
+- Authentication with login/logout
+- Role-based access with `Admin`, `Editor`, and `Viewer`
+- Dashboard as main landing page after login
+- CRUD for:
+  - assets
+  - maintenance plans and events
+  - qualification plans and events
+  - tasks
+- Global audit trail and object-specific change history
+- German UI with i18n-ready structure
+- Shared status badges, filter layout, pagination, and detail-page structure across modules
 
 ## Roles and Permissions
 
@@ -134,12 +156,12 @@ docker compose exec web python manage.py migrate
 - Static files are provided through a shared Docker volume.
 - For real deployment, add backups, monitoring, TLS for the internal network, and proper secret management.
 - Use explicit role assignment after user creation. Authentication alone does not grant internal access.
-- Domain CRUD screens are intentionally not implemented yet. Data administration is currently handled through Django admin.
+- Audit entries are intentionally read-only and exposed through both Django admin and the application UI.
 
 ## Intentionally Not Included Yet
 
-- Domain models for machines, equipment, maintenance, or qualifications
 - API layer
 - Celery
-- Audit trail
 - Document management
+- Notifications / reminder jobs
+- Export functionality

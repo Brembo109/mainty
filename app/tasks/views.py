@@ -9,6 +9,7 @@ from accounts.mixins import RoleRequiredMixin
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 from audit.services import get_audit_entries_for_instance
 from assets.models import Asset
+from core.ui import count_active_filters
 
 from .forms import TaskForm
 from .models import Task
@@ -85,6 +86,7 @@ class TaskListView(TaskAccessMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        active_filter_count = count_active_filters(self.request.GET, ignored_keys={"sort"})
         context.update(
             {
                 "search_query": self.request.GET.get("q", "").strip(),
@@ -95,6 +97,8 @@ class TaskListView(TaskAccessMixin, ListView):
                 "current_overdue": self.request.GET.get("overdue", "").strip(),
                 "current_sort": self.request.GET.get("sort", "due_date"),
                 "result_count": self.get_queryset().count(),
+                "active_filter_count": active_filter_count,
+                "has_active_filters": active_filter_count > 0,
                 "status_choices": Task.STATUS_CHOICES,
                 "priority_choices": Task.PRIORITY_CHOICES,
                 "responsible_user_choices": self._get_responsible_user_choices(),

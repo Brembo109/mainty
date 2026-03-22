@@ -37,8 +37,8 @@
             <div class="col-md-6"><div class="small text-secondary">{% trans "Verantwortlich" %}</div><div>{{ plan.responsible_person|default:"-" }}</div></div>
             <div class="col-md-6"><div class="small text-secondary">{% trans "Letztes Ereignis" %}</div><div>{{ plan.latest_event.performed_on|date:"d.m.Y"|default:"-" }}</div></div>
             <div class="col-md-6"><div class="small text-secondary">{% trans "Nächste Fälligkeit" %}</div><div>{{ plan.next_due_date|date:"d.m.Y"|default:"-" }}</div></div>
-            <div class="col-md-6"><div class="small text-secondary">{% trans "Status" %}</div><div>{{ plan.due_status.label }}</div></div>
-            <div class="col-md-6"><div class="small text-secondary">{% trans "Aktiv" %}</div><div>{% if plan.is_active %}{% trans "Ja" %}{% else %}{% trans "Nein" %}{% endif %}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Status" %}</div><div><span class="badge {{ plan.due_status.code|due_badge_class }}">{{ plan.due_status.label }}</span></div></div>
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Aktiv" %}</div><div><span class="badge {% if plan.is_active %}text-bg-success{% else %}text-bg-secondary{% endif %}">{% if plan.is_active %}{% trans "Aktiv" %}{% else %}{% trans "Inaktiv" %}{% endif %}</span></div></div>
           </div>
           <hr class="my-4" />
           <h3 class="h6 mb-2">{% trans "Notizen" %}</h3>

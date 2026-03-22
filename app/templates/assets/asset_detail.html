@@ -8,16 +8,13 @@
     <div>
       <div class="d-flex align-items-center gap-2 mb-2">
         <span class="badge text-bg-light border">{{ asset.asset_id }}</span>
-        {% if asset.status == "active" %}
-          <span class="badge text-bg-success">{% trans "Aktiv" %}</span>
-        {% elif asset.status == "inactive" %}
-          <span class="badge text-bg-secondary">{% trans "Inaktiv" %}</span>
-        {% else %}
-          <span class="badge text-bg-danger">{% trans "Außer Betrieb" %}</span>
-        {% endif %}
+        <span class="badge {{ asset.status|asset_badge_class }}">{{ asset.get_status_display }}</span>
       </div>
       <h1 class="h2 mb-1">{{ asset.name }}</h1>
-      <p class="text-secondary mb-0">{% if asset.short_name %}{{ asset.short_name }}{% else %}{% trans "Kein Kurzname hinterlegt" %}{% endif %}</p>
+      <p class="text-secondary mb-0">
+        {% if asset.short_name %}{{ asset.short_name }} · {% endif %}
+        {% if asset.location %}{{ asset.location }}{% else %}{% trans "Kein Standort hinterlegt" %}{% endif %}
+      </p>
     </div>
     <div class="d-flex gap-2">
       <a class="btn btn-outline-secondary" href="{% url 'assets:list' %}">{% trans "Zur Liste" %}</a>
@@ -143,21 +140,13 @@
                     <div>
                       <div class="fw-semibold">{{ task.title }}</div>
                       <div class="small text-secondary">
-                        {{ task.due_date|date:"d.m.Y"|default:"-" }} · {{ task.get_priority_display }} · {{ task.get_status_display }}
+                        {{ task.due_date|date:"d.m.Y"|default:"-" }} · {{ task.get_priority_display }} · {{ task|task_status_label }}
                       </div>
                       <div class="small text-secondary">
                         {{ task.responsible_user.username|default:"-" }}
                       </div>
                     </div>
-                    {% if task.is_overdue %}
-                      <span class="badge text-bg-danger">{% trans "Überfällig" %}</span>
-                    {% elif task.status == "done" %}
-                      <span class="badge text-bg-success">{% trans "Erledigt" %}</span>
-                    {% elif task.status == "in_progress" %}
-                      <span class="badge text-bg-warning">{% trans "In Bearbeitung" %}</span>
-                    {% else %}
-                      <span class="badge text-bg-secondary">{% trans "Offen" %}</span>
-                    {% endif %}
+                    <span class="badge {{ task|task_badge_class }}">{{ task|task_status_label }}</span>
                   </div>
                 </a>
               {% endfor %}

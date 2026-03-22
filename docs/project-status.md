@@ -2,7 +2,7 @@
 
 `mainty` is currently set up as a browser-based internal Django application with a production-oriented infrastructure foundation. The repository already includes Docker Compose, PostgreSQL, Nginx, Gunicorn, Django Templates, Bootstrap 5, and prepared HTMX integration. The application is running on the internal Ubuntu VM and is reachable through the browser.
 
-The current implementation now covers the technical platform, the authentication/authorization baseline, the initial domain model foundation, a production-oriented internal dashboard, a central audit trail, and server-rendered CRUD UI for assets, maintenance plans/events, qualification plans/events, and operational tasks. Document workflows are not implemented yet.
+The current implementation now covers the technical platform, the authentication/authorization baseline, the initial domain model foundation, a production-oriented internal dashboard, a central audit trail, a cross-module UX consistency layer, and server-rendered CRUD UI for assets, maintenance plans/events, qualification plans/events, and operational tasks. Document workflows are not implemented yet.
 
 ## What Is Already Implemented
 
@@ -46,6 +46,13 @@ The current implementation now covers the technical platform, the authentication
   - action types for create, update, delete, and status changes
   - optional `change_reason` field prepared for later form integration
   - read-only Django admin integration
+- Cross-module UX refinement with:
+  - unified status badges for assets, due-statuses, tasks, dashboard, and audit-related UI
+  - consistent list filter layout, reset behavior, and active-filter highlighting
+  - shared pagination and result-meta template fragments
+  - consistent table spacing, action button patterns, and empty states
+  - active navigation highlighting for the current module
+  - improved detail-page structure and status presentation
 - Domain model foundation for:
   - assets
   - maintenance plans and maintenance events
@@ -58,7 +65,8 @@ The current implementation now covers the technical platform, the authentication
   - asset detail page
   - create asset
   - update asset
-  - search, filtering, sorting, pagination
+  - standardized search, filtering, sorting, pagination
+  - unified asset status badges
   - server-side permission checks for Admin / Editor / Viewer
 - Maintenance UI with:
   - maintenance plan list
@@ -66,6 +74,7 @@ The current implementation now covers the technical platform, the authentication
   - create and update maintenance plans
   - create and update maintenance events
   - due-status transparency in list/detail views
+  - unified overdue/warning row highlighting and badge styling
   - linked maintenance sections on the asset detail page
 - Qualification UI with:
   - qualification plan list
@@ -73,13 +82,15 @@ The current implementation now covers the technical platform, the authentication
   - create and update qualification plans
   - create and update qualification events
   - due-status transparency in list/detail views
+  - unified overdue/warning row highlighting and badge styling
   - linked qualification sections on the asset detail page
 - Task UI with:
   - task list
   - task detail page
   - create and update tasks
-  - search, filtering, sorting, pagination
+  - standardized search, filtering, sorting, pagination
   - overdue visibility and completion-state handling
+  - unified task status badges and row emphasis
   - linked task section on the asset detail page
 - Environment-based cookie security settings for the current internal HTTP phase and later HTTPS switch-over
 
@@ -134,6 +145,13 @@ The audit layer additionally provides:
 - request-aware user attribution through middleware
 - reusable object-level query helpers for detail pages
 
+The shared UX layer additionally provides:
+
+- reusable template helpers for status badges and active navigation state
+- reusable list metadata and pagination includes
+- common table/filter styling in the shared stylesheet
+- consistent scanability for list, detail, dashboard, and audit pages
+
 The currently implemented business UI layers are:
 
 - internal dashboard
@@ -168,6 +186,7 @@ mainty/
     |-- core/
     |   |-- due_dates.py
     |   |-- dashboard.py
+    |   |-- ui.py
     |   |-- templatetags/
     |   |   `-- mainty_ui.py
     |   |-- tests.py
@@ -244,7 +263,9 @@ mainty/
     |   |   `-- partials/
     |   |       `-- field.html
     |   |-- includes/
-    |   |   `-- form_field.html
+    |   |   |-- form_field.html
+    |   |   |-- list_meta.html
+    |   |   `-- pagination.html
     |   |-- audit/
     |   |   |-- audit_list.html
     |   |   `-- partials/
