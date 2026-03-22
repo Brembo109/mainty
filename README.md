@@ -1,6 +1,6 @@
 # mainty
 
-> Disclaimer: Dieses Projekt ist vollständig mit Codex vibecoded.
+> Disclaimer: This project was entirely vibecoded with Codex.
 
 Internal browser-based Django application for managing assets, maintenance, qualification cycles, operational tasks, and traceable audit history. The repository provides a production-oriented setup with PostgreSQL, Docker, Nginx, Gunicorn, role-based access, a dashboard, and a read-only audit trail.
 
