@@ -52,7 +52,7 @@ class SystemSettingsView(RoleRequiredMixin, UpdateView):
             {
                 "page_title": _("Systemeinstellungen"),
                 "page_description": _(
-                    "Globale Standardwerte und Branding für neue Wartungs- und Qualifizierungspläne."
+                    "Globale Standardwerte, Branding und Reverse-Proxy-Einstellungen für Mainty."
                 ),
             }
         )

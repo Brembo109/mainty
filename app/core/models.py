@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -11,6 +12,22 @@ class TimeStampedModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+def default_allowed_hosts() -> str:
+    return ", ".join(getattr(settings, "ALLOWED_HOSTS", []))
+
+
+def default_csrf_trusted_origins() -> str:
+    return ", ".join(getattr(settings, "CSRF_TRUSTED_ORIGINS", []))
+
+
+def default_force_https() -> bool:
+    return bool(getattr(settings, "SECURE_SSL_REDIRECT", False))
+
+
+def default_debug_mode() -> bool:
+    return bool(getattr(settings, "DEBUG", False))
 
 
 class SystemSettings(TimeStampedModel):
@@ -48,6 +65,28 @@ class SystemSettings(TimeStampedModel):
         default=INTERVAL_MONTHS,
         verbose_name=_("Standard Intervall-Einheit Qualifizierung"),
     )
+    app_public_url = models.URLField(
+        blank=True,
+        verbose_name=_("Öffentliche URL"),
+    )
+    allowed_hosts = models.TextField(
+        blank=True,
+        default=default_allowed_hosts,
+        verbose_name=_("Allowed Hosts"),
+    )
+    csrf_trusted_origins = models.TextField(
+        blank=True,
+        default=default_csrf_trusted_origins,
+        verbose_name=_("CSRF Trusted Origins"),
+    )
+    force_https = models.BooleanField(
+        default=default_force_https,
+        verbose_name=_("HTTPS erzwingen"),
+    )
+    debug_mode = models.BooleanField(
+        default=default_debug_mode,
+        verbose_name=_("Debug-Modus"),
+    )
 
     class Meta:
         verbose_name = _("Systemeinstellung")
@@ -62,6 +101,8 @@ class SystemSettings(TimeStampedModel):
             raise ValidationError({"singleton_enforcer": _("Dieser Wert darf nicht geändert werden.")})
 
     def save(self, *args, **kwargs):
+        from core.runtime import clear_app_settings_cache
+
         old_logo_name = ""
         if self.pk:
             old_instance = type(self).objects.filter(pk=self.pk).only("company_logo").first()
@@ -76,6 +117,7 @@ class SystemSettings(TimeStampedModel):
         if old_logo_name and old_logo_name != new_logo_name:
             self.company_logo.storage.delete(old_logo_name)
 
+        clear_app_settings_cache()
         return result
 
     @classmethod

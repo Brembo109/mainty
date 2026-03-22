@@ -2,7 +2,7 @@
 
 > Disclaimer: This project was entirely vibecoded with Codex.
 
-Internal browser-based Django application for managing assets, maintenance, qualification cycles, operational tasks, internal users, administratively managed system defaults, practical list exports, traceable audit history, configurable company branding, and role/permission assignments on top of Django Groups. The repository provides a production-oriented setup with PostgreSQL, Docker, Nginx, Gunicorn, role-based access, a dashboard, media handling, and a read-only audit trail.
+Internal browser-based Django application for managing assets, maintenance, qualification cycles, operational tasks, internal users, administratively managed system defaults, practical list exports, traceable audit history, configurable company branding, reverse-proxy aware access settings, and role/permission assignments on top of Django Groups. The repository provides a production-oriented setup with PostgreSQL, Docker, Nginx, Gunicorn, role-based access, a dashboard, media handling, and a read-only audit trail.
 
 ## Stack
 
@@ -117,6 +117,7 @@ Internal browser-based Django application for managing assets, maintenance, qual
 - Admin-managed role/permission matrix for Mainty-relevant Django group permissions
 - Dashboard as main landing page after login
 - Admin-managed system settings for default maintenance and qualification plan values
+- Admin-managed network/access settings for reverse proxy operation
 - Admin-managed optional company logo for header and login page branding
 - CRUD for:
   - assets
@@ -165,12 +166,39 @@ docker compose exec web python manage.py migrate
 - Maintenance and qualification plan creation use admin-managed defaults from `/settings/`; changing these defaults only affects future records.
 - Uploaded company logos are stored as media files and served through Django in development and Nginx in the current Docker setup.
 - User and role-permission management is available in the regular mainty UI for `Admin` users and remains backed by Django Groups and Permissions.
+- Reverse-proxy relevant application settings can be managed in `/settings/`, including public URL, allowed hosts, CSRF trusted origins, HTTPS enforcement, and debug mode.
 - Nginx is configured as a reverse proxy in front of Gunicorn.
 - Static files and uploaded media files are provided through shared Docker volumes.
 - For real deployment, add backups, monitoring, TLS for the internal network, and proper secret management.
 - Use explicit role assignment after user creation. Authentication alone does not grant internal access.
 - Audit entries are intentionally read-only and exposed through both Django admin and the application UI.
 - Audit entries include readable user snapshots with name, `Kürzel`, and role label where available.
+
+## Reverse Proxy / Cloudflare Tunnel
+
+Mainty can be configured behind a reverse proxy such as Cloudflare Tunnel, but the tunnel itself remains an external infrastructure component.
+
+Configure in Mainty:
+
+- `/settings/`:
+  - `Öffentliche URL`
+  - `Allowed Hosts`
+  - `CSRF Trusted Origins`
+  - `HTTPS erzwingen`
+  - `Debug-Modus`
+
+Configure outside Mainty:
+
+- Cloudflare Tunnel creation and lifecycle
+- DNS routing
+- Access policies
+- TLS/certificate handling on the Cloudflare side
+- restart/redeploy of the Mainty containers after changing proxy-relevant settings
+
+Important:
+
+- Mainty evaluates `X-Forwarded-Proto` for reverse-proxy HTTPS detection.
+- Changes to network/access settings are stored in the database and audited, but they still require an application restart to be applied consistently across the running stack.
 
 ## Intentionally Not Included Yet
 

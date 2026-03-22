@@ -48,6 +48,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
+    "core.middleware.DynamicAppSettingsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -117,6 +118,7 @@ LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "core:dashboard"
 LOGOUT_REDIRECT_URL = "core:home"
 TASK_DASHBOARD_WARNING_DAYS = int(env("TASK_DASHBOARD_WARNING_DAYS", "7"))
+SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", False)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

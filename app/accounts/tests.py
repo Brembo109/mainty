@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.test import TestCase
@@ -25,6 +26,15 @@ class LoginViewTests(TestCase):
         self.assertContains(response, ">DE<", html=False)
         self.assertContains(response, ">EN<", html=False)
         self.assertContains(response, "data-theme-toggle")
+
+    def test_language_switch_endpoint_redirects_and_sets_cookie(self):
+        response = self.client.post(
+            reverse("set_language"),
+            {"language": "en", "next": reverse("accounts:login")},
+        )
+
+        self.assertRedirects(response, reverse("accounts:login"))
+        self.assertEqual(response.cookies[settings.LANGUAGE_COOKIE_NAME].value, "en")
 
     def test_login_works_with_valid_credentials(self):
         response = self.client.post(

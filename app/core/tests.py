@@ -2,6 +2,7 @@ import shutil
 import tempfile
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import TestCase
@@ -14,6 +15,7 @@ from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 from assets.models import Asset
 from audit.models import AuditLog
 from core.models import SystemSettings
+from core.runtime import apply_runtime_settings, clear_app_settings_cache, get_app_settings
 from maintenance.models import MaintenancePlan
 from qualification.models import QualificationPlan
 from tasks.models import Task
@@ -117,6 +119,7 @@ class CoreViewsTests(TestCase):
         )
 
     def tearDown(self):
+        clear_app_settings_cache()
         shutil.rmtree(self.media_root, ignore_errors=True)
         super().tearDown()
 
@@ -168,6 +171,11 @@ class CoreViewsTests(TestCase):
         self.client.force_login(self.admin_user)
         admin_response = self.client.get(reverse("core:settings"))
         self.assertEqual(admin_response.status_code, 200)
+        self.assertContains(admin_response, "Netzwerk / Zugriff")
+        self.assertContains(
+            admin_response,
+            "Änderungen an diesen Einstellungen erfordern einen Neustart der Anwendung",
+        )
 
     def test_settings_values_are_saved_correctly(self):
         with self.settings(MEDIA_ROOT=self.media_root):
@@ -181,15 +189,27 @@ class CoreViewsTests(TestCase):
                     "default_qualification_warning_days": 21,
                     "default_qualification_interval_value": 6,
                     "default_qualification_interval_unit": QualificationPlan.INTERVAL_MONTHS,
+                    "app_public_url": "https://mainty.example.com",
+                    "allowed_hosts": "mainty.example.com, localhost, testserver",
+                    "csrf_trusted_origins": "https://mainty.example.com, https://proxy.example.net",
+                    "force_https": "on",
                 },
             )
 
             self.assertRedirects(response, reverse("core:settings"))
-            settings = SystemSettings.load()
-            self.assertEqual(settings.default_maintenance_warning_days, 9)
-            self.assertEqual(settings.default_maintenance_interval_value, 45)
-            self.assertEqual(settings.default_qualification_warning_days, 21)
-            self.assertEqual(settings.default_qualification_interval_value, 6)
+            system_settings = SystemSettings.load()
+            self.assertEqual(system_settings.default_maintenance_warning_days, 9)
+            self.assertEqual(system_settings.default_maintenance_interval_value, 45)
+            self.assertEqual(system_settings.default_qualification_warning_days, 21)
+            self.assertEqual(system_settings.default_qualification_interval_value, 6)
+            self.assertEqual(system_settings.app_public_url, "https://mainty.example.com")
+            self.assertEqual(system_settings.allowed_hosts, "mainty.example.com, localhost, testserver")
+            self.assertEqual(
+                system_settings.csrf_trusted_origins,
+                "https://mainty.example.com, https://proxy.example.net",
+            )
+            self.assertTrue(system_settings.force_https)
+            self.assertFalse(system_settings.debug_mode)
 
             audit_entry = AuditLog.objects.filter(model_name="SystemSettings").latest("id")
             self.assertEqual(audit_entry.user, self.admin_user)
@@ -238,6 +258,55 @@ class CoreViewsTests(TestCase):
             self.assertContains(dashboard_response, "img/mainty-logo.svg")
             self.assertContains(dashboard_response, "Marc Heyer [MH]")
             self.assertContains(dashboard_response, "data-theme-toggle")
+
+    def test_runtime_settings_helper_uses_database_values(self):
+        system_settings = SystemSettings.load()
+        system_settings.app_public_url = "https://mainty.example.com"
+        system_settings.allowed_hosts = "mainty.example.com, localhost"
+        system_settings.csrf_trusted_origins = "https://mainty.example.com, https://proxy.example.net"
+        system_settings.force_https = True
+        system_settings.debug_mode = True
+        system_settings.save()
+
+        clear_app_settings_cache()
+        runtime_settings = get_app_settings()
+
+        self.assertEqual(runtime_settings.app_public_url, "https://mainty.example.com")
+        self.assertEqual(runtime_settings.allowed_hosts, ("mainty.example.com", "localhost"))
+        self.assertEqual(
+            runtime_settings.csrf_trusted_origins,
+            ("https://mainty.example.com", "https://proxy.example.net"),
+        )
+        self.assertTrue(runtime_settings.force_https)
+        self.assertTrue(runtime_settings.debug_mode)
+
+    @override_settings(ALLOWED_HOSTS=["localhost"])
+    def test_database_allowed_hosts_are_applied_at_runtime(self):
+        system_settings = SystemSettings.load()
+        system_settings.allowed_hosts = "mainty.example.com, localhost"
+        system_settings.save()
+
+        clear_app_settings_cache()
+        apply_runtime_settings()
+
+        response = self.client.get(reverse("core:home"), HTTP_HOST="mainty.example.com")
+        self.assertEqual(response.status_code, 200)
+
+    def test_language_switch_changes_visible_navigation_language(self):
+        self.client.force_login(self.viewer_user)
+
+        response = self.client.post(
+            reverse("set_language"),
+            {"language": "en", "next": reverse("core:dashboard")},
+        )
+
+        self.assertRedirects(response, reverse("core:dashboard"))
+        self.assertEqual(response.cookies[settings.LANGUAGE_COOKIE_NAME].value, "en")
+
+        follow_up = self.client.get(reverse("core:dashboard"))
+        self.assertContains(follow_up, '<html lang="en">', html=False)
+        self.assertContains(follow_up, "Assets")
+        self.assertContains(follow_up, "Profile")
 
     def test_viewer_cannot_access_editor_page(self):
         self.client.force_login(self.viewer_user)

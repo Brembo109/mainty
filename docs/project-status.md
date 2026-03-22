@@ -2,7 +2,7 @@
 
 `mainty` is currently set up as a browser-based internal Django application with a production-oriented infrastructure foundation. The repository already includes Docker Compose, PostgreSQL, Nginx, Gunicorn, Django Templates, Bootstrap 5, and prepared HTMX integration. The application is running on the internal Ubuntu VM and is reachable through the browser.
 
-The current implementation now covers the technical platform, the authentication/authorization baseline, internal user administration, a group-based role and permission management layer, the initial domain model foundation, a production-oriented internal dashboard, a central audit trail, an administrative system settings area, filter-aware operational exports, configurable branding with company logo support, a cross-module UX consistency layer, and server-rendered CRUD UI for assets, maintenance plans/events, qualification plans/events, and operational tasks. Document workflows are not implemented yet.
+The current implementation now covers the technical platform, the authentication/authorization baseline, internal user administration, a group-based role and permission management layer, the initial domain model foundation, a production-oriented internal dashboard, a central audit trail, an administrative system settings area, reverse-proxy aware runtime configuration, filter-aware operational exports, configurable branding with company logo support, a cross-module UX consistency layer, and server-rendered CRUD UI for assets, maintenance plans/events, qualification plans/events, and operational tasks. Document workflows are not implemented yet.
 
 ## What Is Already Implemented
 
@@ -68,6 +68,14 @@ The current implementation now covers the technical platform, the authentication
   - preview in the settings UI
   - display in the login page
   - display in the top application header
+  - audit coverage through the existing system settings tracking
+- Admin-managed network/access settings with:
+  - public application URL
+  - dynamic allowed hosts
+  - dynamic CSRF trusted origins
+  - HTTPS enforcement flag
+  - debug-mode flag
+  - restart notice in the settings UI
   - audit coverage through the existing system settings tracking
 - Filter-aware CSV and XLSX exports for:
   - assets
@@ -253,12 +261,15 @@ mainty/
     |   |-- exports.py
     |   |-- forms.py
     |   |-- intervals.py
+    |   |-- middleware.py
+    |   |-- runtime.py
     |   |-- ui.py
     |   |-- templatetags/
     |   |   `-- mainty_ui.py
     |   |-- migrations/
     |   |   `-- 0001_initial.py
     |   |   `-- 0002_systemsettings_company_logo.py
+    |   |   `-- 0003_systemsettings_network_access.py
     |   |-- tests.py
     |   |-- urls.py
     |   `-- views.py
@@ -400,3 +411,5 @@ mainty/
 - `94df36c` Add filtered list exports
 - `20274f5` Add branding and company logo support
 - `807ccb8` Add user and role permission management
+- `f639533` Update docs for user and permission management
+- `cc753a3` Refine header and dark mode
