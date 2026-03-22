@@ -57,6 +57,7 @@ Internal browser-based web application scaffold for managing machines, equipment
    - `SECRET_KEY`
    - `ALLOWED_HOSTS`
    - `CSRF_TRUSTED_ORIGINS`
+   - `TASK_DASHBOARD_WARNING_DAYS` for the task warning horizon shown on the dashboard
    - PostgreSQL credentials
 
 3. Start the containers:
@@ -128,6 +129,7 @@ docker compose exec web python manage.py migrate
 
 - Use `DEBUG=False` outside local development.
 - Set `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` to the correct internal hostnames or IP addresses.
+- `TASK_DASHBOARD_WARNING_DAYS` controls how many days in advance open tasks are shown in the dashboard warning section.
 - Nginx is configured as a reverse proxy in front of Gunicorn.
 - Static files are provided through a shared Docker volume.
 - For real deployment, add backups, monitoring, TLS for the internal network, and proper secret management.

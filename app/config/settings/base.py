@@ -110,6 +110,7 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "core:dashboard"
 LOGOUT_REDIRECT_URL = "core:home"
+TASK_DASHBOARD_WARNING_DAYS = int(env("TASK_DASHBOARD_WARNING_DAYS", "7"))
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

@@ -1,20 +1,205 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n mainty_ui %}
 
 {% block title %}{% trans "Dashboard" %} | mainty{% endblock %}
 
 {% block content %}
-  <div class="row g-4">
-    <div class="col-12">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body p-4">
-          <h1 class="h3 mb-3">{% trans "Internes Dashboard" %}</h1>
-          <p class="text-secondary mb-0">
-            {% blocktrans %}Diese Seite ist für alle angemeldeten Benutzer mit einer zugewiesenen mainty-Rolle
-            verfügbar. Sie dient als gemeinsamer interner Einstiegspunkt für künftige operative Module.{% endblocktrans %}
-          </p>
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+    <div>
+      <h1 class="h2 mb-1">{% trans "Dashboard" %}</h1>
+      <p class="text-secondary mb-0">
+        {% blocktrans with date=reference_date|date:"d.m.Y" %}Operativer Überblick zu Fälligkeiten, Maßnahmen und zuletzt geänderten Objekten. Stand: {{ date }}.{% endblocktrans %}
+      </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-secondary" href="{% url 'assets:list' %}">{% trans "Anlagen" %}</a>
+      <a class="btn btn-outline-secondary" href="{% url 'maintenance:plan-list' %}">{% trans "Wartung" %}</a>
+      <a class="btn btn-outline-secondary" href="{% url 'qualification:plan-list' %}">{% trans "Qualifizierung" %}</a>
+      <a class="btn btn-primary" href="{% url 'tasks:list' %}">{% trans "Maßnahmen" %}</a>
+    </div>
+  </div>
+
+  <section class="mb-4">
+    <div class="row g-3">
+      {% for card in metric_cards %}
+        <div class="col-12 col-sm-6 col-xl">
+          <a class="card border-0 shadow-sm h-100 text-decoration-none" href="{{ card.url }}">
+            <div class="card-body">
+              <div class="text-secondary small mb-2">{{ card.title }}</div>
+              <div class="display-6 fw-semibold text-{{ card.accent }}">{{ card.value }}</div>
+            </div>
+          </a>
         </div>
-      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <div class="row g-4">
+    <div class="col-12 col-xxl-7">
+      <section class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h2 class="h4 mb-1">{% trans "Überfällige Einträge" %}</h2>
+              <p class="text-secondary mb-0">{% trans "Wartungspläne, Qualifizierungen und Maßnahmen mit Handlungsbedarf." %}</p>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>{% trans "Typ" %}</th>
+                  <th>{% trans "Objekt" %}</th>
+                  <th>{% trans "Asset" %}</th>
+                  <th>{% trans "Fällig am" %}</th>
+                  <th>{% trans "Status" %}</th>
+                  <th class="text-end">{% trans "Link" %}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in overdue_items %}
+                  <tr>
+                    <td>{{ item.category_label }}</td>
+                    <td class="fw-semibold">{{ item.title }}</td>
+                    <td>{{ item.asset_label }}</td>
+                    <td>{{ item.due_date|date:"d.m.Y"|default:"-" }}</td>
+                    <td><span class="badge {{ item.status_code|due_badge_class }}">{{ item.status_label }}</span></td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ item.detail_url }}">{% trans "Details" %}</a></td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="6" class="text-center py-4 text-secondary">{% trans "Keine überfälligen Einträge vorhanden." %}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h2 class="h4 mb-1">{% trans "Demnächst fällige Einträge" %}</h2>
+              <p class="text-secondary mb-0">
+                {% blocktrans with days=task_warning_days %}Pläne innerhalb der Warnungsfrist und Maßnahmen mit Fälligkeit in den nächsten {{ days }} Tagen.{% endblocktrans %}
+              </p>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>{% trans "Typ" %}</th>
+                  <th>{% trans "Objekt" %}</th>
+                  <th>{% trans "Asset" %}</th>
+                  <th>{% trans "Fällig am" %}</th>
+                  <th>{% trans "Status" %}</th>
+                  <th class="text-end">{% trans "Link" %}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in upcoming_items %}
+                  <tr>
+                    <td>{{ item.category_label }}</td>
+                    <td class="fw-semibold">{{ item.title }}</td>
+                    <td>{{ item.asset_label }}</td>
+                    <td>{{ item.due_date|date:"d.m.Y"|default:"-" }}</td>
+                    <td><span class="badge {{ item.status_code|due_badge_class }}">{{ item.status_label }}</span></td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ item.detail_url }}">{% trans "Details" %}</a></td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="6" class="text-center py-4 text-secondary">{% trans "Keine bald fälligen Einträge vorhanden." %}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h2 class="h4 mb-1">{% trans "Offene Maßnahmen" %}</h2>
+              <p class="text-secondary mb-0">{% trans "Alle offenen und laufenden Maßnahmen mit Priorität und Verantwortlichkeit." %}</p>
+            </div>
+            <a class="btn btn-sm btn-outline-secondary" href="{% url 'tasks:list' %}">{% trans "Alle Maßnahmen" %}</a>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>{% trans "Titel" %}</th>
+                  <th>{% trans "Asset" %}</th>
+                  <th>{% trans "Fällig am" %}</th>
+                  <th>{% trans "Priorität" %}</th>
+                  <th>{% trans "Status" %}</th>
+                  <th>{% trans "Verantwortliche Person" %}</th>
+                  <th class="text-end">{% trans "Link" %}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for task in open_tasks %}
+                  <tr>
+                    <td class="fw-semibold">{{ task.title }}</td>
+                    <td>{{ task.asset_label }}</td>
+                    <td>{{ task.due_date|date:"d.m.Y"|default:"-" }}</td>
+                    <td>{{ task.priority_label }}</td>
+                    <td>
+                      {% if task.status_code == "overdue" %}
+                        <span class="badge text-bg-danger">{{ task.status_label }}</span>
+                      {% elif task.status_code == "in_progress" %}
+                        <span class="badge text-bg-info">{{ task.status_label }}</span>
+                      {% else %}
+                        <span class="badge text-bg-primary">{{ task.status_label }}</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ task.responsible_label }}</td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ task.detail_url }}">{% trans "Details" %}</a></td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="7" class="text-center py-4 text-secondary">{% trans "Keine offenen Maßnahmen vorhanden." %}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="col-12 col-xxl-5">
+      <section class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h2 class="h4 mb-1">{% trans "Zuletzt aktualisiert" %}</h2>
+              <p class="text-secondary mb-0">{% trans "Schneller Zugriff auf zuletzt geänderte Assets, Pläne und Maßnahmen." %}</p>
+            </div>
+          </div>
+          <div class="list-group list-group-flush">
+            {% for item in recent_items %}
+              <a class="list-group-item list-group-item-action px-0" href="{{ item.detail_url }}">
+                <div class="d-flex justify-content-between align-items-start gap-3">
+                  <div>
+                    <div class="small text-secondary">{{ item.category_label }}</div>
+                    <div class="fw-semibold">{{ item.title }}</div>
+                    <div class="small text-secondary">{{ item.asset_label }}</div>
+                  </div>
+                  <div class="small text-nowrap text-secondary">{{ item.updated_at|date:"d.m.Y H:i" }}</div>
+                </div>
+              </a>
+            {% empty %}
+              <div class="text-secondary">{% trans "Noch keine aktualisierten Einträge vorhanden." %}</div>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 {% endblock %}
