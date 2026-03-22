@@ -1,6 +1,6 @@
 # mainty
 
-Interne browserbasierte Webanwendung als Grundgeruest fuer die Verwaltung von Maschinen, Anlagen, Wartungen und Qualifizierungen. Dieses Repository enthaelt bewusst nur das technische Setup fuer einen produktionsnahen Start mit Django, PostgreSQL, Docker Compose, Nginx und Gunicorn.
+Internal browser-based web application scaffold for managing machines, equipment, maintenance, and qualifications. This repository intentionally contains only the technical foundation for a production-oriented start with Django, PostgreSQL, Docker Compose, Nginx, and Gunicorn.
 
 ## Stack
 
@@ -14,7 +14,7 @@ Interne browserbasierte Webanwendung als Grundgeruest fuer die Verwaltung von Ma
 - HTMX
 - Bootstrap 5
 
-## Projektstruktur
+## Project Structure
 
 ```text
 .
@@ -37,50 +37,50 @@ Interne browserbasierte Webanwendung als Grundgeruest fuer die Verwaltung von Ma
     `-- templates/
 ```
 
-## Voraussetzungen
+## Prerequisites
 
-- Docker Engine mit Compose Plugin
-- Zugriff auf das private Repository
-- Eine `.env` Datei auf Basis von `.env.example`
+- Docker Engine with Compose plugin
+- Access to the private repository
+- A `.env` file created from `.env.example`
 
 ## Setup
 
-1. Beispielkonfiguration kopieren:
+1. Copy the example configuration:
 
    ```bash
    cp .env.example .env
    ```
 
-2. Werte in `.env` anpassen, insbesondere:
+2. Adjust the values in `.env`, especially:
    - `SECRET_KEY`
    - `ALLOWED_HOSTS`
    - `CSRF_TRUSTED_ORIGINS`
-   - PostgreSQL Zugangsdaten
+   - PostgreSQL credentials
 
-3. Container starten:
+3. Start the containers:
 
    ```bash
    docker compose up -d --build
    ```
 
-4. Migrationen laufen beim Start automatisch. Fuer einen Superuser:
+4. Migrations run automatically on container start. To create a superuser:
 
    ```bash
    docker compose exec web python manage.py createsuperuser
    ```
 
-5. Anwendung im Browser oeffnen:
-   - lokal: `http://localhost/`
-   - intern spaeter mit der IP oder dem DNS-Namen der Ubuntu-VM
+5. Open the application in a browser:
+   - local: `http://localhost/`
+   - internal network later: use the Ubuntu VM IP or internal DNS name
 
-## Entwicklung
+## Development Notes
 
-- Django nutzt serverseitig gerenderte Templates.
-- HTMX und Bootstrap 5 sind bereits im Base-Template eingebunden.
-- Die Apps `core` und `accounts` sind als Basis fuer weitere Module vorbereitet.
-- Die geschuetzte Beispielseite `/dashboard/` erfordert einen Login.
+- Django uses server-rendered templates.
+- HTMX and Bootstrap 5 are already included in the base template.
+- The `core` and `accounts` apps are prepared as the foundation for future modules.
+- The protected example page at `/dashboard/` requires authentication.
 
-Nuetzliche Befehle:
+Useful commands:
 
 ```bash
 docker compose logs -f
@@ -88,19 +88,19 @@ docker compose exec web python manage.py test
 docker compose exec web python manage.py collectstatic --noinput
 ```
 
-## Produktionsnahe Hinweise
+## Production-Oriented Notes
 
-- `DEBUG=False` ausserhalb lokaler Entwicklung verwenden.
-- `ALLOWED_HOSTS` und `CSRF_TRUSTED_ORIGINS` sauber auf interne Hostnamen oder IPs setzen.
-- Das Nginx-Setup dient als Reverse Proxy vor Gunicorn.
-- Statische Dateien werden ueber ein gemeinsames Docker-Volume bereitgestellt.
-- Fuer echtes Deployment sollten Backups, Monitoring, TLS im internen Netz und Secrets-Management ergaenzt werden.
+- Use `DEBUG=False` outside local development.
+- Set `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` to the correct internal hostnames or IP addresses.
+- Nginx is configured as a reverse proxy in front of Gunicorn.
+- Static files are provided through a shared Docker volume.
+- For real deployment, add backups, monitoring, TLS for the internal network, and proper secret management.
 
-## Noch bewusst nicht enthalten
+## Intentionally Not Included Yet
 
-- Fachmodelle fuer Maschinen, Anlagen, Wartungen oder Qualifizierungen
-- API
+- Domain models for machines, equipment, maintenance, or qualifications
+- API layer
 - Celery
-- Audittrail
-- Dokumentenverwaltung
-- Rollen- und Rechtemodell jenseits von Django Auth Basisfunktionen
+- Audit trail
+- Document management
+- Role and permission model beyond the Django Auth baseline
