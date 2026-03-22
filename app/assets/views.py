@@ -107,6 +107,7 @@ class AssetDetailView(AssetAccessMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context["maintenance_plans"] = self.object.maintenance_plans.all()
         context["qualification_plans"] = self.object.qualification_plans.all()
+        context["tasks"] = self.object.tasks.select_related("responsible_user").all()
         return context
 
 

@@ -1,9 +1,6 @@
 {% extends "base.html" %}
 {% load i18n mainty_ui %}
 
-{% trans "-" as dash %}
-{% trans "Keine Notizen hinterlegt." as no_notes %}
-
 {% block title %}{{ plan.title }} | mainty{% endblock %}
 
 {% block content %}
@@ -37,15 +34,15 @@
             <div class="col-md-6"><div class="small text-secondary">{% trans "Asset" %}</div><div><a href="{% url 'assets:detail' plan.asset.pk %}">{{ plan.asset.asset_id }} - {{ plan.asset.name }}</a></div></div>
             <div class="col-md-6"><div class="small text-secondary">{% trans "Intervall" %}</div><div>{{ plan.interval_value }} {{ plan.get_interval_unit_display }}</div></div>
             <div class="col-md-6"><div class="small text-secondary">{% trans "Warnungstage" %}</div><div>{{ plan.warning_days }}</div></div>
-            <div class="col-md-6"><div class="small text-secondary">{% trans "Verantwortlich" %}</div><div>{{ plan.responsible_person|default:dash }}</div></div>
-            <div class="col-md-6"><div class="small text-secondary">{% trans "Letztes Ereignis" %}</div><div>{{ plan.latest_event.performed_on|date:"d.m.Y"|default:dash }}</div></div>
-            <div class="col-md-6"><div class="small text-secondary">{% trans "Nächste Fälligkeit" %}</div><div>{{ plan.next_due_date|date:"d.m.Y"|default:dash }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Verantwortlich" %}</div><div>{{ plan.responsible_person|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Letztes Ereignis" %}</div><div>{{ plan.latest_event.performed_on|date:"d.m.Y"|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Nächste Fälligkeit" %}</div><div>{{ plan.next_due_date|date:"d.m.Y"|default:"-" }}</div></div>
             <div class="col-md-6"><div class="small text-secondary">{% trans "Status" %}</div><div>{{ plan.due_status.label }}</div></div>
             <div class="col-md-6"><div class="small text-secondary">{% trans "Aktiv" %}</div><div>{% if plan.is_active %}{% trans "Ja" %}{% else %}{% trans "Nein" %}{% endif %}</div></div>
           </div>
           <hr class="my-4" />
           <h3 class="h6 mb-2">{% trans "Notizen" %}</h3>
-          <p class="mb-0 text-secondary">{{ plan.notes|default:no_notes }}</p>
+          <p class="mb-0 text-secondary">{% if plan.notes %}{{ plan.notes }}{% else %}{% trans "Keine Notizen hinterlegt." %}{% endif %}</p>
         </div>
       </div>
 
@@ -71,8 +68,8 @@
                 {% for event in event_history %}
                   <tr>
                     <td>{{ event.performed_on|date:"d.m.Y" }}</td>
-                    <td>{{ event.performed_by|default:dash }}</td>
-                    <td>{{ event.notes|default:dash }}</td>
+                    <td>{{ event.performed_by|default:"-" }}</td>
+                    <td>{{ event.notes|default:"-" }}</td>
                     {% if can_access_editor_area %}
                       <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{% url 'qualification:event-edit' event.pk %}">{% trans "Bearbeiten" %}</a></td>
                     {% endif %}

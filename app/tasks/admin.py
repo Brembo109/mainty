@@ -14,6 +14,7 @@ class TaskAdmin(admin.ModelAdmin):
         "responsible_user",
         "is_overdue",
     )
-    list_filter = ("priority", "status", "due_date")
+    list_filter = ("status", "priority", "due_date", "asset", "responsible_user")
     search_fields = ("title", "description", "asset__asset_id", "asset__name", "responsible_user__username")
     ordering = ("due_date", "-created_at")
+    autocomplete_fields = ("asset", "responsible_user")

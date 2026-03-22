@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% load i18n mainty_ui %}
+
+{% block title %}{% trans "Maßnahmen" %} | mainty{% endblock %}
+
+{% block content %}
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+    <div>
+      <h1 class="h2 mb-1">{% trans "Maßnahmen" %}</h1>
+      <p class="text-secondary mb-0">{% trans "Operative Aufgaben und Maßnahmen für Anlagen und interne Abläufe." %}</p>
+    </div>
+    {% if can_access_editor_area %}
+      <a class="btn btn-primary" href="{% url 'tasks:create' %}">{% trans "Maßnahme anlegen" %}</a>
+    {% endif %}
+  </div>
+
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+      <form method="get" class="row g-3 align-items-end">
+        <div class="col-12 col-xl-4">
+          <label class="form-label" for="searchInput">{% trans "Suche" %}</label>
+          <input class="form-control" id="searchInput" type="search" name="q" value="{{ search_query }}" placeholder="{% trans 'Titel, Beschreibung, Anlage, Benutzer ...' %}" />
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <label class="form-label" for="statusSelect">{% trans "Status" %}</label>
+          <select class="form-select" id="statusSelect" name="status">
+            <option value="">{% trans "Alle" %}</option>
+            {% for value, label in status_choices %}
+              <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <label class="form-label" for="prioritySelect">{% trans "Priorität" %}</label>
+          <select class="form-select" id="prioritySelect" name="priority">
+            <option value="">{% trans "Alle" %}</option>
+            {% for value, label in priority_choices %}
+              <option value="{{ value }}" {% if current_priority == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <label class="form-label" for="responsibleUserSelect">{% trans "Verantwortliche Person" %}</label>
+          <select class="form-select" id="responsibleUserSelect" name="responsible_user">
+            <option value="">{% trans "Alle" %}</option>
+            {% for user_id, username in responsible_user_choices %}
+              <option value="{{ user_id }}" {% if current_responsible_user == user_id|stringformat:"s" %}selected{% endif %}>{{ username }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <label class="form-label" for="assetSelect">{% trans "Anlage" %}</label>
+          <select class="form-select" id="assetSelect" name="asset">
+            <option value="">{% trans "Alle" %}</option>
+            {% for asset_id, asset_code, asset_name in asset_choices %}
+              <option value="{{ asset_id }}" {% if current_asset == asset_id|stringformat:"s" %}selected{% endif %}>{{ asset_code }} - {{ asset_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <label class="form-label" for="overdueSelect">{% trans "Überfällig" %}</label>
+          <select class="form-select" id="overdueSelect" name="overdue">
+            <option value="">{% trans "Alle" %}</option>
+            <option value="yes" {% if current_overdue == "yes" %}selected{% endif %}>{% trans "Ja" %}</option>
+            <option value="no" {% if current_overdue == "no" %}selected{% endif %}>{% trans "Nein" %}</option>
+          </select>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <label class="form-label" for="sortSelect">{% trans "Sortierung" %}</label>
+          <select class="form-select" id="sortSelect" name="sort">
+            {% for value, label in sort_choices %}
+              <option value="{{ value }}" {% if current_sort == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 d-flex gap-2">
+          <button class="btn btn-primary" type="submit">{% trans "Filter anwenden" %}</button>
+          <a class="btn btn-outline-secondary" href="{% url 'tasks:list' %}">{% trans "Zurücksetzen" %}</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-secondary mb-0">{% blocktrans count count=result_count %}{{ count }} Maßnahme gefunden{% plural %}{{ count }} Maßnahmen gefunden{% endblocktrans %}</p>
+    {% if page_obj %}
+      <p class="text-secondary mb-0">{% blocktrans with page=page_obj.number pages=page_obj.paginator.num_pages %}Seite {{ page }} von {{ pages }}{% endblocktrans %}</p>
+    {% endif %}
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>{% trans "Titel" %}</th>
+            <th>{% trans "Anlage" %}</th>
+            <th>{% trans "Fällig am" %}</th>
+            <th>{% trans "Priorität" %}</th>
+            <th>{% trans "Status" %}</th>
+            <th>{% trans "Verantwortliche Person" %}</th>
+            <th>{% trans "Abgeschlossen am" %}</th>
+            <th class="text-end">{% trans "Aktionen" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for task in tasks %}
+            <tr>
+              <td>
+                <div class="fw-semibold">{{ task.title }}</div>
+                {% if task.is_overdue %}
+                  <div class="small text-danger">{% trans "Überfällig" %}</div>
+                {% endif %}
+              </td>
+              <td>
+                {% if task.asset %}
+                  <a href="{% url 'assets:detail' task.asset.pk %}">{{ task.asset.asset_id }}</a>
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>{{ task.due_date|date:"d.m.Y"|default:"-" }}</td>
+              <td>{{ task.get_priority_display }}</td>
+              <td>{{ task.get_status_display }}</td>
+              <td>{{ task.responsible_user.username|default:"-" }}</td>
+              <td>{{ task.completed_at|date:"d.m.Y H:i"|default:"-" }}</td>
+              <td class="text-end">
+                <div class="d-flex justify-content-end gap-2">
+                  <a class="btn btn-sm btn-outline-primary" href="{% url 'tasks:detail' task.pk %}">{% trans "Details" %}</a>
+                  {% if can_access_editor_area %}
+                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'tasks:edit' task.pk %}">{% trans "Bearbeiten" %}</a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="8" class="text-center py-4 text-secondary">{% trans "Keine Maßnahmen für die aktuelle Filterung gefunden." %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if is_paginated %}
+    <nav class="mt-4" aria-label="{% trans 'Maßnahmen Seiten' %}">
+      <ul class="pagination">
+        {% if page_obj.has_previous %}
+          <li class="page-item"><a class="page-link" href="?{% querystring page=page_obj.previous_page_number %}">{% trans "Zurück" %}</a></li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">{% trans "Zurück" %}</span></li>
+        {% endif %}
+        {% for page_number in page_obj.paginator.page_range %}
+          {% if page_number == page_obj.number %}
+            <li class="page-item active"><span class="page-link">{{ page_number }}</span></li>
+          {% elif page_number >= page_obj.number|add:-2 and page_number <= page_obj.number|add:2 %}
+            <li class="page-item"><a class="page-link" href="?{% querystring page=page_number %}">{{ page_number }}</a></li>
+          {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+          <li class="page-item"><a class="page-link" href="?{% querystring page=page_obj.next_page_number %}">{% trans "Weiter" %}</a></li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">{% trans "Weiter" %}</span></li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+{% endblock %}

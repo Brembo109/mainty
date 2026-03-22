@@ -78,9 +78,21 @@ class Task(TimeStampedModel):
             and self.due_date < timezone.localdate()
         )
 
+    def _normalize_completion_state(self):
+        if self.status == self.STATUS_DONE:
+            self.completed_at = self.completed_at or timezone.now()
+        else:
+            self.completed_at = None
+
     def clean(self):
         super().clean()
-        if self.completed_at and self.status != self.STATUS_DONE:
+        self._normalize_completion_state()
+
+        if self.completed_at and self.completed_at > timezone.now():
             raise ValidationError(
-                {"completed_at": _("Abschlusszeitpunkt ist nur für Aufgaben mit dem Status 'Erledigt' zulässig.")}
+                {"completed_at": _("Der Abschlusszeitpunkt darf nicht in der Zukunft liegen.")}
             )
+
+    def save(self, *args, **kwargs):
+        self._normalize_completion_state()
+        return super().save(*args, **kwargs)

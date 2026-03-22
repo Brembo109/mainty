@@ -53,6 +53,9 @@
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'qualification:plan-list' %}">{% trans "Qualifizierung" %}</a>
               </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'tasks:list' %}">{% trans "Maßnahmen" %}</a>
+              </li>
               {% if can_access_editor_area %}
                 <li class="nav-item">
                   <a class="nav-link" href="{% url 'core:editor-demo' %}">{% trans "Editor-Bereich" %}</a>

@@ -2,7 +2,7 @@
 
 `mainty` is currently set up as a browser-based internal Django application with a production-oriented infrastructure foundation. The repository already includes Docker Compose, PostgreSQL, Nginx, Gunicorn, Django Templates, Bootstrap 5, and prepared HTMX integration. The application is running on the internal Ubuntu VM and is reachable through the browser.
 
-The current implementation now covers the technical platform, the authentication/authorization baseline, the initial domain model foundation, and server-rendered CRUD UI for assets, maintenance plans/events, and qualification plans/events. Task UI, audit trail, and document workflows are not implemented yet.
+The current implementation now covers the technical platform, the authentication/authorization baseline, the initial domain model foundation, and server-rendered CRUD UI for assets, maintenance plans/events, qualification plans/events, and operational tasks. Audit trail and document workflows are not implemented yet.
 
 ## What Is Already Implemented
 
@@ -58,6 +58,13 @@ The current implementation now covers the technical platform, the authentication
   - create and update qualification events
   - due-status transparency in list/detail views
   - linked qualification sections on the asset detail page
+- Task UI with:
+  - task list
+  - task detail page
+  - create and update tasks
+  - search, filtering, sorting, pagination
+  - overdue visibility and completion-state handling
+  - linked task section on the asset detail page
 - Environment-based cookie security settings for the current internal HTTP phase and later HTTPS switch-over
 
 ## Authorization Model
@@ -104,6 +111,7 @@ The currently implemented business UI layers are:
 - assets
 - maintenance plans and maintenance events
 - qualification plans and qualification events
+- operational tasks
 
 ## Current Repository Structure
 
@@ -171,7 +179,10 @@ mainty/
     |   `-- tests.py
     |-- tasks/
     |   |-- admin.py
+    |   |-- forms.py
     |   |-- models.py
+    |   |-- urls.py
+    |   |-- views.py
     |   `-- tests.py
     |-- templates/
     |   |-- 403.html
@@ -197,6 +208,10 @@ mainty/
     |   |   |-- plan_detail.html
     |   |   |-- plan_form.html
     |   |   `-- plan_list.html
+    |   |-- tasks/
+    |   |   |-- task_detail.html
+    |   |   |-- task_form.html
+    |   |   `-- task_list.html
     |   `-- core/
     |       |-- home.html
     |       |-- dashboard.html
@@ -208,7 +223,6 @@ mainty/
 
 ## What Is Not Implemented Yet
 
-- Task CRUD UI
 - Audit trail
 - Document management
 - API layer
@@ -224,3 +238,4 @@ mainty/
 - `7c5d6fa` Add project status documentation
 - `0953d47` Add domain model foundation for operations
 - `83a540a` Add asset CRUD interface
+- `de31a8a` Prepare project for future i18n

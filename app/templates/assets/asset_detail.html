@@ -1,10 +1,6 @@
 {% extends "base.html" %}
 {% load i18n mainty_ui %}
 
-{% trans "-" as dash %}
-{% trans "Kein Kurzname hinterlegt" as no_short_name %}
-{% trans "Keine Notizen hinterlegt." as no_notes %}
-
 {% block title %}{{ asset.asset_id }} | mainty{% endblock %}
 
 {% block content %}
@@ -21,7 +17,7 @@
         {% endif %}
       </div>
       <h1 class="h2 mb-1">{{ asset.name }}</h1>
-      <p class="text-secondary mb-0">{{ asset.short_name|default:no_short_name }}</p>
+      <p class="text-secondary mb-0">{% if asset.short_name %}{{ asset.short_name }}{% else %}{% trans "Kein Kurzname hinterlegt" %}{% endif %}</p>
     </div>
     <div class="d-flex gap-2">
       <a class="btn btn-outline-secondary" href="{% url 'assets:list' %}">{% trans "Zur Liste" %}</a>
@@ -37,13 +33,13 @@
         <div class="card-body p-4">
           <h2 class="h5 mb-4">{% trans "Stammdaten" %}</h2>
           <div class="row g-3">
-            <div class="col-md-6"><div class="small text-secondary">{% trans "Kategorie" %}</div><div>{{ asset.category|default:dash }}</div></div>
-            <div class="col-md-6"><div class="small text-secondary">{% trans "Hersteller" %}</div><div>{{ asset.manufacturer|default:dash }}</div></div>
-            <div class="col-md-6"><div class="small text-secondary">{% trans "Modell" %}</div><div>{{ asset.model|default:dash }}</div></div>
-            <div class="col-md-6"><div class="small text-secondary">{% trans "Seriennummer" %}</div><div>{{ asset.serial_number|default:dash }}</div></div>
-            <div class="col-md-6"><div class="small text-secondary">{% trans "Standort" %}</div><div>{{ asset.location|default:dash }}</div></div>
-            <div class="col-md-6"><div class="small text-secondary">{% trans "Abteilung" %}</div><div>{{ asset.department|default:dash }}</div></div>
-            <div class="col-md-6"><div class="small text-secondary">{% trans "Inbetriebnahme" %}</div><div>{{ asset.commissioning_date|date:"d.m.Y"|default:dash }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Kategorie" %}</div><div>{{ asset.category|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Hersteller" %}</div><div>{{ asset.manufacturer|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Modell" %}</div><div>{{ asset.model|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Seriennummer" %}</div><div>{{ asset.serial_number|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Standort" %}</div><div>{{ asset.location|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Abteilung" %}</div><div>{{ asset.department|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Inbetriebnahme" %}</div><div>{{ asset.commissioning_date|date:"d.m.Y"|default:"-" }}</div></div>
             <div class="col-md-6"><div class="small text-secondary">{% trans "Status" %}</div><div>{{ asset.get_status_display }}</div></div>
           </div>
         </div>
@@ -52,7 +48,7 @@
       <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
           <h2 class="h5 mb-3">{% trans "Interne Hinweise" %}</h2>
-          <p class="mb-0 text-secondary">{{ asset.notes|default:no_notes }}</p>
+          <p class="mb-0 text-secondary">{% if asset.notes %}{{ asset.notes }}{% else %}{% trans "Keine Notizen hinterlegt." %}{% endif %}</p>
         </div>
       </div>
     </div>
@@ -85,7 +81,7 @@
                     <div>
                       <div class="fw-semibold">{{ plan.title }}</div>
                       <div class="small text-secondary">
-                        {{ plan.next_due_date|date:"d.m.Y"|default:dash }} · {% if plan.is_active %}{% trans "Aktiv" %}{% else %}{% trans "Inaktiv" %}{% endif %}
+                        {{ plan.next_due_date|date:"d.m.Y"|default:"-" }} · {% if plan.is_active %}{% trans "Aktiv" %}{% else %}{% trans "Inaktiv" %}{% endif %}
                       </div>
                     </div>
                     <span class="badge {{ plan.due_status.code|due_badge_class }}">{{ plan.due_status.label }}</span>
@@ -116,7 +112,7 @@
                     <div>
                       <div class="fw-semibold">{{ plan.title }}</div>
                       <div class="small text-secondary">
-                        {{ plan.next_due_date|date:"d.m.Y"|default:dash }} · {% if plan.is_active %}{% trans "Aktiv" %}{% else %}{% trans "Inaktiv" %}{% endif %}
+                        {{ plan.next_due_date|date:"d.m.Y"|default:"-" }} · {% if plan.is_active %}{% trans "Aktiv" %}{% else %}{% trans "Inaktiv" %}{% endif %}
                       </div>
                     </div>
                     <span class="badge {{ plan.due_status.code|due_badge_class }}">{{ plan.due_status.label }}</span>
@@ -132,8 +128,43 @@
 
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-4">
-          <h2 class="h5 mb-3">{% trans "Aufgaben / Aktionen" %}</h2>
-          <p class="text-secondary mb-0">{% trans "Platzhalter für operative Aufgaben und Maßnahmen." %}</p>
+          <h2 class="h5 mb-3">{% trans "Aufgaben / Maßnahmen" %}</h2>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-secondary small">{% blocktrans count count=tasks|length %}{{ count }} Maßnahme{% plural %}{{ count }} Maßnahmen{% endblocktrans %}</span>
+            {% if can_access_editor_area %}
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'tasks:create' %}?asset={{ asset.pk }}">{% trans "Maßnahme anlegen" %}</a>
+            {% endif %}
+          </div>
+          {% if tasks %}
+            <div class="list-group list-group-flush">
+              {% for task in tasks %}
+                <a href="{% url 'tasks:detail' task.pk %}" class="list-group-item list-group-item-action px-0">
+                  <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                      <div class="fw-semibold">{{ task.title }}</div>
+                      <div class="small text-secondary">
+                        {{ task.due_date|date:"d.m.Y"|default:"-" }} · {{ task.get_priority_display }} · {{ task.get_status_display }}
+                      </div>
+                      <div class="small text-secondary">
+                        {{ task.responsible_user.username|default:"-" }}
+                      </div>
+                    </div>
+                    {% if task.is_overdue %}
+                      <span class="badge text-bg-danger">{% trans "Überfällig" %}</span>
+                    {% elif task.status == "done" %}
+                      <span class="badge text-bg-success">{% trans "Erledigt" %}</span>
+                    {% elif task.status == "in_progress" %}
+                      <span class="badge text-bg-warning">{% trans "In Bearbeitung" %}</span>
+                    {% else %}
+                      <span class="badge text-bg-secondary">{% trans "Offen" %}</span>
+                    {% endif %}
+                  </div>
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-secondary mb-0">{% trans "Noch keine Maßnahmen für diese Anlage vorhanden." %}</p>
+          {% endif %}
         </div>
       </div>
 

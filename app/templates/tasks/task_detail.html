@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ task.title }} | mainty{% endblock %}
+
+{% block content %}
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-4">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+        {% if task.is_overdue %}
+          <span class="badge text-bg-danger">{% trans "Überfällig" %}</span>
+        {% endif %}
+        <span class="badge text-bg-light border">{{ task.get_priority_display }}</span>
+        {% if task.status == "done" %}
+          <span class="badge text-bg-success">{% trans "Erledigt" %}</span>
+        {% elif task.status == "in_progress" %}
+          <span class="badge text-bg-warning">{% trans "In Bearbeitung" %}</span>
+        {% else %}
+          <span class="badge text-bg-secondary">{% trans "Offen" %}</span>
+        {% endif %}
+      </div>
+      <h1 class="h2 mb-1">{{ task.title }}</h1>
+      <p class="text-secondary mb-0">
+        {% if task.asset %}
+            {% blocktrans with asset_id=task.asset.asset_id asset_name=task.asset.name %}Verknüpft mit {{ asset_id }} - {{ asset_name }}{% endblocktrans %}
+        {% else %}
+          {% trans "Keine Anlage verknüpft" %}
+        {% endif %}
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="{% url 'tasks:list' %}">{% trans "Zur Liste" %}</a>
+      {% if can_access_editor_area %}
+        <a class="btn btn-primary" href="{% url 'tasks:edit' task.pk %}">{% trans "Bearbeiten" %}</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-xl-8">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+          <h2 class="h5 mb-4">{% trans "Aufgabendetails" %}</h2>
+          <div class="row g-3">
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Status" %}</div><div>{{ task.get_status_display }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Priorität" %}</div><div>{{ task.get_priority_display }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Fällig am" %}</div><div>{{ task.due_date|date:"d.m.Y"|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Abgeschlossen am" %}</div><div>{{ task.completed_at|date:"d.m.Y H:i"|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Verantwortliche Person" %}</div><div>{{ task.responsible_user.username|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Überfällig" %}</div><div>{% if task.is_overdue %}{% trans "Ja" %}{% else %}{% trans "Nein" %}{% endif %}</div></div>
+            <div class="col-12">
+              <div class="small text-secondary">{% trans "Anlage" %}</div>
+              <div>
+                {% if task.asset %}
+                  <a href="{% url 'assets:detail' task.asset.pk %}">{{ task.asset.asset_id }} - {{ task.asset.name }}</a>
+                {% else %}
+                  -
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <hr class="my-4" />
+          <h3 class="h6 mb-2">{% trans "Beschreibung" %}</h3>
+          <p class="mb-0 text-secondary">{% if task.description %}{{ task.description|linebreaksbr }}{% else %}{% trans "Keine Beschreibung hinterlegt." %}{% endif %}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <h2 class="h5 mb-3">{% trans "Systeminformationen" %}</h2>
+          <div class="small text-secondary">{% trans "Erstellt am" %}</div>
+          <div class="mb-3">{{ task.created_at|date:"d.m.Y H:i" }}</div>
+          <div class="small text-secondary">{% trans "Aktualisiert am" %}</div>
+          <div>{{ task.updated_at|date:"d.m.Y H:i" }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

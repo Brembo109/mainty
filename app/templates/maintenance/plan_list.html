@@ -1,8 +1,6 @@
 {% extends "base.html" %}
 {% load i18n mainty_ui %}
 
-{% trans "-" as dash %}
-
 {% block title %}{% trans "Wartungspläne" %} | mainty{% endblock %}
 
 {% block content %}
@@ -116,10 +114,10 @@
               <td>{{ plan.title }}</td>
               <td>{{ plan.interval_value }} {{ plan.get_interval_unit_display }}</td>
               <td>{{ plan.warning_days }}</td>
-              <td>{{ plan.latest_event.performed_on|date:"d.m.Y"|default:dash }}</td>
-              <td>{{ plan.next_due_date|date:"d.m.Y"|default:dash }}</td>
+              <td>{{ plan.latest_event.performed_on|date:"d.m.Y"|default:"-" }}</td>
+              <td>{{ plan.next_due_date|date:"d.m.Y"|default:"-" }}</td>
               <td><span class="badge {{ plan.due_status.code|due_badge_class }}">{{ plan.due_status.label }}</span></td>
-              <td>{{ plan.responsible_person|default:dash }}</td>
+              <td>{{ plan.responsible_person|default:"-" }}</td>
               <td>{% if plan.is_active %}{% trans "Ja" %}{% else %}{% trans "Nein" %}{% endif %}</td>
               <td class="text-end">
                 <div class="d-flex justify-content-end gap-2">
