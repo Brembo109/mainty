@@ -1,17 +1,18 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Admin-Bereich | mainty{% endblock %}
+{% block title %}{% trans "Admin-Bereich" %} | mainty{% endblock %}
 
 {% block content %}
   <div class="row g-4">
     <div class="col-12">
       <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-          <span class="badge text-bg-danger-subtle border border-danger-subtle mb-3">Nur Admin</span>
-          <h1 class="h3 mb-3">Admin-Beispielseite</h1>
+          <span class="badge text-bg-danger-subtle border border-danger-subtle mb-3">{% trans "Nur Admin" %}</span>
+          <h1 class="h3 mb-3">{% trans "Admin-Beispielseite" %}</h1>
           <p class="text-secondary mb-0">
-            Diese Seite steht für geschützte administrative Funktionen wie Benutzerverwaltung
-            und spätere Systemeinstellungen. Nur Admin-Benutzer dürfen darauf zugreifen.
+            {% blocktrans %}Diese Seite steht für geschützte administrative Funktionen wie Benutzerverwaltung
+            und spätere Systemeinstellungen. Nur Admin-Benutzer dürfen darauf zugreifen.{% endblocktrans %}
           </p>
         </div>
       </div>

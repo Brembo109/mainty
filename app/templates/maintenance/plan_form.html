@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block title %}{{ page_title }} | mainty{% endblock %}
 
@@ -6,9 +7,9 @@
   <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
     <div>
       <h1 class="h2 mb-1">{{ page_title }}</h1>
-      <p class="text-secondary mb-0">Pflege der Wartungsplanung für interne Betriebsabläufe.</p>
+      <p class="text-secondary mb-0">{% trans "Pflege der Wartungsplanung für interne Betriebsabläufe." %}</p>
     </div>
-    <a class="btn btn-outline-secondary" href="{{ cancel_url }}">Abbrechen</a>
+    <a class="btn btn-outline-secondary" href="{{ cancel_url }}">{% trans "Abbrechen" %}</a>
   </div>
 
   <div class="card border-0 shadow-sm">
@@ -39,7 +40,7 @@
         </div>
         <div class="d-flex gap-2 mt-4">
           <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
-          <a class="btn btn-outline-secondary" href="{{ cancel_url }}">Abbrechen</a>
+          <a class="btn btn-outline-secondary" href="{{ cancel_url }}">{% trans "Abbrechen" %}</a>
         </div>
       </form>
     </div>

@@ -1,13 +1,14 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Anmelden | mainty{% endblock %}
+{% block title %}{% trans "Anmelden" %} | mainty{% endblock %}
 
 {% block content %}
   <div class="row justify-content-center">
     <div class="col-md-6 col-xl-4">
       <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-          <h1 class="h4 mb-4">Anmelden</h1>
+          <h1 class="h4 mb-4">{% trans "Anmelden" %}</h1>
           <form method="post" novalidate>
             {% csrf_token %}
             {% if form.non_field_errors %}
@@ -19,14 +20,14 @@
               <input type="hidden" name="next" value="{{ next }}" />
             {% endif %}
             <div class="mb-3">
-              <label class="form-label" for="{{ form.username.id_for_label }}">Benutzername</label>
+              <label class="form-label" for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
               {{ form.username }}
             </div>
             <div class="mb-4">
-              <label class="form-label" for="{{ form.password.id_for_label }}">Passwort</label>
+              <label class="form-label" for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
               {{ form.password }}
             </div>
-            <button class="btn btn-primary w-100" type="submit">Anmelden</button>
+            <button class="btn btn-primary w-100" type="submit">{% trans "Anmelden" %}</button>
           </form>
         </div>
       </div>

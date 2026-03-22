@@ -1,17 +1,18 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Editor-Bereich | mainty{% endblock %}
+{% block title %}{% trans "Editor-Bereich" %} | mainty{% endblock %}
 
 {% block content %}
   <div class="row g-4">
     <div class="col-12">
       <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-          <span class="badge text-bg-warning-subtle border border-warning-subtle mb-3">Admin + Editor</span>
-          <h1 class="h3 mb-3">Editor-Beispielseite</h1>
+          <span class="badge text-bg-warning-subtle border border-warning-subtle mb-3">{% trans "Admin + Editor" %}</span>
+          <h1 class="h3 mb-3">{% trans "Editor-Beispielseite" %}</h1>
           <p class="text-secondary mb-0">
-            Diese Seite demonstriert den operativen Schreibzugriff für die Rollen Admin und Editor.
-            Viewer-Konten werden serverseitig zuverlässig blockiert.
+            {% blocktrans %}Diese Seite demonstriert den operativen Schreibzugriff für die Rollen Admin und Editor.
+            Viewer-Konten werden serverseitig zuverlässig blockiert.{% endblocktrans %}
           </p>
         </div>
       </div>

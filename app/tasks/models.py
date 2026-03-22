@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from assets.models import Asset
 from core.models import TimeStampedModel
@@ -13,9 +14,9 @@ class Task(TimeStampedModel):
     PRIORITY_HIGH = "high"
 
     PRIORITY_CHOICES = [
-        (PRIORITY_LOW, "Niedrig"),
-        (PRIORITY_MEDIUM, "Mittel"),
-        (PRIORITY_HIGH, "Hoch"),
+        (PRIORITY_LOW, _("Niedrig")),
+        (PRIORITY_MEDIUM, _("Mittel")),
+        (PRIORITY_HIGH, _("Hoch")),
     ]
 
     STATUS_OPEN = "open"
@@ -23,9 +24,9 @@ class Task(TimeStampedModel):
     STATUS_DONE = "done"
 
     STATUS_CHOICES = [
-        (STATUS_OPEN, "Offen"),
-        (STATUS_IN_PROGRESS, "In Bearbeitung"),
-        (STATUS_DONE, "Erledigt"),
+        (STATUS_OPEN, _("Offen")),
+        (STATUS_IN_PROGRESS, _("In Bearbeitung")),
+        (STATUS_DONE, _("Erledigt")),
     ]
 
     asset = models.ForeignKey(
@@ -34,22 +35,22 @@ class Task(TimeStampedModel):
         null=True,
         blank=True,
         related_name="tasks",
-        verbose_name="Asset",
+        verbose_name=_("Asset"),
     )
-    title = models.CharField(max_length=255, verbose_name="Titel")
-    description = models.TextField(blank=True, verbose_name="Beschreibung")
-    due_date = models.DateField(null=True, blank=True, verbose_name="Faellig am")
+    title = models.CharField(max_length=255, verbose_name=_("Titel"))
+    description = models.TextField(blank=True, verbose_name=_("Beschreibung"))
+    due_date = models.DateField(null=True, blank=True, verbose_name=_("Faellig am"))
     priority = models.CharField(
         max_length=10,
         choices=PRIORITY_CHOICES,
         default=PRIORITY_MEDIUM,
-        verbose_name="Prioritaet",
+        verbose_name=_("Prioritaet"),
     )
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
         default=STATUS_OPEN,
-        verbose_name="Status",
+        verbose_name=_("Status"),
     )
     responsible_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -57,14 +58,14 @@ class Task(TimeStampedModel):
         null=True,
         blank=True,
         related_name="tasks",
-        verbose_name="Verantwortlicher Benutzer",
+        verbose_name=_("Verantwortlicher Benutzer"),
     )
-    completed_at = models.DateTimeField(null=True, blank=True, verbose_name="Abgeschlossen am")
+    completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Abgeschlossen am"))
 
     class Meta:
         ordering = ["due_date", "-created_at"]
-        verbose_name = "Aufgabe"
-        verbose_name_plural = "Aufgaben"
+        verbose_name = _("Aufgabe")
+        verbose_name_plural = _("Aufgaben")
 
     def __str__(self) -> str:
         return self.title
@@ -81,5 +82,5 @@ class Task(TimeStampedModel):
         super().clean()
         if self.completed_at and self.status != self.STATUS_DONE:
             raise ValidationError(
-                {"completed_at": "Completed timestamp is only allowed for tasks with status done."}
+                {"completed_at": _("Abschlusszeitpunkt ist nur für Aufgaben mit dem Status 'Erledigt' zulässig.")}
             )

@@ -1,26 +1,29 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Mein Profil | mainty{% endblock %}
+{% trans "Nicht zugewiesen" as not_assigned %}
+
+{% block title %}{% trans "Mein Profil" %} | mainty{% endblock %}
 
 {% block content %}
   <div class="row g-4">
     <div class="col-lg-8">
       <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-          <h1 class="h3 mb-4">Mein Profil</h1>
+          <h1 class="h3 mb-4">{% trans "Mein Profil" %}</h1>
           <dl class="row mb-0">
-            <dt class="col-sm-4">Benutzername</dt>
+            <dt class="col-sm-4">{% trans "Benutzername" %}</dt>
             <dd class="col-sm-8">{{ request.user.username }}</dd>
-            <dt class="col-sm-4">E-Mail</dt>
+            <dt class="col-sm-4">{% trans "E-Mail" %}</dt>
             <dd class="col-sm-8">{{ request.user.email|default:"-" }}</dd>
-            <dt class="col-sm-4">Primäre Rolle</dt>
-            <dd class="col-sm-8">{{ current_user_role|default:"Nicht zugewiesen" }}</dd>
-            <dt class="col-sm-4">Alle Rollen</dt>
+            <dt class="col-sm-4">{% trans "Primäre Rolle" %}</dt>
+            <dd class="col-sm-8">{{ current_user_role|default:not_assigned }}</dd>
+            <dt class="col-sm-4">{% trans "Alle Rollen" %}</dt>
             <dd class="col-sm-8">
               {% if current_user_roles %}
                 {{ current_user_roles|join:", " }}
               {% else %}
-                Nicht zugewiesen
+                {{ not_assigned }}
               {% endif %}
             </dd>
           </dl>

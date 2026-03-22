@@ -1,16 +1,17 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Dashboard | mainty{% endblock %}
+{% block title %}{% trans "Dashboard" %} | mainty{% endblock %}
 
 {% block content %}
   <div class="row g-4">
     <div class="col-12">
       <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-          <h1 class="h3 mb-3">Internes Dashboard</h1>
+          <h1 class="h3 mb-3">{% trans "Internes Dashboard" %}</h1>
           <p class="text-secondary mb-0">
-            Diese Seite ist für alle angemeldeten Benutzer mit einer zugewiesenen mainty-Rolle
-            verfügbar. Sie dient als gemeinsamer interner Einstiegspunkt für künftige operative Module.
+            {% blocktrans %}Diese Seite ist für alle angemeldeten Benutzer mit einer zugewiesenen mainty-Rolle
+            verfügbar. Sie dient als gemeinsamer interner Einstiegspunkt für künftige operative Module.{% endblocktrans %}
           </p>
         </div>
       </div>

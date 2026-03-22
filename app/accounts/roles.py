@@ -1,3 +1,6 @@
+from django.utils.translation import gettext_lazy as _
+
+
 ROLE_ADMIN = "Admin"
 ROLE_EDITOR = "Editor"
 ROLE_VIEWER = "Viewer"
@@ -7,6 +10,12 @@ ROLE_NAMES = (
     ROLE_EDITOR,
     ROLE_VIEWER,
 )
+
+ROLE_LABELS = {
+    ROLE_ADMIN: _("Admin"),
+    ROLE_EDITOR: _("Editor"),
+    ROLE_VIEWER: _("Viewer"),
+}
 
 
 def normalize_role_name(role_name: str) -> str:
@@ -30,6 +39,20 @@ def get_user_role_names(user) -> list[str]:
 def get_primary_role(user) -> str | None:
     roles = get_user_role_names(user)
     return roles[0] if roles else None
+
+
+def get_role_label(role_name: str | None):
+    if role_name is None:
+        return None
+    return ROLE_LABELS.get(role_name, role_name)
+
+
+def get_user_role_labels(user) -> list:
+    return [get_role_label(role_name) for role_name in get_user_role_names(user)]
+
+
+def get_primary_role_label(user):
+    return get_role_label(get_primary_role(user))
 
 
 def has_role(user, *role_names: str) -> bool:

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 
 DUE_STATUS_OK = "ok"
@@ -12,11 +13,11 @@ DUE_STATUS_INACTIVE = "inactive"
 DUE_STATUS_UNKNOWN = "unknown"
 
 DUE_STATUS_LABELS = {
-    DUE_STATUS_OK: "OK",
-    DUE_STATUS_WARNING: "Fällig bald",
-    DUE_STATUS_OVERDUE: "Überfällig",
-    DUE_STATUS_INACTIVE: "Inaktiv",
-    DUE_STATUS_UNKNOWN: "Unbekannt",
+    DUE_STATUS_OK: _("OK"),
+    DUE_STATUS_WARNING: _("Fällig bald"),
+    DUE_STATUS_OVERDUE: _("Überfällig"),
+    DUE_STATUS_INACTIVE: _("Inaktiv"),
+    DUE_STATUS_UNKNOWN: _("Unbekannt"),
 }
 
 

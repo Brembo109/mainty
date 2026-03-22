@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% load assets_query %}
+{% load i18n assets_query %}
 
-{% block title %}Anlagen | mainty{% endblock %}
+{% block title %}{% trans "Anlagen" %} | mainty{% endblock %}
 
 {% block content %}
   <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
     <div>
-      <h1 class="h2 mb-1">Anlagen</h1>
-      <p class="text-secondary mb-0">Zentrale Stammdatenansicht für Maschinen, Anlagen und weitere Betriebsmittel.</p>
+      <h1 class="h2 mb-1">{% trans "Anlagen" %}</h1>
+      <p class="text-secondary mb-0">{% trans "Zentrale Stammdatenansicht für Maschinen, Anlagen und weitere Betriebsmittel." %}</p>
     </div>
     {% if can_access_editor_area %}
-      <a class="btn btn-primary" href="{% url 'assets:create' %}">Anlage anlegen</a>
+      <a class="btn btn-primary" href="{% url 'assets:create' %}">{% trans "Anlage anlegen" %}</a>
     {% endif %}
   </div>
 
@@ -18,38 +18,38 @@
     <div class="card-body p-4">
       <form method="get" class="row g-3 align-items-end">
         <div class="col-12 col-xl-4">
-          <label class="form-label" for="searchInput">Suche</label>
-          <input class="form-control" id="searchInput" type="search" name="q" value="{{ search_query }}" placeholder="Asset-ID, Name, Hersteller ..." />
+          <label class="form-label" for="searchInput">{% trans "Suche" %}</label>
+          <input class="form-control" id="searchInput" type="search" name="q" value="{{ search_query }}" placeholder="{% trans 'Asset-ID, Name, Hersteller ...' %}" />
         </div>
         <div class="col-sm-6 col-xl-2">
-          <label class="form-label" for="statusSelect">Status</label>
+          <label class="form-label" for="statusSelect">{% trans "Status" %}</label>
           <select class="form-select" id="statusSelect" name="status">
-            <option value="">Alle</option>
+            <option value="">{% trans "Alle" %}</option>
             {% for value, label in status_choices %}
               <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
         </div>
         <div class="col-sm-6 col-xl-2">
-          <label class="form-label" for="locationSelect">Standort</label>
+          <label class="form-label" for="locationSelect">{% trans "Standort" %}</label>
           <select class="form-select" id="locationSelect" name="location">
-            <option value="">Alle</option>
+            <option value="">{% trans "Alle" %}</option>
             {% for location in location_choices %}
               <option value="{{ location }}" {% if current_location == location %}selected{% endif %}>{{ location }}</option>
             {% endfor %}
           </select>
         </div>
         <div class="col-sm-6 col-xl-2">
-          <label class="form-label" for="departmentSelect">Abteilung</label>
+          <label class="form-label" for="departmentSelect">{% trans "Abteilung" %}</label>
           <select class="form-select" id="departmentSelect" name="department">
-            <option value="">Alle</option>
+            <option value="">{% trans "Alle" %}</option>
             {% for department in department_choices %}
               <option value="{{ department }}" {% if current_department == department %}selected{% endif %}>{{ department }}</option>
             {% endfor %}
           </select>
         </div>
         <div class="col-sm-6 col-xl-2">
-          <label class="form-label" for="sortSelect">Sortierung</label>
+          <label class="form-label" for="sortSelect">{% trans "Sortierung" %}</label>
           <select class="form-select" id="sortSelect" name="sort">
             {% for value, label in sort_choices %}
               <option value="{{ value }}" {% if current_sort == value %}selected{% endif %}>{{ label }}</option>
@@ -57,17 +57,17 @@
           </select>
         </div>
         <div class="col-12 d-flex gap-2">
-          <button class="btn btn-primary" type="submit">Filter anwenden</button>
-          <a class="btn btn-outline-secondary" href="{% url 'assets:list' %}">Zurücksetzen</a>
+          <button class="btn btn-primary" type="submit">{% trans "Filter anwenden" %}</button>
+          <a class="btn btn-outline-secondary" href="{% url 'assets:list' %}">{% trans "Zurücksetzen" %}</a>
         </div>
       </form>
     </div>
   </div>
 
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <p class="text-secondary mb-0">{{ result_count }} Anlage{{ result_count|pluralize:"n," }} gefunden</p>
+    {% blocktrans count count=result_count %}{{ count }} Anlage gefunden{% plural %}{{ count }} Anlagen gefunden{% endblocktrans %}
     {% if page_obj %}
-      <p class="text-secondary mb-0">Seite {{ page_obj.number }} von {{ page_obj.paginator.num_pages }}</p>
+      <p class="text-secondary mb-0">{% blocktrans with page=page_obj.number pages=page_obj.paginator.num_pages %}Seite {{ page }} von {{ pages }}{% endblocktrans %}</p>
     {% endif %}
   </div>
 
@@ -76,17 +76,17 @@
       <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
           <tr>
-            <th>Asset-ID</th>
-            <th>Name</th>
-            <th>Kurzname</th>
-            <th>Kategorie</th>
-            <th>Hersteller</th>
-            <th>Seriennummer</th>
-            <th>Standort</th>
-            <th>Abteilung</th>
-            <th>Inbetriebnahme</th>
-            <th>Status</th>
-            <th class="text-end">Aktion</th>
+            <th>{% trans "Asset-ID" %}</th>
+            <th>{% trans "Name" %}</th>
+            <th>{% trans "Kurzname" %}</th>
+            <th>{% trans "Kategorie" %}</th>
+            <th>{% trans "Hersteller" %}</th>
+            <th>{% trans "Seriennummer" %}</th>
+            <th>{% trans "Standort" %}</th>
+            <th>{% trans "Abteilung" %}</th>
+            <th>{% trans "Inbetriebnahme" %}</th>
+            <th>{% trans "Status" %}</th>
+            <th class="text-end">{% trans "Aktion" %}</th>
           </tr>
         </thead>
         <tbody>
@@ -103,20 +103,20 @@
               <td>{{ asset.commissioning_date|date:"d.m.Y"|default:"-" }}</td>
               <td>
                 {% if asset.status == "active" %}
-                  <span class="badge text-bg-success">Aktiv</span>
+                  <span class="badge text-bg-success">{% trans "Aktiv" %}</span>
                 {% elif asset.status == "inactive" %}
-                  <span class="badge text-bg-secondary">Inaktiv</span>
+                  <span class="badge text-bg-secondary">{% trans "Inaktiv" %}</span>
                 {% else %}
-                  <span class="badge text-bg-danger">Außer Betrieb</span>
+                  <span class="badge text-bg-danger">{% trans "Außer Betrieb" %}</span>
                 {% endif %}
               </td>
               <td class="text-end">
-                <a class="btn btn-sm btn-outline-primary" href="{% url 'assets:detail' asset.pk %}">Details</a>
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'assets:detail' asset.pk %}">{% trans "Details" %}</a>
               </td>
             </tr>
           {% empty %}
             <tr>
-              <td colspan="11" class="text-center py-4 text-secondary">Keine Anlagen für die aktuelle Filterung gefunden.</td>
+              <td colspan="11" class="text-center py-4 text-secondary">{% trans "Keine Anlagen für die aktuelle Filterung gefunden." %}</td>
             </tr>
           {% endfor %}
         </tbody>
@@ -125,14 +125,14 @@
   </div>
 
   {% if is_paginated %}
-    <nav class="mt-4" aria-label="Asset-Seiten">
+    <nav class="mt-4" aria-label="{% trans 'Asset-Seiten' %}">
       <ul class="pagination">
         {% if page_obj.has_previous %}
           <li class="page-item">
-            <a class="page-link" href="?{% querystring page=page_obj.previous_page_number %}">Zurück</a>
+            <a class="page-link" href="?{% querystring page=page_obj.previous_page_number %}">{% trans "Zurück" %}</a>
           </li>
         {% else %}
-          <li class="page-item disabled"><span class="page-link">Zurück</span></li>
+          <li class="page-item disabled"><span class="page-link">{% trans "Zurück" %}</span></li>
         {% endif %}
 
         {% for page_number in page_obj.paginator.page_range %}
@@ -145,10 +145,10 @@
 
         {% if page_obj.has_next %}
           <li class="page-item">
-            <a class="page-link" href="?{% querystring page=page_obj.next_page_number %}">Weiter</a>
+            <a class="page-link" href="?{% querystring page=page_obj.next_page_number %}">{% trans "Weiter" %}</a>
           </li>
         {% else %}
-          <li class="page-item disabled"><span class="page-link">Weiter</span></li>
+          <li class="page-item disabled"><span class="page-link">{% trans "Weiter" %}</span></li>
         {% endif %}
       </ul>
     </nav>

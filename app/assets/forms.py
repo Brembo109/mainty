@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from .models import Asset
 
@@ -25,12 +26,12 @@ class AssetForm(forms.ModelForm):
             "notes": forms.Textarea(attrs={"rows": 4}),
         }
         labels = {
-            "name": "Bezeichnung",
-            "commissioning_date": "Inbetriebnahme",
+            "name": _("Bezeichnung"),
+            "commissioning_date": _("Inbetriebnahme"),
         }
         help_texts = {
-            "asset_id": "Eindeutige interne Kennung des Assets.",
-            "status": "Steuert den operativen Zustand des Assets ohne Löschworkflow.",
+            "asset_id": _("Eindeutige interne Kennung des Assets."),
+            "status": _("Steuert den operativen Zustand des Assets ohne Löschworkflow."),
         }
 
     def __init__(self, *args, **kwargs):
@@ -42,4 +43,4 @@ class AssetForm(forms.ModelForm):
                 existing_class = field.widget.attrs.get("class", "")
                 field.widget.attrs["class"] = f"{existing_class} form-control".strip()
 
-        self.fields["notes"].widget.attrs["placeholder"] = "Freitext für interne Hinweise"
+        self.fields["notes"].widget.attrs["placeholder"] = _("Freitext für interne Hinweise")

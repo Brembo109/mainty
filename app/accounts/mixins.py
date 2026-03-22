@@ -1,12 +1,13 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
+from django.utils.translation import gettext_lazy as _
 
 from .roles import normalize_role_name
 
 
 class RoleRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     allowed_roles: tuple[str, ...] = ()
-    permission_denied_message = "Sie haben keine Berechtigung, auf diese Seite zuzugreifen."
+    permission_denied_message = _("Sie haben keine Berechtigung, auf diese Seite zuzugreifen.")
 
     def get_allowed_roles(self) -> tuple[str, ...]:
         if not self.allowed_roles:

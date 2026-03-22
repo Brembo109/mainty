@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from .models import QualificationEvent, QualificationPlan
 
@@ -20,17 +21,17 @@ class QualificationPlanForm(forms.ModelForm):
             "notes": forms.Textarea(attrs={"rows": 4}),
         }
         labels = {
-            "asset": "Anlage",
-            "interval_value": "Intervallwert",
-            "interval_unit": "Intervall-Einheit",
-            "warning_days": "Warnungstage",
-            "responsible_person": "Verantwortlich",
-            "is_active": "Aktiv",
-            "notes": "Notizen",
+            "asset": _("Anlage"),
+            "interval_value": _("Intervallwert"),
+            "interval_unit": _("Intervall-Einheit"),
+            "warning_days": _("Warnungstage"),
+            "responsible_person": _("Verantwortlich"),
+            "is_active": _("Aktiv"),
+            "notes": _("Notizen"),
         }
         help_texts = {
-            "warning_days": "Anzahl der Tage vor Fälligkeit, ab denen die Planung als kritisch markiert wird.",
-            "is_active": "Inaktive Pläne werden grau dargestellt und nicht als operative Fälligkeit gewertet.",
+            "warning_days": _("Anzahl der Tage vor Fälligkeit, ab denen die Planung als kritisch markiert wird."),
+            "is_active": _("Inaktive Pläne werden grau dargestellt und nicht als operative Fälligkeit gewertet."),
         }
 
     def __init__(self, *args, **kwargs):
@@ -53,12 +54,12 @@ class QualificationEventForm(forms.ModelForm):
             "notes": forms.Textarea(attrs={"rows": 4}),
         }
         labels = {
-            "performed_on": "Durchgeführt am",
-            "performed_by": "Durchgeführt von",
-            "notes": "Notizen",
+            "performed_on": _("Durchgeführt am"),
+            "performed_by": _("Durchgeführt von"),
+            "notes": _("Notizen"),
         }
         help_texts = {
-            "performed_on": "Tatsächlicher Durchführungstermin der Qualifizierung.",
+            "performed_on": _("Tatsächlicher Durchführungstermin der Qualifizierung."),
         }
 
     def __init__(self, *args, **kwargs):

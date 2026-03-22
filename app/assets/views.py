@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.db.models import Q
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from accounts.mixins import RoleRequiredMixin
@@ -81,16 +82,16 @@ class AssetListView(AssetAccessMixin, ListView):
                 "department_choices": filters_source.exclude(department="").order_by("department").values_list("department", flat=True).distinct(),
                 "result_count": self.get_queryset().count(),
                 "sort_choices": [
-                    ("asset_id", "Asset-ID aufsteigend"),
-                    ("-asset_id", "Asset-ID absteigend"),
-                    ("name", "Name A-Z"),
-                    ("-name", "Name Z-A"),
-                    ("commissioning_date", "Inbetriebnahme aufsteigend"),
-                    ("-commissioning_date", "Inbetriebnahme absteigend"),
-                    ("status", "Status"),
-                    ("location", "Standort"),
-                    ("department", "Abteilung"),
-                    ("-updated_at", "Zuletzt geändert"),
+                    ("asset_id", _("Asset-ID aufsteigend")),
+                    ("-asset_id", _("Asset-ID absteigend")),
+                    ("name", _("Name A-Z")),
+                    ("-name", _("Name Z-A")),
+                    ("commissioning_date", _("Inbetriebnahme aufsteigend")),
+                    ("-commissioning_date", _("Inbetriebnahme absteigend")),
+                    ("status", _("Status")),
+                    ("location", _("Standort")),
+                    ("department", _("Abteilung")),
+                    ("-updated_at", _("Zuletzt geändert")),
                 ],
             }
         )
@@ -115,7 +116,7 @@ class AssetCreateView(AssetEditAccessMixin, CreateView):
     template_name = "assets/asset_form.html"
 
     def form_valid(self, form):
-        messages.success(self.request, "Anlage wurde erfolgreich angelegt.")
+        messages.success(self.request, _("Anlage wurde erfolgreich angelegt."))
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -123,8 +124,8 @@ class AssetCreateView(AssetEditAccessMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["page_title"] = "Anlage anlegen"
-        context["submit_label"] = "Anlage anlegen"
+        context["page_title"] = _("Anlage anlegen")
+        context["submit_label"] = _("Anlage anlegen")
         context["cancel_url"] = reverse("assets:list")
         return context
 
@@ -135,7 +136,7 @@ class AssetUpdateView(AssetEditAccessMixin, UpdateView):
     template_name = "assets/asset_form.html"
 
     def form_valid(self, form):
-        messages.success(self.request, "Anlage wurde erfolgreich aktualisiert.")
+        messages.success(self.request, _("Anlage wurde erfolgreich aktualisiert."))
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -143,7 +144,7 @@ class AssetUpdateView(AssetEditAccessMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["page_title"] = "Anlage bearbeiten"
-        context["submit_label"] = "Änderungen speichern"
+        context["page_title"] = _("Anlage bearbeiten")
+        context["submit_label"] = _("Änderungen speichern")
         context["cancel_url"] = reverse("assets:detail", kwargs={"pk": self.object.pk})
         return context

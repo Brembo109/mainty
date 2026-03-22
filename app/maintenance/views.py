@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.db.models import Q
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from accounts.mixins import RoleRequiredMixin
@@ -90,11 +91,11 @@ class MaintenancePlanListView(MaintenanceAccessMixin, ListView):
                 "location_choices": base_assets.exclude(asset__location="").order_by("asset__location").values_list("asset__location", flat=True).distinct(),
                 "department_choices": base_assets.exclude(asset__department="").order_by("asset__department").values_list("asset__department", flat=True).distinct(),
                 "sort_choices": [
-                    ("asset", "Asset"),
-                    ("title", "Titel"),
-                    ("next_due_date", "Nächste Fälligkeit"),
-                    ("due_status", "Fälligkeitsstatus"),
-                    ("-updated_at", "Zuletzt geändert"),
+                    ("asset", _("Asset")),
+                    ("title", _("Titel")),
+                    ("next_due_date", _("Nächste Fälligkeit")),
+                    ("due_status", _("Fälligkeitsstatus")),
+                    ("-updated_at", _("Zuletzt geändert")),
                 ],
             }
         )
@@ -128,7 +129,7 @@ class MaintenancePlanCreateView(MaintenanceEditMixin, CreateView):
         return initial
 
     def form_valid(self, form):
-        messages.success(self.request, "Wartungsplan wurde erfolgreich angelegt.")
+        messages.success(self.request, _("Wartungsplan wurde erfolgreich angelegt."))
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -138,8 +139,8 @@ class MaintenancePlanCreateView(MaintenanceEditMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context.update(
             {
-                "page_title": "Wartungsplan anlegen",
-                "submit_label": "Wartungsplan anlegen",
+                "page_title": _("Wartungsplan anlegen"),
+                "submit_label": _("Wartungsplan anlegen"),
                 "cancel_url": reverse("maintenance:plan-list"),
             }
         )
@@ -152,7 +153,7 @@ class MaintenancePlanUpdateView(MaintenanceEditMixin, UpdateView):
     template_name = "maintenance/plan_form.html"
 
     def form_valid(self, form):
-        messages.success(self.request, "Wartungsplan wurde erfolgreich aktualisiert.")
+        messages.success(self.request, _("Wartungsplan wurde erfolgreich aktualisiert."))
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -162,8 +163,8 @@ class MaintenancePlanUpdateView(MaintenanceEditMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context.update(
             {
-                "page_title": "Wartungsplan bearbeiten",
-                "submit_label": "Änderungen speichern",
+                "page_title": _("Wartungsplan bearbeiten"),
+                "submit_label": _("Änderungen speichern"),
                 "cancel_url": reverse("maintenance:plan-detail", kwargs={"pk": self.object.pk}),
             }
         )
@@ -181,7 +182,7 @@ class MaintenanceEventCreateView(MaintenanceEditMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.plan = self.plan
-        messages.success(self.request, "Wartungsereignis wurde erfasst.")
+        messages.success(self.request, _("Wartungsereignis wurde erfasst."))
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -192,8 +193,8 @@ class MaintenanceEventCreateView(MaintenanceEditMixin, CreateView):
         context.update(
             {
                 "plan": self.plan,
-                "page_title": "Wartungsereignis erfassen",
-                "submit_label": "Ereignis speichern",
+                "page_title": _("Wartungsereignis erfassen"),
+                "submit_label": _("Ereignis speichern"),
                 "cancel_url": reverse("maintenance:plan-detail", kwargs={"pk": self.plan.pk}),
             }
         )
@@ -206,7 +207,7 @@ class MaintenanceEventUpdateView(MaintenanceEditMixin, UpdateView):
     template_name = "maintenance/event_form.html"
 
     def form_valid(self, form):
-        messages.success(self.request, "Wartungsereignis wurde aktualisiert.")
+        messages.success(self.request, _("Wartungsereignis wurde aktualisiert."))
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -217,8 +218,8 @@ class MaintenanceEventUpdateView(MaintenanceEditMixin, UpdateView):
         context.update(
             {
                 "plan": self.object.plan,
-                "page_title": "Wartungsereignis bearbeiten",
-                "submit_label": "Änderungen speichern",
+                "page_title": _("Wartungsereignis bearbeiten"),
+                "submit_label": _("Änderungen speichern"),
                 "cancel_url": reverse("maintenance:plan-detail", kwargs={"pk": self.object.plan.pk}),
             }
         )

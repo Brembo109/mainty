@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+from django.utils.translation import gettext_lazy as _
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -91,7 +93,12 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-LANGUAGE_CODE = "de-de"
+LANGUAGE_CODE = "de"
+LANGUAGES = [
+    ("de", _("Deutsch")),
+    ("en", _("English")),
+]
+LOCALE_PATHS = [BASE_DIR / "locale"]
 TIME_ZONE = "Europe/Berlin"
 USE_I18N = True
 USE_TZ = True
