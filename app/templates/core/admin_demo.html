@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Area | mainty{% endblock %}
+
+{% block content %}
+  <div class="row g-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <span class="badge text-bg-danger-subtle border border-danger-subtle mb-3">Admin only</span>
+          <h1 class="h3 mb-3">Admin example page</h1>
+          <p class="text-secondary mb-0">
+            This page represents protected administrative capabilities such as user management
+            and future system settings. Only Admin users may access it.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

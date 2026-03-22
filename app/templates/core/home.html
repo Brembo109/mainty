@@ -1,33 +1,33 @@
 {% extends "base.html" %}
 
-{% block title %}Start | mainty{% endblock %}
+{% block title %}Home | mainty{% endblock %}
 
 {% block content %}
   <div class="row g-4 align-items-center">
     <div class="col-lg-7">
-      <span class="badge rounded-pill text-bg-light border mb-3">Technisches Grundsetup</span>
-      <h1 class="display-5 fw-semibold mb-3">Verwaltung fuer Maschinen, Anlagen und Wartungen</h1>
+      <span class="badge rounded-pill text-bg-light border mb-3">Authentication foundation</span>
+      <h1 class="display-5 fw-semibold mb-3">Internal platform for machines, maintenance, and qualifications</h1>
       <p class="lead text-secondary mb-4">
-        Dieses Initial-Setup stellt die technische Basis fuer eine interne Webanwendung bereit.
-        Fachlogik, Rollen und Domaenenmodelle folgen in den naechsten Ausbaustufen.
+        This project currently focuses on a clean technical foundation with authentication,
+        role-based authorization, and reusable access control patterns.
       </p>
       <div class="d-flex gap-2">
-        <a class="btn btn-primary" href="{% url 'core:dashboard' %}">Zum Dashboard</a>
+        <a class="btn btn-primary" href="{% url 'core:dashboard' %}">Open Dashboard</a>
         {% if not request.user.is_authenticated %}
-          <a class="btn btn-outline-secondary" href="{% url 'accounts:login' %}">Anmelden</a>
+          <a class="btn btn-outline-secondary" href="{% url 'accounts:login' %}">Sign In</a>
         {% endif %}
       </div>
     </div>
     <div class="col-lg-5">
       <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-          <h2 class="h5 mb-3">Bereit fuer den Ausbau</h2>
+          <h2 class="h5 mb-3">Current authorization model</h2>
           <ul class="list-unstyled mb-0 text-secondary">
-            <li class="mb-2">Django Templates mit Bootstrap 5</li>
-            <li class="mb-2">HTMX bereits eingebunden</li>
-            <li class="mb-2">PostgreSQL ueber Docker Compose</li>
-            <li class="mb-2">Nginx vor Gunicorn vorbereitet</li>
-            <li>Modulare Apps fuer Core und Accounts</li>
+            <li class="mb-2">Admin: full internal and user-management access</li>
+            <li class="mb-2">Editor: internal read/write access for future modules</li>
+            <li class="mb-2">Viewer: internal read-only access</li>
+            <li class="mb-2">Server-side checks via reusable mixins</li>
+            <li>Navigation adapts to the signed-in role</li>
           </ul>
         </div>
       </div>

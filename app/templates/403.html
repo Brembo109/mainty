@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Access Denied | mainty{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4 p-lg-5">
+          <span class="badge text-bg-danger-subtle border border-danger-subtle mb-3">403</span>
+          <h1 class="h3 mb-3">Access denied</h1>
+          <p class="text-secondary mb-0">
+            Your account is authenticated, but it does not have the required role for this page.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

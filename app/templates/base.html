@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -30,22 +30,42 @@
           data-bs-target="#mainNav"
           aria-controls="mainNav"
           aria-expanded="false"
-          aria-label="Navigation umschalten"
+          aria-label="Toggle navigation"
         >
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="mainNav">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'core:home' %}">Start</a>
+              <a class="nav-link" href="{% url 'core:home' %}">Home</a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'core:dashboard' %}">Dashboard</a>
-            </li>
+            {% if request.user.is_authenticated %}
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'core:dashboard' %}">Dashboard</a>
+              </li>
+              {% if can_access_editor_area %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'core:editor-demo' %}">Editor Area</a>
+                </li>
+              {% endif %}
+              {% if can_manage_users %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'core:admin-demo' %}">Admin Area</a>
+                </li>
+              {% endif %}
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'accounts:profile' %}">My Profile</a>
+              </li>
+            {% endif %}
           </ul>
           <div class="d-flex gap-2">
             {% if request.user.is_authenticated %}
-              <span class="navbar-text text-secondary">Angemeldet als {{ request.user.username }}</span>
+              <span class="navbar-text text-secondary">
+                Signed in as {{ request.user.username }}
+                {% if current_user_role %}
+                  <span class="ms-1 badge text-bg-light border">{{ current_user_role }}</span>
+                {% endif %}
+              </span>
               <form action="{% url 'accounts:logout' %}" method="post">
                 {% csrf_token %}
                 <button class="btn btn-outline-secondary btn-sm" type="submit">Logout</button>
