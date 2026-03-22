@@ -2,7 +2,7 @@
 
 `mainty` is currently set up as a browser-based internal Django application with a production-oriented infrastructure foundation. The repository already includes Docker Compose, PostgreSQL, Nginx, Gunicorn, Django Templates, Bootstrap 5, and prepared HTMX integration. The application is running on the internal Ubuntu VM and is reachable through the browser.
 
-The current implementation now covers the technical platform, the authentication/authorization baseline, the initial domain model foundation, a production-oriented internal dashboard, and server-rendered CRUD UI for assets, maintenance plans/events, qualification plans/events, and operational tasks. Audit trail and document workflows are not implemented yet.
+The current implementation now covers the technical platform, the authentication/authorization baseline, the initial domain model foundation, a production-oriented internal dashboard, a central audit trail, and server-rendered CRUD UI for assets, maintenance plans/events, qualification plans/events, and operational tasks. Document workflows are not implemented yet.
 
 ## What Is Already Implemented
 
@@ -37,6 +37,15 @@ The current implementation now covers the technical platform, the authentication
   - open and in-progress tasks
   - recently updated operational objects
 - Configurable task warning horizon for dashboard upcoming items via `TASK_DASHBOARD_WARNING_DAYS`
+- Central audit trail with:
+  - dedicated `audit` app
+  - global `/audit/` page with filters, search, and pagination
+  - object-specific change history on asset, maintenance plan, qualification plan, and task detail pages
+  - field-level change logging with old and new values
+  - user attribution from the request context
+  - action types for create, update, delete, and status changes
+  - optional `change_reason` field prepared for later form integration
+  - read-only Django admin integration
 - Domain model foundation for:
   - assets
   - maintenance plans and maintenance events
@@ -91,11 +100,14 @@ The current authorization model is intentionally simple and Django-native.
 Navigation visibility adapts to the signed-in user, but access control is enforced server-side in the views.
 
 All three roles can access the operational dashboard in read-only form.
+All three roles can also access the audit trail in read-only form.
 
 ## Domain Model Status
 
 The following domain apps and models are already present:
 
+- `audit`
+  - `AuditLog`
 - `assets`
   - `Asset`
 - `maintenance`
@@ -115,9 +127,17 @@ These models already include:
 - focused model tests
 - reusable due-date helper logic for maintenance and qualification planning
 
+The audit layer additionally provides:
+
+- field-level tracking of relevant model changes
+- indexed log storage for model/object lookup and chronological filtering
+- request-aware user attribution through middleware
+- reusable object-level query helpers for detail pages
+
 The currently implemented business UI layers are:
 
 - internal dashboard
+- audit trail
 - assets
 - maintenance plans and maintenance events
 - qualification plans and qualification events
@@ -153,6 +173,22 @@ mainty/
     |   |-- tests.py
     |   |-- urls.py
     |   `-- views.py
+    |-- audit/
+    |   |-- admin.py
+    |   |-- apps.py
+    |   |-- context.py
+    |   |-- middleware.py
+    |   |-- models.py
+    |   |-- registry.py
+    |   |-- services.py
+    |   |-- signals.py
+    |   |-- tests.py
+    |   |-- urls.py
+    |   |-- views.py
+    |   |-- migrations/
+    |   |   `-- 0001_initial.py
+    |   `-- templatetags/
+    |       `-- audit_ui.py
     |-- accounts/
     |   |-- admin.py
     |   |-- context_processors.py
@@ -209,6 +245,10 @@ mainty/
     |   |       `-- field.html
     |   |-- includes/
     |   |   `-- form_field.html
+    |   |-- audit/
+    |   |   |-- audit_list.html
+    |   |   `-- partials/
+    |   |       `-- object_history.html
     |   |-- maintenance/
     |   |   |-- event_form.html
     |   |   |-- plan_detail.html
@@ -234,7 +274,6 @@ mainty/
 
 ## What Is Not Implemented Yet
 
-- Audit trail
 - Document management
 - API layer
 - Background jobs / Celery
@@ -251,3 +290,4 @@ mainty/
 - `83a540a` Add asset CRUD interface
 - `de31a8a` Prepare project for future i18n
 - `16ddf26` Add operational dashboard
+- `c8d8add` Add audit trail system
