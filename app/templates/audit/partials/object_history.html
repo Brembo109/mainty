@@ -1,0 +1,40 @@
+{% load i18n audit_ui %}
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h5 mb-0">{% trans "Änderungsverlauf" %}</h2>
+      <a class="btn btn-sm btn-outline-secondary" href="{% url 'audit:list' %}?model={{ audit_model_name }}&q={{ audit_object_id }}">{% trans "Audit Trail" %}</a>
+    </div>
+    {% if audit_entries %}
+      <div class="list-group list-group-flush">
+        {% for entry in audit_entries %}
+          <div class="list-group-item px-0">
+            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+              <div>
+                <span class="badge {{ entry.action|audit_action_badge_class }}">{{ entry.get_action_display }}</span>
+                {% if entry.field_name %}
+                  <span class="small text-secondary ms-2">{{ entry.field_name }}</span>
+                {% endif %}
+              </div>
+              <div class="small text-secondary text-nowrap">{{ entry.timestamp|date:"d.m.Y H:i:s" }}</div>
+            </div>
+            <div class="small text-secondary mb-1">{{ entry.user_display }}</div>
+            {% if entry.field_name %}
+              <div>{{ entry.old_value|default:"-" }} &rarr; {{ entry.new_value|default:"-" }}</div>
+            {% elif entry.new_value %}
+              <div>{{ entry.new_value }}</div>
+            {% else %}
+              <div>{{ entry.old_value|default:"-" }}</div>
+            {% endif %}
+            {% if entry.change_reason %}
+              <div class="small text-secondary mt-2">{% trans "Grund" %}: {{ entry.change_reason }}</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-secondary mb-0">{% trans "Noch keine Audit-Einträge für dieses Objekt vorhanden." %}</p>
+    {% endif %}
+  </div>
+</div>

@@ -6,6 +6,7 @@ from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from accounts.mixins import RoleRequiredMixin
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
+from audit.services import get_audit_entries_for_instance
 
 from .forms import AssetForm
 from .models import Asset
@@ -108,6 +109,9 @@ class AssetDetailView(AssetAccessMixin, DetailView):
         context["maintenance_plans"] = self.object.maintenance_plans.all()
         context["qualification_plans"] = self.object.qualification_plans.all()
         context["tasks"] = self.object.tasks.select_related("responsible_user").all()
+        context["audit_entries"] = get_audit_entries_for_instance(self.object, limit=10)
+        context["audit_model_name"] = self.object.__class__.__name__
+        context["audit_object_id"] = self.object.pk
         return context
 
 

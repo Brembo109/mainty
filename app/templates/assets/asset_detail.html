@@ -168,12 +168,7 @@
         </div>
       </div>
 
-      <div class="card border-0 shadow-sm">
-        <div class="card-body p-4">
-          <h2 class="h5 mb-3">{% trans "Änderungshistorie" %}</h2>
-          <p class="text-secondary mb-0">{% trans "Platzhalter für spätere Änderungs- und Aktivitätshistorie." %}</p>
-        </div>
-      </div>
+      {% include "audit/partials/object_history.html" %}
     </div>
   </div>
 {% endblock %}

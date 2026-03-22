@@ -6,6 +6,7 @@ from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from accounts.mixins import RoleRequiredMixin
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
+from audit.services import get_audit_entries_for_instance
 
 from .forms import QualificationEventForm, QualificationPlanForm
 from .models import QualificationEvent, QualificationPlan
@@ -113,6 +114,9 @@ class QualificationPlanDetailView(QualificationAccessMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["event_history"] = self.object.events.all()
+        context["audit_entries"] = get_audit_entries_for_instance(self.object, limit=10)
+        context["audit_model_name"] = self.object.__class__.__name__
+        context["audit_object_id"] = self.object.pk
         return context
 
 

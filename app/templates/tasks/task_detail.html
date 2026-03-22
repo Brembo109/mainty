@@ -67,7 +67,7 @@
     </div>
 
     <div class="col-xl-4">
-      <div class="card border-0 shadow-sm">
+      <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-4">
           <h2 class="h5 mb-3">{% trans "Systeminformationen" %}</h2>
           <div class="small text-secondary">{% trans "Erstellt am" %}</div>
@@ -76,6 +76,8 @@
           <div>{{ task.updated_at|date:"d.m.Y H:i" }}</div>
         </div>
       </div>
+
+      {% include "audit/partials/object_history.html" %}
     </div>
   </div>
 {% endblock %}
