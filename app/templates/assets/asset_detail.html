@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}{{ asset.asset_id }} | mainty{% endblock %}
+
+{% block content %}
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-4">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <span class="badge text-bg-light border">{{ asset.asset_id }}</span>
+        {% if asset.status == "active" %}
+          <span class="badge text-bg-success">Aktiv</span>
+        {% elif asset.status == "inactive" %}
+          <span class="badge text-bg-secondary">Inaktiv</span>
+        {% else %}
+          <span class="badge text-bg-danger">Ausser Betrieb</span>
+        {% endif %}
+      </div>
+      <h1 class="h2 mb-1">{{ asset.name }}</h1>
+      <p class="text-secondary mb-0">{{ asset.short_name|default:"Kein Kurzname hinterlegt" }}</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="{% url 'assets:list' %}">Zur Liste</a>
+      {% if can_access_editor_area %}
+        <a class="btn btn-primary" href="{% url 'assets:edit' asset.pk %}">Bearbeiten</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-xl-8">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+          <h2 class="h5 mb-4">Stammdaten</h2>
+          <div class="row g-3">
+            <div class="col-md-6"><div class="small text-secondary">Kategorie</div><div>{{ asset.category|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">Hersteller</div><div>{{ asset.manufacturer|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">Modell</div><div>{{ asset.model|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">Seriennummer</div><div>{{ asset.serial_number|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">Standort</div><div>{{ asset.location|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">Abteilung</div><div>{{ asset.department|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">Inbetriebnahme</div><div>{{ asset.commissioning_date|date:"d.m.Y"|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">Status</div><div>{{ asset.get_status_display }}</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <h2 class="h5 mb-3">Interne Hinweise</h2>
+          <p class="mb-0 text-secondary">{{ asset.notes|default:"Keine Notizen hinterlegt." }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+          <h2 class="h5 mb-3">Systeminformationen</h2>
+          <div class="small text-secondary">Erstellt am</div>
+          <div class="mb-3">{{ asset.created_at|date:"d.m.Y H:i" }}</div>
+          <div class="small text-secondary">Aktualisiert am</div>
+          <div>{{ asset.updated_at|date:"d.m.Y H:i" }}</div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+          <h2 class="h5 mb-3">Wartungsplaene</h2>
+          <p class="text-secondary mb-0">Platzhalter fuer kuenftige Wartungsplanung und Ereignislisten.</p>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+          <h2 class="h5 mb-3">Qualifizierungsplaene</h2>
+          <p class="text-secondary mb-0">Platzhalter fuer kuenftige Qualifizierungsplanung und Historie.</p>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+          <h2 class="h5 mb-3">Aufgaben / Aktionen</h2>
+          <p class="text-secondary mb-0">Platzhalter fuer operative Aufgaben und Massnahmen.</p>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <h2 class="h5 mb-3">Audit Trail</h2>
+          <p class="text-secondary mb-0">Platzhalter fuer spaetere Aenderungs- und Aktivitaetshistorie.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

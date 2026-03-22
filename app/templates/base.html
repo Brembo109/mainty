@@ -43,6 +43,9 @@
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'core:dashboard' %}">Dashboard</a>
               </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'assets:list' %}">Assets</a>
+              </li>
               {% if can_access_editor_area %}
                 <li class="nav-item">
                   <a class="nav-link" href="{% url 'core:editor-demo' %}">Editor Area</a>

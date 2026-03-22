@@ -2,7 +2,7 @@
 
 `mainty` is currently set up as a browser-based internal Django application with a production-oriented infrastructure foundation. The repository already includes Docker Compose, PostgreSQL, Nginx, Gunicorn, Django Templates, Bootstrap 5, and prepared HTMX integration. The application is running on the internal Ubuntu VM and is reachable through the browser.
 
-The current implementation intentionally focuses only on the technical platform and the authentication/authorization baseline. No domain-specific business modules for machines, equipment, maintenance, or qualifications have been implemented yet.
+The current implementation now covers the technical platform, the authentication/authorization baseline, the initial domain model foundation, and the first server-rendered CRUD UI for assets. Maintenance, qualification, task, audit trail, and document workflows are not implemented as business UI yet.
 
 ## What Is Already Implemented
 
@@ -30,6 +30,20 @@ The current implementation intentionally focuses only on the technical platform 
 - Management command to bootstrap roles
 - Management command to create or update an initial admin user
 - Automated tests covering authentication and role access rules
+- Domain model foundation for:
+  - assets
+  - maintenance plans and maintenance events
+  - qualification plans and qualification events
+  - operational tasks
+- Shared due-date and due-status logic for maintenance and qualification plans
+- Django admin integration for the domain models
+- Asset UI with:
+  - asset list
+  - asset detail page
+  - create asset
+  - update asset
+  - search, filtering, sorting, pagination
+  - server-side permission checks for Admin / Editor / Viewer
 
 ## Authorization Model
 
@@ -46,6 +60,31 @@ The current authorization model is intentionally simple and Django-native.
   - no edit capabilities
 
 Navigation visibility adapts to the signed-in user, but access control is enforced server-side in the views.
+
+## Domain Model Status
+
+The following domain apps and models are already present:
+
+- `assets`
+  - `Asset`
+- `maintenance`
+  - `MaintenancePlan`
+  - `MaintenanceEvent`
+- `qualification`
+  - `QualificationPlan`
+  - `QualificationEvent`
+- `tasks`
+  - `Task`
+
+These models already include:
+
+- timestamp fields where appropriate
+- Django migrations
+- Django admin registration
+- focused model tests
+- reusable due-date helper logic for maintenance and qualification planning
+
+The first business UI layer currently exists only for assets.
 
 ## Current Repository Structure
 
@@ -85,12 +124,39 @@ mainty/
     |   `-- management/commands/
     |       |-- bootstrap_roles.py
     |       `-- create_initial_admin.py
+    |-- assets/
+    |   |-- admin.py
+    |   |-- forms.py
+    |   |-- models.py
+    |   |-- tests.py
+    |   |-- urls.py
+    |   |-- views.py
+    |   `-- templatetags/
+    |       `-- assets_query.py
+    |-- maintenance/
+    |   |-- admin.py
+    |   |-- models.py
+    |   `-- tests.py
+    |-- qualification/
+    |   |-- admin.py
+    |   |-- models.py
+    |   `-- tests.py
+    |-- tasks/
+    |   |-- admin.py
+    |   |-- models.py
+    |   `-- tests.py
     |-- templates/
     |   |-- 403.html
     |   |-- base.html
     |   |-- accounts/
     |   |   |-- login.html
     |   |   `-- profile.html
+    |   |-- assets/
+    |   |   |-- asset_detail.html
+    |   |   |-- asset_form.html
+    |   |   |-- asset_list.html
+    |   |   `-- partials/
+    |   |       `-- field.html
     |   `-- core/
     |       |-- home.html
     |       |-- dashboard.html
@@ -102,13 +168,14 @@ mainty/
 
 ## What Is Not Implemented Yet
 
-- Machine or equipment models
-- Maintenance workflows
-- Qualification workflows
+- Maintenance CRUD UI
+- Qualification CRUD UI
+- Task CRUD UI
 - Audit trail
 - Document management
 - API layer
 - Background jobs / Celery
+- Notifications and scheduled jobs
 - Advanced permission granularity beyond the initial role model
 
 ## Current Git Milestones
@@ -116,3 +183,5 @@ mainty/
 - `c248197` Initial project scaffold
 - `612856c` Write documentation in English
 - `eda9c1b` Add role-based access control foundation
+- `7c5d6fa` Add project status documentation
+- `0953d47` Add domain model foundation for operations
