@@ -102,6 +102,12 @@ class AssetDetailView(AssetAccessMixin, DetailView):
     template_name = "assets/asset_detail.html"
     context_object_name = "asset"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["maintenance_plans"] = self.object.maintenance_plans.all()
+        context["qualification_plans"] = self.object.qualification_plans.all()
+        return context
+
 
 class AssetCreateView(AssetEditAccessMixin, CreateView):
     model = Asset

@@ -25,24 +25,24 @@
 
         <div class="row g-4">
           <div class="col-12"><h2 class="h5 mb-3">Identifikation und Einordnung</h2></div>
-          <div class="col-md-4">{% include "assets/partials/field.html" with field=form.asset_id %}</div>
-          <div class="col-md-4">{% include "assets/partials/field.html" with field=form.name %}</div>
-          <div class="col-md-4">{% include "assets/partials/field.html" with field=form.short_name %}</div>
-          <div class="col-md-4">{% include "assets/partials/field.html" with field=form.category %}</div>
-          <div class="col-md-4">{% include "assets/partials/field.html" with field=form.status %}</div>
-          <div class="col-md-4">{% include "assets/partials/field.html" with field=form.commissioning_date %}</div>
+          <div class="col-md-4">{% include "includes/form_field.html" with field=form.asset_id %}</div>
+          <div class="col-md-4">{% include "includes/form_field.html" with field=form.name %}</div>
+          <div class="col-md-4">{% include "includes/form_field.html" with field=form.short_name %}</div>
+          <div class="col-md-4">{% include "includes/form_field.html" with field=form.category %}</div>
+          <div class="col-md-4">{% include "includes/form_field.html" with field=form.status %}</div>
+          <div class="col-md-4">{% include "includes/form_field.html" with field=form.commissioning_date %}</div>
 
           <div class="col-12 mt-2"><h2 class="h5 mb-3">Hersteller und technische Angaben</h2></div>
-          <div class="col-md-4">{% include "assets/partials/field.html" with field=form.manufacturer %}</div>
-          <div class="col-md-4">{% include "assets/partials/field.html" with field=form.model %}</div>
-          <div class="col-md-4">{% include "assets/partials/field.html" with field=form.serial_number %}</div>
+          <div class="col-md-4">{% include "includes/form_field.html" with field=form.manufacturer %}</div>
+          <div class="col-md-4">{% include "includes/form_field.html" with field=form.model %}</div>
+          <div class="col-md-4">{% include "includes/form_field.html" with field=form.serial_number %}</div>
 
           <div class="col-12 mt-2"><h2 class="h5 mb-3">Organisation und Standort</h2></div>
-          <div class="col-md-6">{% include "assets/partials/field.html" with field=form.location %}</div>
-          <div class="col-md-6">{% include "assets/partials/field.html" with field=form.department %}</div>
+          <div class="col-md-6">{% include "includes/form_field.html" with field=form.location %}</div>
+          <div class="col-md-6">{% include "includes/form_field.html" with field=form.department %}</div>
 
           <div class="col-12 mt-2"><h2 class="h5 mb-3">Notizen</h2></div>
-          <div class="col-12">{% include "assets/partials/field.html" with field=form.notes %}</div>
+          <div class="col-12">{% include "includes/form_field.html" with field=form.notes %}</div>
         </div>
 
         <div class="d-flex gap-2 mt-4">

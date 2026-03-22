@@ -2,7 +2,7 @@
 
 `mainty` is currently set up as a browser-based internal Django application with a production-oriented infrastructure foundation. The repository already includes Docker Compose, PostgreSQL, Nginx, Gunicorn, Django Templates, Bootstrap 5, and prepared HTMX integration. The application is running on the internal Ubuntu VM and is reachable through the browser.
 
-The current implementation now covers the technical platform, the authentication/authorization baseline, the initial domain model foundation, and the first server-rendered CRUD UI for assets. Maintenance, qualification, task, audit trail, and document workflows are not implemented as business UI yet.
+The current implementation now covers the technical platform, the authentication/authorization baseline, the initial domain model foundation, and server-rendered CRUD UI for assets, maintenance plans/events, and qualification plans/events. Task UI, audit trail, and document workflows are not implemented yet.
 
 ## What Is Already Implemented
 
@@ -44,6 +44,21 @@ The current implementation now covers the technical platform, the authentication
   - update asset
   - search, filtering, sorting, pagination
   - server-side permission checks for Admin / Editor / Viewer
+- Maintenance UI with:
+  - maintenance plan list
+  - maintenance plan detail page
+  - create and update maintenance plans
+  - create and update maintenance events
+  - due-status transparency in list/detail views
+  - linked maintenance sections on the asset detail page
+- Qualification UI with:
+  - qualification plan list
+  - qualification plan detail page
+  - create and update qualification plans
+  - create and update qualification events
+  - due-status transparency in list/detail views
+  - linked qualification sections on the asset detail page
+- Environment-based cookie security settings for the current internal HTTP phase and later HTTPS switch-over
 
 ## Authorization Model
 
@@ -84,7 +99,11 @@ These models already include:
 - focused model tests
 - reusable due-date helper logic for maintenance and qualification planning
 
-The first business UI layer currently exists only for assets.
+The currently implemented business UI layers are:
+
+- assets
+- maintenance plans and maintenance events
+- qualification plans and qualification events
 
 ## Current Repository Structure
 
@@ -109,6 +128,9 @@ mainty/
     |   `-- settings/
     |       `-- base.py
     |-- core/
+    |   |-- due_dates.py
+    |   |-- templatetags/
+    |   |   `-- mainty_ui.py
     |   |-- tests.py
     |   |-- urls.py
     |   `-- views.py
@@ -135,11 +157,17 @@ mainty/
     |       `-- assets_query.py
     |-- maintenance/
     |   |-- admin.py
+    |   |-- forms.py
     |   |-- models.py
+    |   |-- urls.py
+    |   |-- views.py
     |   `-- tests.py
     |-- qualification/
     |   |-- admin.py
+    |   |-- forms.py
     |   |-- models.py
+    |   |-- urls.py
+    |   |-- views.py
     |   `-- tests.py
     |-- tasks/
     |   |-- admin.py
@@ -157,6 +185,18 @@ mainty/
     |   |   |-- asset_list.html
     |   |   `-- partials/
     |   |       `-- field.html
+    |   |-- includes/
+    |   |   `-- form_field.html
+    |   |-- maintenance/
+    |   |   |-- event_form.html
+    |   |   |-- plan_detail.html
+    |   |   |-- plan_form.html
+    |   |   `-- plan_list.html
+    |   |-- qualification/
+    |   |   |-- event_form.html
+    |   |   |-- plan_detail.html
+    |   |   |-- plan_form.html
+    |   |   `-- plan_list.html
     |   `-- core/
     |       |-- home.html
     |       |-- dashboard.html
@@ -168,8 +208,6 @@ mainty/
 
 ## What Is Not Implemented Yet
 
-- Maintenance CRUD UI
-- Qualification CRUD UI
 - Task CRUD UI
 - Audit trail
 - Document management
@@ -185,3 +223,4 @@ mainty/
 - `eda9c1b` Add role-based access control foundation
 - `7c5d6fa` Add project status documentation
 - `0953d47` Add domain model foundation for operations
+- `83a540a` Add asset CRUD interface

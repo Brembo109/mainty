@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% load mainty_ui %}
+
+{% block title %}Maintenance Plans | mainty{% endblock %}
+
+{% block content %}
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+    <div>
+      <h1 class="h2 mb-1">Wartungsplaene</h1>
+      <p class="text-secondary mb-0">Planung, Faelligkeiten und operative Nachverfolgung fuer Wartungen.</p>
+    </div>
+    {% if can_access_editor_area %}
+      <a class="btn btn-primary" href="{% url 'maintenance:plan-create' %}">Wartungsplan anlegen</a>
+    {% endif %}
+  </div>
+
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+      <form method="get" class="row g-3 align-items-end">
+        <div class="col-12 col-xl-4">
+          <label class="form-label" for="searchInput">Suche</label>
+          <input class="form-control" id="searchInput" type="search" name="q" value="{{ search_query }}" placeholder="Titel, Asset, Verantwortlich ..." />
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <label class="form-label" for="dueStatusSelect">Faelligkeitsstatus</label>
+          <select class="form-select" id="dueStatusSelect" name="due_status">
+            <option value="">Alle</option>
+            <option value="ok" {% if current_due_status == "ok" %}selected{% endif %}>OK</option>
+            <option value="warning" {% if current_due_status == "warning" %}selected{% endif %}>Faellig bald</option>
+            <option value="overdue" {% if current_due_status == "overdue" %}selected{% endif %}>Ueberfaellig</option>
+            <option value="inactive" {% if current_due_status == "inactive" %}selected{% endif %}>Inaktiv</option>
+            <option value="unknown" {% if current_due_status == "unknown" %}selected{% endif %}>Unbekannt</option>
+          </select>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <label class="form-label" for="activeSelect">Aktivitaet</label>
+          <select class="form-select" id="activeSelect" name="active">
+            <option value="">Alle</option>
+            <option value="active" {% if current_active == "active" %}selected{% endif %}>Aktiv</option>
+            <option value="inactive" {% if current_active == "inactive" %}selected{% endif %}>Inaktiv</option>
+          </select>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <label class="form-label" for="assetSelect">Asset</label>
+          <select class="form-select" id="assetSelect" name="asset">
+            <option value="">Alle</option>
+            {% for asset_pk, asset_code, asset_name in asset_choices %}
+              <option value="{{ asset_pk }}" {% if current_asset == asset_pk|stringformat:"s" %}selected{% endif %}>{{ asset_code }} - {{ asset_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-sm-6 col-xl-1">
+          <label class="form-label" for="locationSelect">Standort</label>
+          <select class="form-select" id="locationSelect" name="location">
+            <option value="">Alle</option>
+            {% for location in location_choices %}
+              <option value="{{ location }}" {% if current_location == location %}selected{% endif %}>{{ location }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-sm-6 col-xl-1">
+          <label class="form-label" for="departmentSelect">Abteilung</label>
+          <select class="form-select" id="departmentSelect" name="department">
+            <option value="">Alle</option>
+            {% for department in department_choices %}
+              <option value="{{ department }}" {% if current_department == department %}selected{% endif %}>{{ department }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <label class="form-label" for="sortSelect">Sortierung</label>
+          <select class="form-select" id="sortSelect" name="sort">
+            {% for value, label in sort_choices %}
+              <option value="{{ value }}" {% if current_sort == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 d-flex gap-2">
+          <button class="btn btn-primary" type="submit">Filter anwenden</button>
+          <a class="btn btn-outline-secondary" href="{% url 'maintenance:plan-list' %}">Zuruecksetzen</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-secondary mb-0">{{ result_count }} Plan{{ result_count|pluralize:" ,e" }} gefunden</p>
+    {% if page_obj %}
+      <p class="text-secondary mb-0">Seite {{ page_obj.number }} von {{ page_obj.paginator.num_pages }}</p>
+    {% endif %}
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Asset</th>
+            <th>Titel</th>
+            <th>Intervall</th>
+            <th>Warnungstage</th>
+            <th>Letztes Ereignis</th>
+            <th>Naechste Faelligkeit</th>
+            <th>Status</th>
+            <th>Verantwortlich</th>
+            <th>Aktiv</th>
+            <th class="text-end">Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for plan in plans %}
+            <tr>
+              <td class="fw-semibold">{{ plan.asset.asset_id }} - {{ plan.asset.name }}</td>
+              <td>{{ plan.title }}</td>
+              <td>{{ plan.interval_value }} {{ plan.get_interval_unit_display }}</td>
+              <td>{{ plan.warning_days }}</td>
+              <td>{{ plan.latest_event.performed_on|date:"d.m.Y"|default:"-" }}</td>
+              <td>{{ plan.next_due_date|date:"d.m.Y"|default:"-" }}</td>
+              <td><span class="badge {{ plan.due_status.code|due_badge_class }}">{{ plan.due_status.label }}</span></td>
+              <td>{{ plan.responsible_person|default:"-" }}</td>
+              <td>{% if plan.is_active %}Ja{% else %}Nein{% endif %}</td>
+              <td class="text-end">
+                <div class="d-flex justify-content-end gap-2">
+                  <a class="btn btn-sm btn-outline-primary" href="{% url 'maintenance:plan-detail' plan.pk %}">Details</a>
+                  {% if can_access_editor_area %}
+                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'maintenance:plan-edit' plan.pk %}">Bearbeiten</a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="10" class="text-center py-4 text-secondary">Keine Wartungsplaene fuer die aktuelle Filterung gefunden.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if is_paginated %}
+    <nav class="mt-4" aria-label="Maintenance pagination">
+      <ul class="pagination">
+        {% if page_obj.has_previous %}
+          <li class="page-item"><a class="page-link" href="?{% querystring page=page_obj.previous_page_number %}">Zurueck</a></li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">Zurueck</span></li>
+        {% endif %}
+        {% for page_number in page_obj.paginator.page_range %}
+          {% if page_number == page_obj.number %}
+            <li class="page-item active"><span class="page-link">{{ page_number }}</span></li>
+          {% elif page_number >= page_obj.number|add:-2 and page_number <= page_obj.number|add:2 %}
+            <li class="page-item"><a class="page-link" href="?{% querystring page=page_number %}">{{ page_number }}</a></li>
+          {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+          <li class="page-item"><a class="page-link" href="?{% querystring page=page_obj.next_page_number %}">Weiter</a></li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">Weiter</span></li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+{% endblock %}

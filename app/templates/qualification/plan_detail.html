@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load mainty_ui %}
+
+{% block title %}{{ plan.title }} | mainty{% endblock %}
+
+{% block content %}
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-4">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <span class="badge text-bg-light border">{{ plan.asset.asset_id }}</span>
+        <span class="badge {{ plan.due_status.code|due_badge_class }}">{{ plan.due_status.label }}</span>
+        {% if not plan.is_active %}
+          <span class="badge text-bg-secondary">Inaktiv</span>
+        {% endif %}
+      </div>
+      <h1 class="h2 mb-1">{{ plan.title }}</h1>
+      <p class="text-secondary mb-0">{{ plan.asset.name }}</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="{% url 'qualification:plan-list' %}">Zur Liste</a>
+      {% if can_access_editor_area %}
+        <a class="btn btn-outline-primary" href="{% url 'qualification:event-create' plan.pk %}">Ereignis erfassen</a>
+        <a class="btn btn-primary" href="{% url 'qualification:plan-edit' plan.pk %}">Bearbeiten</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-xl-8">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+          <h2 class="h5 mb-4">Planstammdaten</h2>
+          <div class="row g-3">
+            <div class="col-md-6"><div class="small text-secondary">Asset</div><div><a href="{% url 'assets:detail' plan.asset.pk %}">{{ plan.asset.asset_id }} - {{ plan.asset.name }}</a></div></div>
+            <div class="col-md-6"><div class="small text-secondary">Intervall</div><div>{{ plan.interval_value }} {{ plan.get_interval_unit_display }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">Warnungstage</div><div>{{ plan.warning_days }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">Verantwortlich</div><div>{{ plan.responsible_person|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">Letztes Ereignis</div><div>{{ plan.latest_event.performed_on|date:"d.m.Y"|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">Naechste Faelligkeit</div><div>{{ plan.next_due_date|date:"d.m.Y"|default:"-" }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">Status</div><div>{{ plan.due_status.label }}</div></div>
+            <div class="col-md-6"><div class="small text-secondary">Aktiv</div><div>{% if plan.is_active %}Ja{% else %}Nein{% endif %}</div></div>
+          </div>
+          <hr class="my-4" />
+          <h3 class="h6 mb-2">Notizen</h3>
+          <p class="mb-0 text-secondary">{{ plan.notes|default:"Keine Notizen hinterlegt." }}</p>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 mb-0">Ereignishistorie</h2>
+            {% if can_access_editor_area %}
+              <a class="btn btn-sm btn-primary" href="{% url 'qualification:event-create' plan.pk %}">Ereignis erfassen</a>
+            {% endif %}
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Datum</th>
+                  <th>Durchgefuehrt von</th>
+                  <th>Notizen</th>
+                  {% if can_access_editor_area %}<th class="text-end">Aktion</th>{% endif %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for event in event_history %}
+                  <tr>
+                    <td>{{ event.performed_on|date:"d.m.Y" }}</td>
+                    <td>{{ event.performed_by|default:"-" }}</td>
+                    <td>{{ event.notes|default:"-" }}</td>
+                    {% if can_access_editor_area %}
+                      <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{% url 'qualification:event-edit' event.pk %}">Bearbeiten</a></td>
+                    {% endif %}
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="{% if can_access_editor_area %}4{% else %}3{% endif %}" class="text-center py-3 text-secondary">Noch keine Qualifizierungsereignisse vorhanden.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load mainty_ui %}
 
 {% block title %}{{ asset.asset_id }} | mainty{% endblock %}
 
@@ -66,14 +67,62 @@
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-4">
           <h2 class="h5 mb-3">Wartungsplaene</h2>
-          <p class="text-secondary mb-0">Platzhalter fuer kuenftige Wartungsplanung und Ereignislisten.</p>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-secondary small">{{ maintenance_plans|length }} Plan{{ maintenance_plans|length|pluralize:" ,e" }}</span>
+            {% if can_access_editor_area %}
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'maintenance:plan-create' %}?asset={{ asset.pk }}">Plan anlegen</a>
+            {% endif %}
+          </div>
+          {% if maintenance_plans %}
+            <div class="list-group list-group-flush">
+              {% for plan in maintenance_plans %}
+                <a href="{% url 'maintenance:plan-detail' plan.pk %}" class="list-group-item list-group-item-action px-0">
+                  <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                      <div class="fw-semibold">{{ plan.title }}</div>
+                      <div class="small text-secondary">
+                        {{ plan.next_due_date|date:"d.m.Y"|default:"-" }} · {% if plan.is_active %}Aktiv{% else %}Inaktiv{% endif %}
+                      </div>
+                    </div>
+                    <span class="badge {{ plan.due_status.code|due_badge_class }}">{{ plan.due_status.label }}</span>
+                  </div>
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-secondary mb-0">Noch keine Wartungsplaene fuer dieses Asset vorhanden.</p>
+          {% endif %}
         </div>
       </div>
 
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-4">
           <h2 class="h5 mb-3">Qualifizierungsplaene</h2>
-          <p class="text-secondary mb-0">Platzhalter fuer kuenftige Qualifizierungsplanung und Historie.</p>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-secondary small">{{ qualification_plans|length }} Plan{{ qualification_plans|length|pluralize:" ,e" }}</span>
+            {% if can_access_editor_area %}
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'qualification:plan-create' %}?asset={{ asset.pk }}">Plan anlegen</a>
+            {% endif %}
+          </div>
+          {% if qualification_plans %}
+            <div class="list-group list-group-flush">
+              {% for plan in qualification_plans %}
+                <a href="{% url 'qualification:plan-detail' plan.pk %}" class="list-group-item list-group-item-action px-0">
+                  <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                      <div class="fw-semibold">{{ plan.title }}</div>
+                      <div class="small text-secondary">
+                        {{ plan.next_due_date|date:"d.m.Y"|default:"-" }} · {% if plan.is_active %}Aktiv{% else %}Inaktiv{% endif %}
+                      </div>
+                    </div>
+                    <span class="badge {{ plan.due_status.code|due_badge_class }}">{{ plan.due_status.label }}</span>
+                  </div>
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-secondary mb-0">Noch keine Qualifizierungsplaene fuer dieses Asset vorhanden.</p>
+          {% endif %}
         </div>
       </div>
 

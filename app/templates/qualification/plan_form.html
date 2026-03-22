@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} | mainty{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h1 class="h2 mb-1">{{ page_title }}</h1>
+      <p class="text-secondary mb-0">Pflege der Qualifizierungsplanung fuer interne Betriebsablaeufe.</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{{ cancel_url }}">Abbrechen</a>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4 p-lg-5">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+          </div>
+        {% endif %}
+        <div class="row g-4">
+          <div class="col-md-6">{% include "includes/form_field.html" with field=form.asset %}</div>
+          <div class="col-md-6">{% include "includes/form_field.html" with field=form.title %}</div>
+          <div class="col-md-3">{% include "includes/form_field.html" with field=form.interval_value %}</div>
+          <div class="col-md-3">{% include "includes/form_field.html" with field=form.interval_unit %}</div>
+          <div class="col-md-3">{% include "includes/form_field.html" with field=form.warning_days %}</div>
+          <div class="col-md-3">
+            <div class="form-check mt-4 pt-2">
+              {{ form.is_active }}
+              <label class="form-check-label" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+            </div>
+            {% if form.is_active.help_text %}<div class="form-text">{{ form.is_active.help_text }}</div>{% endif %}
+            {% if form.is_active.errors %}<div class="invalid-feedback d-block">{% for error in form.is_active.errors %}<div>{{ error }}</div>{% endfor %}</div>{% endif %}
+          </div>
+          <div class="col-md-6">{% include "includes/form_field.html" with field=form.responsible_person %}</div>
+          <div class="col-12">{% include "includes/form_field.html" with field=form.notes %}</div>
+        </div>
+        <div class="d-flex gap-2 mt-4">
+          <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
+          <a class="btn btn-outline-secondary" href="{{ cancel_url }}">Abbrechen</a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
