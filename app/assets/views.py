@@ -7,6 +7,7 @@ from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from accounts.mixins import RoleRequiredMixin
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 from audit.services import get_audit_entries_for_instance
+from core.exports import ListExportMixin, stringify_export_value
 from core.ui import count_active_filters
 
 from .forms import AssetForm
@@ -21,11 +22,26 @@ class AssetEditAccessMixin(RoleRequiredMixin):
     allowed_roles = (ROLE_ADMIN, ROLE_EDITOR)
 
 
-class AssetListView(AssetAccessMixin, ListView):
+class AssetListView(AssetAccessMixin, ListExportMixin, ListView):
     model = Asset
     template_name = "assets/asset_list.html"
     context_object_name = "assets"
     paginate_by = 10
+    export_filename_prefix = "geraete"
+    export_headers = [
+        "Asset-ID",
+        "Bezeichnung",
+        "Kurzname",
+        "Kategorie",
+        "Hersteller",
+        "Modell",
+        "Seriennummer",
+        "Standort",
+        "Abteilung",
+        "Inbetriebnahme",
+        "Status",
+        "Notizen",
+    ]
 
     sort_options = {
         "asset_id": "asset_id",
@@ -97,9 +113,32 @@ class AssetListView(AssetAccessMixin, ListView):
                     ("department", _("Abteilung")),
                     ("-updated_at", _("Zuletzt geändert")),
                 ],
+                "export_urls": self.get_export_urls(),
             }
         )
         return context
+
+    def get_export_queryset(self):
+        return list(self.get_queryset())
+
+    def get_export_rows(self, queryset):
+        return [
+            [
+                asset.asset_id,
+                asset.name,
+                asset.short_name,
+                asset.category,
+                asset.manufacturer,
+                asset.model,
+                asset.serial_number,
+                asset.location,
+                asset.department,
+                stringify_export_value(asset.commissioning_date),
+                asset.get_status_display(),
+                asset.notes,
+            ]
+            for asset in queryset
+        ]
 
 
 class AssetDetailView(AssetAccessMixin, DetailView):

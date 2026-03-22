@@ -207,3 +207,14 @@ class QualificationViewTests(TestCase):
         self.plan.refresh_from_db()
 
         self.assertEqual(self.plan.interval_value, 6)
+
+    def test_plan_list_supports_csv_export(self):
+        self.client.force_login(self.viewer_user)
+
+        response = self.client.get(reverse("qualification:plan-list"), {"export": "csv"})
+
+        content = response.content.decode("utf-8-sig")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/csv; charset=utf-8")
+        self.assertIn("Titel", content)
+        self.assertIn("Semi annual qualification", content)

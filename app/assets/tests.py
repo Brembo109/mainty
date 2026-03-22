@@ -1,7 +1,10 @@
+from io import BytesIO
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.urls import reverse
+from openpyxl import load_workbook
 
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 
@@ -165,3 +168,38 @@ class AssetViewTests(TestCase):
             response.context["form"].errors["asset_id"],
             ["Asset mit diesem Wert für das Feld Asset-ID existiert bereits."],
         )
+
+    def test_asset_csv_export_requires_login(self):
+        response = self.client.get(reverse("assets:list"), {"export": "csv"})
+        expected = f"{reverse('accounts:login')}?next={reverse('assets:list')}%3Fexport%3Dcsv"
+        self.assertRedirects(response, expected)
+
+    def test_viewer_can_export_assets_as_csv(self):
+        self.client.force_login(self.viewer_user)
+
+        response = self.client.get(reverse("assets:list"), {"export": "csv"})
+        content = response.content.decode("utf-8-sig")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/csv; charset=utf-8")
+        self.assertIn("attachment; filename=", response["Content-Disposition"])
+        self.assertIn("Asset-ID", content)
+        self.assertIn("A-1000", content)
+
+    def test_asset_xlsx_export_contains_expected_columns_and_values(self):
+        self.client.force_login(self.viewer_user)
+
+        response = self.client.get(reverse("assets:list"), {"export": "xlsx"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response["Content-Type"],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        workbook = load_workbook(BytesIO(response.content))
+        sheet = workbook.active
+
+        self.assertEqual(sheet["A1"].value, "Asset-ID")
+        self.assertEqual(sheet["B1"].value, "Bezeichnung")
+        self.assertEqual(sheet["A2"].value, "A-1000")
+        self.assertEqual(sheet["B2"].value, "Packaging Line 1")

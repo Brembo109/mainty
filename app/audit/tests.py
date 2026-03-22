@@ -1,3 +1,5 @@
+from io import BytesIO
+
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -5,6 +7,7 @@ from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
+from openpyxl import load_workbook
 
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 from assets.models import Asset
@@ -180,3 +183,29 @@ class AuditTrailTests(TestCase):
         self.assertContains(maintenance_response, "Team Blau")
         self.assertContains(qualification_response, "QA Team")
         self.assertContains(task_response, "In Bearbeitung")
+
+    def test_viewer_can_export_filtered_audit_log_as_xlsx(self):
+        with audit_context(user=self.admin_user):
+            self.asset.status = Asset.STATUS_OUT_OF_SERVICE
+            self.asset.save()
+            self.task.title = "Andere Maßnahme"
+            self.task.save()
+
+        self.client.force_login(self.viewer_user)
+        response = self.client.get(
+            reverse("audit:list"),
+            {"model": "Asset", "action": AuditLog.ACTION_STATUS_CHANGE, "export": "xlsx"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response["Content-Type"],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        workbook = load_workbook(BytesIO(response.content))
+        sheet = workbook.active
+
+        self.assertEqual(sheet["A1"].value, "Zeitpunkt")
+        self.assertEqual(sheet["C2"].value, "Statuswechsel")
+        self.assertEqual(sheet["D2"].value, "Asset")
+        self.assertNotEqual(sheet.max_row, 1)

@@ -248,3 +248,32 @@ class MaintenanceViewTests(TestCase):
         self.plan.refresh_from_db()
 
         self.assertEqual(self.plan.interval_value, 30)
+
+    def test_filtered_csv_export_only_contains_matching_plans(self):
+        other_asset = Asset.objects.create(
+            asset_id="A-4002",
+            name="Secondary Line",
+            location="Plant B",
+            department="QA",
+            commissioning_date=date(2024, 1, 5),
+        )
+        MaintenancePlan.objects.create(
+            asset=other_asset,
+            title="Filtered out plan",
+            interval_value=14,
+            interval_unit=MaintenancePlan.INTERVAL_DAYS,
+            warning_days=2,
+            responsible_person="Other Team",
+        )
+
+        self.client.force_login(self.viewer_user)
+        response = self.client.get(
+            reverse("maintenance:plan-list"),
+            {"location": "Plant A", "active": "active", "export": "csv"},
+        )
+
+        content = response.content.decode("utf-8-sig")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/csv; charset=utf-8")
+        self.assertIn("Monthly service", content)
+        self.assertNotIn("Filtered out plan", content)

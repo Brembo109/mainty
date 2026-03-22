@@ -7,6 +7,7 @@ from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from accounts.mixins import RoleRequiredMixin
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 from audit.services import get_audit_entries_for_instance
+from core.exports import ListExportMixin, stringify_export_value
 from core.models import SystemSettings
 from core.ui import count_active_filters
 
@@ -22,11 +23,25 @@ class QualificationEditMixin(RoleRequiredMixin):
     allowed_roles = (ROLE_ADMIN, ROLE_EDITOR)
 
 
-class QualificationPlanListView(QualificationAccessMixin, ListView):
+class QualificationPlanListView(QualificationAccessMixin, ListExportMixin, ListView):
     model = QualificationPlan
     template_name = "qualification/plan_list.html"
     context_object_name = "plans"
     paginate_by = 10
+    export_filename_prefix = "qualifizierungsplaene"
+    export_headers = [
+        "Anlage",
+        "Titel",
+        "Intervallwert",
+        "Intervall-Einheit",
+        "Warnungstage",
+        "Verantwortlich",
+        "Aktiv",
+        "Letztes Ereignis",
+        "Nächste Fälligkeit",
+        "Fälligkeitsstatus",
+        "Notizen",
+    ]
 
     def get_queryset(self):
         queryset = list(super().get_queryset().select_related("asset"))
@@ -103,9 +118,31 @@ class QualificationPlanListView(QualificationAccessMixin, ListView):
                     ("due_status", _("Fälligkeitsstatus")),
                     ("-updated_at", _("Zuletzt geändert")),
                 ],
+                "export_urls": self.get_export_urls(),
             }
         )
         return context
+
+    def get_export_queryset(self):
+        return list(self.get_queryset())
+
+    def get_export_rows(self, queryset):
+        return [
+            [
+                str(plan.asset),
+                plan.title,
+                stringify_export_value(plan.interval_value),
+                plan.get_interval_unit_display(),
+                stringify_export_value(plan.warning_days),
+                plan.responsible_person,
+                stringify_export_value(plan.is_active),
+                stringify_export_value(plan.latest_event.performed_on if plan.latest_event else None),
+                stringify_export_value(plan.next_due_date),
+                plan.due_status.label,
+                plan.notes,
+            ]
+            for plan in queryset
+        ]
 
 
 class QualificationPlanDetailView(QualificationAccessMixin, DetailView):
