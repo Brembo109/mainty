@@ -2,7 +2,7 @@
 
 `mainty` is currently set up as a browser-based internal Django application with a production-oriented infrastructure foundation. The repository already includes Docker Compose, PostgreSQL, Nginx, Gunicorn, Django Templates, Bootstrap 5, and prepared HTMX integration. The application is running on the internal Ubuntu VM and is reachable through the browser.
 
-The current implementation now covers the technical platform, the authentication/authorization baseline, the initial domain model foundation, and server-rendered CRUD UI for assets, maintenance plans/events, qualification plans/events, and operational tasks. Audit trail and document workflows are not implemented yet.
+The current implementation now covers the technical platform, the authentication/authorization baseline, the initial domain model foundation, a production-oriented internal dashboard, and server-rendered CRUD UI for assets, maintenance plans/events, qualification plans/events, and operational tasks. Audit trail and document workflows are not implemented yet.
 
 ## What Is Already Implemented
 
@@ -14,7 +14,7 @@ The current implementation now covers the technical platform, the authentication
 - Base template with Bootstrap 5 and HTMX included
 - Public home page
 - Login and logout using Django Auth
-- Protected internal dashboard
+- Protected internal dashboard as the main authenticated entry point
 - Role-based access control using Django Groups
 - Three initial roles:
   - `Admin`
@@ -30,6 +30,13 @@ The current implementation now covers the technical platform, the authentication
 - Management command to bootstrap roles
 - Management command to create or update an initial admin user
 - Automated tests covering authentication and role access rules
+- Dashboard aggregation layer for:
+  - key system metrics
+  - overdue maintenance plans, qualification plans, and tasks
+  - upcoming maintenance plans, qualification plans, and tasks
+  - open and in-progress tasks
+  - recently updated operational objects
+- Configurable task warning horizon for dashboard upcoming items via `TASK_DASHBOARD_WARNING_DAYS`
 - Domain model foundation for:
   - assets
   - maintenance plans and maintenance events
@@ -83,6 +90,8 @@ The current authorization model is intentionally simple and Django-native.
 
 Navigation visibility adapts to the signed-in user, but access control is enforced server-side in the views.
 
+All three roles can access the operational dashboard in read-only form.
+
 ## Domain Model Status
 
 The following domain apps and models are already present:
@@ -108,6 +117,7 @@ These models already include:
 
 The currently implemented business UI layers are:
 
+- internal dashboard
 - assets
 - maintenance plans and maintenance events
 - qualification plans and qualification events
@@ -137,6 +147,7 @@ mainty/
     |       `-- base.py
     |-- core/
     |   |-- due_dates.py
+    |   |-- dashboard.py
     |   |-- templatetags/
     |   |   `-- mainty_ui.py
     |   |-- tests.py
@@ -239,3 +250,4 @@ mainty/
 - `0953d47` Add domain model foundation for operations
 - `83a540a` Add asset CRUD interface
 - `de31a8a` Prepare project for future i18n
+- `16ddf26` Add operational dashboard
