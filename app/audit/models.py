@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from accounts.roles import get_user_display_with_role
 from .registry import IGNORED_AUDIT_FIELDS, get_tracked_model_map
 
 
@@ -27,6 +28,8 @@ class AuditLog(models.Model):
         related_name="audit_logs",
         verbose_name=_("Benutzer"),
     )
+    user_display_snapshot = models.CharField(max_length=255, blank=True, verbose_name=_("Benutzeranzeige"))
+    user_role_snapshot = models.CharField(max_length=50, blank=True, verbose_name=_("Benutzerrolle"))
     action = models.CharField(max_length=20, choices=ACTION_CHOICES, verbose_name=_("Aktion"))
     model_name = models.CharField(max_length=100, db_index=True, verbose_name=_("Modell"))
     object_id = models.CharField(max_length=64, db_index=True, verbose_name=_("Objekt-ID"))
@@ -50,7 +53,11 @@ class AuditLog(models.Model):
 
     @property
     def user_display(self) -> str:
-        return self.user.username if self.user else str(_("System"))
+        if self.user_display_snapshot:
+            if self.user_role_snapshot:
+                return f"{self.user_display_snapshot} - {self.user_role_snapshot}"
+            return self.user_display_snapshot
+        return get_user_display_with_role(self.user) if self.user else str(_("System"))
 
     @property
     def model_label(self) -> str:

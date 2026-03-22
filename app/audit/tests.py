@@ -21,9 +21,9 @@ from tasks.models import Task
 class AuditTrailTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
-        self.admin_group = Group.objects.create(name=ROLE_ADMIN)
-        self.editor_group = Group.objects.create(name=ROLE_EDITOR)
-        self.viewer_group = Group.objects.create(name=ROLE_VIEWER)
+        self.admin_group, _ = Group.objects.get_or_create(name=ROLE_ADMIN)
+        self.editor_group, _ = Group.objects.get_or_create(name=ROLE_EDITOR)
+        self.viewer_group, _ = Group.objects.get_or_create(name=ROLE_VIEWER)
 
         self.admin_user = user_model.objects.create_user(username="admin", password="pass-12345")
         self.editor_user = user_model.objects.create_user(username="editor", password="pass-12345")
@@ -32,6 +32,15 @@ class AuditTrailTests(TestCase):
         self.admin_user.groups.add(self.admin_group)
         self.editor_user.groups.add(self.editor_group)
         self.viewer_user.groups.add(self.viewer_group)
+        self.admin_user.profile.user_code = "AD"
+        self.admin_user.profile.role = ROLE_ADMIN
+        self.admin_user.profile.save()
+        self.editor_user.profile.user_code = "ED"
+        self.editor_user.profile.role = ROLE_EDITOR
+        self.editor_user.profile.save()
+        self.viewer_user.profile.user_code = "VW"
+        self.viewer_user.profile.role = ROLE_VIEWER
+        self.viewer_user.profile.save()
 
         self.asset = Asset.objects.create(
             asset_id="A-100",
@@ -77,6 +86,7 @@ class AuditTrailTests(TestCase):
         self.assertIn("Bezeichnung: Abfülllinie", entry.new_value)
         self.assertIn("Asset-ID: A-200", entry.new_value_display)
         self.assertIn("Bezeichnung: Abfülllinie", entry.new_value_display)
+        self.assertEqual(entry.user_display, "admin [AD] - Admin")
 
     def test_update_logs_detect_changed_fields_and_status_changes(self):
         with audit_context(user=self.editor_user, change_reason="Status angepasst"):
@@ -104,6 +114,7 @@ class AuditTrailTests(TestCase):
         self.assertEqual(title_entry.new_value, "Sichtprüfung gestartet")
         self.assertEqual(status_entry.field_label, "Status")
         self.assertEqual(title_entry.field_label, "Titel")
+        self.assertEqual(status_entry.user_display, "editor [ED] - Benutzer")
 
     def test_existing_summary_values_are_rendered_with_readable_labels(self):
         entry = AuditLog.objects.create(

@@ -49,9 +49,9 @@ class QualificationViewTests(TestCase):
         self.settings.save()
 
         user_model = get_user_model()
-        self.admin_group = Group.objects.create(name=ROLE_ADMIN)
-        self.editor_group = Group.objects.create(name=ROLE_EDITOR)
-        self.viewer_group = Group.objects.create(name=ROLE_VIEWER)
+        self.admin_group, _ = Group.objects.get_or_create(name=ROLE_ADMIN)
+        self.editor_group, _ = Group.objects.get_or_create(name=ROLE_EDITOR)
+        self.viewer_group, _ = Group.objects.get_or_create(name=ROLE_VIEWER)
         self.admin_user = user_model.objects.create_user("qualification_admin", password="pass-12345")
         self.editor_user = user_model.objects.create_user("qualification_editor", password="pass-12345")
         self.viewer_user = user_model.objects.create_user("qualification_viewer", password="pass-12345")

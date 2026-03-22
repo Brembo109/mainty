@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Benutzer" %} | mainty{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h1 class="h2 mb-1">{% trans "Benutzerverwaltung" %}</h1>
+      <p class="text-secondary mb-0">{% trans "Interne Benutzer, Rollen und Kürzel verwalten." %}</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'accounts:user-create' %}">{% trans "Benutzer anlegen" %}</a>
+  </div>
+
+  <div class="card border-0 shadow-sm mb-4 filter-panel">
+    <div class="card-body p-4">
+      <form method="get" class="row g-3 align-items-end">
+        <div class="col-12 col-xl-5">
+          <label class="form-label" for="searchInput">{% trans "Suche" %}</label>
+          <input class="form-control {% if search_query %}filter-active{% endif %}" id="searchInput" type="search" name="q" value="{{ search_query }}" placeholder="{% trans 'Suche nach Name, E-Mail, Benutzername oder Kürzel ...' %}" />
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <label class="form-label" for="roleSelect">{% trans "Rolle" %}</label>
+          <select class="form-select {% if current_role %}filter-active{% endif %}" id="roleSelect" name="role">
+            <option value="">{% trans "Alle" %}</option>
+            {% for value, label in role_choices %}
+              <option value="{{ value }}" {% if current_role == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <label class="form-label" for="activeSelect">{% trans "Status" %}</label>
+          <select class="form-select {% if current_active %}filter-active{% endif %}" id="activeSelect" name="active">
+            <option value="">{% trans "Alle" %}</option>
+            <option value="active" {% if current_active == "active" %}selected{% endif %}>{% trans "Aktiv" %}</option>
+            <option value="inactive" {% if current_active == "inactive" %}selected{% endif %}>{% trans "Inaktiv" %}</option>
+          </select>
+        </div>
+        <div class="col-12 d-flex gap-2">
+          <button class="btn btn-primary" type="submit">{% trans "Filter anwenden" %}</button>
+          <a class="btn btn-outline-secondary" href="{% url 'accounts:user-list' %}">{% trans "Zurücksetzen" %}</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% blocktrans count count=result_count asvar result_text %}{{ count }} Benutzer gefunden{% plural %}{{ count }} Benutzer gefunden{% endblocktrans %}
+  {% include "includes/list_meta.html" with result_text=result_text %}
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>{% trans "Name" %}</th>
+            <th>{% trans "Benutzername" %}</th>
+            <th>{% trans "E-Mail" %}</th>
+            <th>{% trans "Kürzel" %}</th>
+            <th>{% trans "Rolle" %}</th>
+            <th>{% trans "Status" %}</th>
+            <th class="text-end">{% trans "Aktionen" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for managed_user in users %}
+            <tr>
+              <td>
+                <div class="fw-semibold">{{ managed_user.get_full_name|default:managed_user.username }}</div>
+                {% if managed_user.profile and managed_user.profile.user_code %}
+                  <div class="small text-secondary">[{{ managed_user.profile.user_code }}]</div>
+                {% endif %}
+              </td>
+              <td>{{ managed_user.username }}</td>
+              <td>{{ managed_user.email|default:"-" }}</td>
+              <td>{{ managed_user.profile.user_code|default:"-" }}</td>
+              <td><span class="badge text-bg-light border">{{ managed_user.profile.get_role_display }}</span></td>
+              <td>
+                {% if managed_user.is_active %}
+                  <span class="badge text-bg-success">{% trans "Aktiv" %}</span>
+                {% else %}
+                  <span class="badge text-bg-secondary">{% trans "Inaktiv" %}</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-secondary" href="{% url 'accounts:user-edit' managed_user.pk %}">{% trans "Bearbeiten" %}</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" class="text-center py-4 text-secondary">{% trans "Keine Benutzer für die aktuelle Filterung gefunden." %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% trans "Benutzer Seiten" as pagination_aria_label %}
+  {% include "includes/pagination.html" with aria_label=pagination_aria_label %}
+{% endblock %}

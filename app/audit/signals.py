@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.db.models import signals
 from django.utils import timezone
 
+from accounts.roles import get_primary_role_label, get_user_code, get_user_display_name
 from audit.context import get_current_audit_user, get_current_change_reason
 
 from .models import AuditLog
@@ -30,9 +31,12 @@ def cache_original_instance(sender, instance, **kwargs):
 def write_save_audit_logs(sender, instance, created, **kwargs):
     user = get_current_audit_user()
     change_reason = getattr(instance, "_audit_change_reason", "") or get_current_change_reason()
+    user_snapshot = _build_user_snapshot(user)
     if created:
         AuditLog.objects.create(
             user=user,
+            user_display_snapshot=user_snapshot["display"],
+            user_role_snapshot=user_snapshot["role"],
             action=AuditLog.ACTION_CREATE,
             model_name=sender.__name__,
             object_id=str(instance.pk),
@@ -54,6 +58,8 @@ def write_save_audit_logs(sender, instance, created, **kwargs):
             continue
         AuditLog.objects.create(
             user=user,
+            user_display_snapshot=user_snapshot["display"],
+            user_role_snapshot=user_snapshot["role"],
             action=(
                 AuditLog.ACTION_STATUS_CHANGE if field.name in STATUS_LIKE_FIELDS else AuditLog.ACTION_UPDATE
             ),
@@ -68,8 +74,12 @@ def write_save_audit_logs(sender, instance, created, **kwargs):
 
 
 def write_delete_audit_log(sender, instance, **kwargs):
+    user = get_current_audit_user()
+    user_snapshot = _build_user_snapshot(user)
     AuditLog.objects.create(
-        user=get_current_audit_user(),
+        user=user,
+        user_display_snapshot=user_snapshot["display"],
+        user_role_snapshot=user_snapshot["role"],
         action=AuditLog.ACTION_DELETE,
         model_name=sender.__name__,
         object_id=str(instance.pk),
@@ -141,3 +151,17 @@ def _build_summary(instance):
 
 def _truncate(value: str, limit: int = 255) -> str:
     return value[:limit]
+
+
+def _build_user_snapshot(user):
+    if user is None:
+        return {"display": "", "role": ""}
+
+    display = get_user_display_name(user)
+    user_code = get_user_code(user)
+    if user_code:
+        display = f"{display} [{user_code}]"
+    return {
+        "display": display,
+        "role": get_primary_role_label(user) or "",
+    }

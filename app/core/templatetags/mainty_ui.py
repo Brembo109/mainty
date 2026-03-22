@@ -89,6 +89,8 @@ def nav_link_active(context, target: str):
         return ""
     current_url_name = resolver_match.view_name or ""
     current_app_name = resolver_match.app_name or ""
+    if target.endswith("*"):
+        return "active" if current_url_name.startswith(target[:-1]) else ""
     if (
         target == current_app_name
         or current_url_name == target

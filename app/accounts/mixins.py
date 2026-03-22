@@ -2,7 +2,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from django.utils.translation import gettext_lazy as _
 
-from .roles import normalize_role_name
+from .roles import has_role, normalize_role_name
 
 
 class RoleRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -18,7 +18,7 @@ class RoleRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         user = self.request.user
         if user.is_superuser:
             return True
-        return any(user.groups.filter(name=role_name).exists() for role_name in self.get_allowed_roles())
+        return has_role(user, *self.get_allowed_roles())
 
     def handle_no_permission(self):
         if self.request.user.is_authenticated:

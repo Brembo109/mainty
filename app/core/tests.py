@@ -24,9 +24,9 @@ class CoreViewsTests(TestCase):
         self.media_root = tempfile.mkdtemp()
         self.today = timezone.localdate()
         self.user_model = get_user_model()
-        self.admin_group = Group.objects.create(name=ROLE_ADMIN)
-        self.editor_group = Group.objects.create(name=ROLE_EDITOR)
-        self.viewer_group = Group.objects.create(name=ROLE_VIEWER)
+        self.admin_group, _ = Group.objects.get_or_create(name=ROLE_ADMIN)
+        self.editor_group, _ = Group.objects.get_or_create(name=ROLE_EDITOR)
+        self.viewer_group, _ = Group.objects.get_or_create(name=ROLE_VIEWER)
 
         self.admin_user = self.user_model.objects.create_user("admin_user", password="pass-12345")
         self.editor_user = self.user_model.objects.create_user("editor_user", password="pass-12345")

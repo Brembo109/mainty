@@ -30,9 +30,6 @@
                 <img src="{% static app_logo_static_path %}" alt="{% trans 'mainty Logo' %}" class="mainty-app-logo" />
                 <span>mainty</span>
               </a>
-              {% if request.user.is_authenticated %}
-                <span class="text-secondary small">{% trans "Interne Betriebsanwendung" %}</span>
-              {% endif %}
             </div>
             <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-lg-end gap-2 gap-sm-3">
               {% if request.user.is_authenticated %}
@@ -109,6 +106,12 @@
                   <a class="nav-link {% nav_link_active 'audit' %}" href="{% url 'audit:list' %}">{% trans "Audit" %}</a>
                 </li>
                 {% if can_manage_users %}
+                  <li class="nav-item">
+                    <a class="nav-link {% nav_link_active 'accounts:user-*' %}" href="{% url 'accounts:user-list' %}">{% trans "Benutzer" %}</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link {% nav_link_active 'accounts:permission-*' %}" href="{% url 'accounts:permission-matrix' %}">{% trans "Rollen & Rechte" %}</a>
+                  </li>
                   <li class="nav-item">
                     <a class="nav-link {% nav_link_active 'core:settings' %}" href="{% url 'core:settings' %}">{% trans "Einstellungen" %}</a>
                   </li>

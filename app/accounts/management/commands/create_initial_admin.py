@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand, CommandError
 
+from accounts.models import UserProfile
 from accounts.roles import ROLE_ADMIN
 
 
@@ -31,6 +32,9 @@ class Command(BaseCommand):
         user.set_password(options["password"])
         user.save()
         user.groups.add(admin_group)
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile.role = ROLE_ADMIN
+        profile.save()
 
         state = "Created" if created else "Updated"
         self.stdout.write(self.style.SUCCESS(f"{state} admin user: {user.username}"))

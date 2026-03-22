@@ -4,6 +4,7 @@ from django.contrib.auth.admin import GroupAdmin as DjangoGroupAdmin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.contrib.auth.models import Group
 
+from .models import UserProfile
 from .roles import get_primary_role
 
 
@@ -19,6 +20,7 @@ class UserAdmin(DjangoUserAdmin):
         "email",
         "first_name",
         "last_name",
+        "user_code",
         "is_staff",
         "is_active",
         "primary_role",
@@ -30,6 +32,11 @@ class UserAdmin(DjangoUserAdmin):
     def primary_role(self, obj):
         return get_primary_role(obj) or "-"
 
+    @admin.display(description="Kürzel")
+    def user_code(self, obj):
+        profile = getattr(obj, "profile", None)
+        return getattr(profile, "user_code", "") or "-"
+
 
 admin.site.unregister(Group)
 
@@ -37,3 +44,10 @@ admin.site.unregister(Group)
 @admin.register(Group)
 class GroupAdmin(DjangoGroupAdmin):
     list_display = ("name",)
+
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "user_code", "role")
+    list_filter = ("role",)
+    search_fields = ("user__username", "user__first_name", "user__last_name", "user_code")
