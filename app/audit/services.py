@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 
 from .models import AuditLog
+from .registry import get_tracked_model_choices
 
 
 def get_audit_entries_for_instance(instance, *, limit: int | None = None):
@@ -30,7 +31,11 @@ def get_audit_list_queryset(*, model_name: str = "", user_id: str = "", action: 
 def get_audit_filter_choices():
     user_model = get_user_model()
     return {
-        "model_choices": AuditLog.objects.order_by("model_name").values_list("model_name", flat=True).distinct(),
+        "model_choices": [
+            (model_name, label)
+            for model_name, label in get_tracked_model_choices()
+            if AuditLog.objects.filter(model_name=model_name).exists()
+        ],
         "user_choices": user_model.objects.filter(audit_logs__isnull=False)
         .order_by("username")
         .values_list("id", "username")

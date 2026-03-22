@@ -2,23 +2,97 @@ body {
   min-height: 100vh;
 }
 
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+}
+
 .navbar-brand {
   letter-spacing: 0.04em;
+  font-size: 1.2rem;
+}
+
+.mainty-app-logo {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+}
+
+.company-logo-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.company-logo {
+  display: block;
+  width: auto;
+  object-fit: contain;
+}
+
+.company-logo-header {
+  max-height: 1.6rem;
+  max-width: 7rem;
+}
+
+.company-logo-login {
+  max-height: 3rem;
+  max-width: 11rem;
+}
+
+.settings-company-logo {
+  max-height: 4rem;
+  max-width: 14rem;
+  object-fit: contain;
+}
+
+.company-logo-preview {
+  min-height: 5.5rem;
+}
+
+.login-branding {
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(248, 249, 250, 0.94));
 }
 
 .card {
   border-radius: 1rem;
 }
 
-.navbar .nav-link {
+.site-main-nav {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.site-main-nav .nav-link {
   border-radius: 999px;
   font-weight: 500;
   padding-inline: 0.8rem;
 }
 
-.navbar .nav-link.active {
+.site-main-nav .nav-link.active {
   background-color: var(--bs-primary-bg-subtle);
   color: var(--bs-primary-text-emphasis);
+}
+
+.site-header-top .btn,
+.site-main-nav .navbar-toggler {
+  border-radius: 999px;
+}
+
+@media (max-width: 991.98px) {
+  .site-main-nav .navbar-nav {
+    padding-bottom: 1rem;
+  }
+
+  .company-logo-header {
+    max-width: 5.5rem;
+  }
 }
 
 .filter-panel {

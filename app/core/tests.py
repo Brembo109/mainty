@@ -1,9 +1,12 @@
+import shutil
+import tempfile
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.test import override_settings
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
 
@@ -18,6 +21,7 @@ from tasks.models import Task
 
 class CoreViewsTests(TestCase):
     def setUp(self):
+        self.media_root = tempfile.mkdtemp()
         self.today = timezone.localdate()
         self.user_model = get_user_model()
         self.admin_group = Group.objects.create(name=ROLE_ADMIN)
@@ -112,6 +116,21 @@ class CoreViewsTests(TestCase):
             responsible_user=self.viewer_user,
         )
 
+    def tearDown(self):
+        shutil.rmtree(self.media_root, ignore_errors=True)
+        super().tearDown()
+
+    def _build_test_logo(self, name="company-logo.png"):
+        return SimpleUploadedFile(
+            name,
+            (
+                b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+                b"\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc```\x00\x00"
+                b"\x00\x04\x00\x01\xf6\x178U\x00\x00\x00\x00IEND\xaeB`\x82"
+            ),
+            content_type="image/png",
+        )
+
     def test_homepage_returns_ok(self):
         response = self.client.get(reverse("core:home"))
         self.assertEqual(response.status_code, 200)
@@ -151,28 +170,64 @@ class CoreViewsTests(TestCase):
         self.assertEqual(admin_response.status_code, 200)
 
     def test_settings_values_are_saved_correctly(self):
-        self.client.force_login(self.admin_user)
-        response = self.client.post(
-            reverse("core:settings"),
-            {
-                "default_maintenance_warning_days": 9,
-                "default_maintenance_interval_value": 45,
-                "default_maintenance_interval_unit": MaintenancePlan.INTERVAL_DAYS,
-                "default_qualification_warning_days": 21,
-                "default_qualification_interval_value": 6,
-                "default_qualification_interval_unit": QualificationPlan.INTERVAL_MONTHS,
-            },
-        )
+        with self.settings(MEDIA_ROOT=self.media_root):
+            self.client.force_login(self.admin_user)
+            response = self.client.post(
+                reverse("core:settings"),
+                {
+                    "default_maintenance_warning_days": 9,
+                    "default_maintenance_interval_value": 45,
+                    "default_maintenance_interval_unit": MaintenancePlan.INTERVAL_DAYS,
+                    "default_qualification_warning_days": 21,
+                    "default_qualification_interval_value": 6,
+                    "default_qualification_interval_unit": QualificationPlan.INTERVAL_MONTHS,
+                },
+            )
 
-        self.assertRedirects(response, reverse("core:settings"))
-        settings = SystemSettings.load()
-        self.assertEqual(settings.default_maintenance_warning_days, 9)
-        self.assertEqual(settings.default_maintenance_interval_value, 45)
-        self.assertEqual(settings.default_qualification_warning_days, 21)
-        self.assertEqual(settings.default_qualification_interval_value, 6)
+            self.assertRedirects(response, reverse("core:settings"))
+            settings = SystemSettings.load()
+            self.assertEqual(settings.default_maintenance_warning_days, 9)
+            self.assertEqual(settings.default_maintenance_interval_value, 45)
+            self.assertEqual(settings.default_qualification_warning_days, 21)
+            self.assertEqual(settings.default_qualification_interval_value, 6)
 
-        audit_entry = AuditLog.objects.filter(model_name="SystemSettings").latest("id")
-        self.assertEqual(audit_entry.user, self.admin_user)
+            audit_entry = AuditLog.objects.filter(model_name="SystemSettings").latest("id")
+            self.assertEqual(audit_entry.user, self.admin_user)
+
+    def test_admin_can_upload_company_logo_in_settings(self):
+        with self.settings(MEDIA_ROOT=self.media_root):
+            self.client.force_login(self.admin_user)
+            response = self.client.post(
+                reverse("core:settings"),
+                {
+                    "default_maintenance_warning_days": 7,
+                    "default_maintenance_interval_value": 30,
+                    "default_maintenance_interval_unit": MaintenancePlan.INTERVAL_DAYS,
+                    "default_qualification_warning_days": 14,
+                    "default_qualification_interval_value": 12,
+                    "default_qualification_interval_unit": QualificationPlan.INTERVAL_MONTHS,
+                    "company_logo": self._build_test_logo(),
+                },
+            )
+
+            self.assertRedirects(response, reverse("core:settings"))
+            settings = SystemSettings.load()
+            self.assertTrue(settings.company_logo.name.startswith("branding/"))
+
+    def test_login_page_and_header_show_company_logo_when_configured(self):
+        with self.settings(MEDIA_ROOT=self.media_root):
+            settings = SystemSettings.load()
+            settings.company_logo.save("brand-header.png", self._build_test_logo("brand-header.png"), save=True)
+
+            login_response = self.client.get(reverse("accounts:login"))
+            self.assertEqual(login_response.status_code, 200)
+            self.assertContains(login_response, settings.company_logo.url)
+            self.assertContains(login_response, "img/mainty-logo.svg")
+
+            self.client.force_login(self.viewer_user)
+            dashboard_response = self.client.get(reverse("core:dashboard"))
+            self.assertContains(dashboard_response, settings.company_logo.url)
+            self.assertContains(dashboard_response, "img/mainty-logo.svg")
 
     def test_viewer_cannot_access_editor_page(self):
         self.client.force_login(self.viewer_user)

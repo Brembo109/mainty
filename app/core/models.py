@@ -15,6 +15,11 @@ class TimeStampedModel(models.Model):
 
 class SystemSettings(TimeStampedModel):
     singleton_enforcer = models.BooleanField(default=True, editable=False, unique=True)
+    company_logo = models.ImageField(
+        upload_to="branding/",
+        blank=True,
+        verbose_name=_("Firmenlogo"),
+    )
     default_maintenance_warning_days = models.PositiveIntegerField(
         default=7,
         verbose_name=_("Standard Warnungstage Wartung"),
@@ -57,9 +62,21 @@ class SystemSettings(TimeStampedModel):
             raise ValidationError({"singleton_enforcer": _("Dieser Wert darf nicht geändert werden.")})
 
     def save(self, *args, **kwargs):
+        old_logo_name = ""
+        if self.pk:
+            old_instance = type(self).objects.filter(pk=self.pk).only("company_logo").first()
+            if old_instance and old_instance.company_logo:
+                old_logo_name = old_instance.company_logo.name
+
         self.pk = 1
         self.singleton_enforcer = True
-        return super().save(*args, **kwargs)
+        result = super().save(*args, **kwargs)
+
+        new_logo_name = self.company_logo.name if self.company_logo else ""
+        if old_logo_name and old_logo_name != new_logo_name:
+            self.company_logo.storage.delete(old_logo_name)
+
+        return result
 
     @classmethod
     def load(cls):

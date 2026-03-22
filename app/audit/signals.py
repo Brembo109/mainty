@@ -7,7 +7,7 @@ from django.utils import timezone
 from audit.context import get_current_audit_user, get_current_change_reason
 
 from .models import AuditLog
-from .registry import STATUS_LIKE_FIELDS, TRACKED_MODELS
+from .registry import IGNORED_AUDIT_FIELDS, STATUS_LIKE_FIELDS, TRACKED_MODELS
 
 
 def register_audit_signals():
@@ -85,6 +85,8 @@ def _tracked_fields(model):
     for field in model._meta.concrete_fields:
         if field.primary_key:
             continue
+        if field.name in IGNORED_AUDIT_FIELDS:
+            continue
         if getattr(field, "auto_now", False) or getattr(field, "auto_now_add", False):
             continue
         fields.append(field)
@@ -133,7 +135,7 @@ def _build_summary(instance):
         raw_value = _raw_field_value(instance, field)
         if raw_value in (None, ""):
             continue
-        parts.append(f"{field.name}: {serialized}")
+        parts.append(f"{field.verbose_name}: {serialized}")
     return "; ".join(parts)
 
 

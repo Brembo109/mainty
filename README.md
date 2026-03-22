@@ -2,7 +2,7 @@
 
 > Disclaimer: This project was entirely vibecoded with Codex.
 
-Internal browser-based Django application for managing assets, maintenance, qualification cycles, operational tasks, administratively managed system defaults, and traceable audit history. The repository provides a production-oriented setup with PostgreSQL, Docker, Nginx, Gunicorn, role-based access, a dashboard, and a read-only audit trail.
+Internal browser-based Django application for managing assets, maintenance, qualification cycles, operational tasks, administratively managed system defaults, practical list exports, traceable audit history, and configurable company branding. The repository provides a production-oriented setup with PostgreSQL, Docker, Nginx, Gunicorn, role-based access, a dashboard, media handling, and a read-only audit trail.
 
 ## Stack
 
@@ -16,7 +16,7 @@ Internal browser-based Django application for managing assets, maintenance, qual
 - HTMX
 - Bootstrap 5
 - Django Groups based role model
-- Assets, maintenance, qualification, tasks, dashboard, audit trail, and system settings
+- Assets, maintenance, qualification, tasks, dashboard, audit trail, system settings, exports, and branding
 
 ## Project Structure
 
@@ -107,6 +107,7 @@ Internal browser-based Django application for managing assets, maintenance, qual
 - Domain data models are available in Django admin for internal maintenance of master data.
 - The UI uses shared template helpers for consistent badges, filters, pagination, and detail-page layout.
 - Global defaults for new maintenance and qualification plans are managed through the regular mainty UI and remain overridable per plan.
+- Branding is split into a fixed Mainty app logo and an optional company logo managed through system settings.
 
 ## Current Functional Scope
 
@@ -114,15 +115,17 @@ Internal browser-based Django application for managing assets, maintenance, qual
 - Role-based access with `Admin`, `Editor`, and `Viewer`
 - Dashboard as main landing page after login
 - Admin-managed system settings for default maintenance and qualification plan values
+- Admin-managed optional company logo for header and login page branding
 - CRUD for:
   - assets
   - maintenance plans and events
   - qualification plans and events
   - tasks
+- Filter-aware CSV and XLSX exports for assets, maintenance plans, qualification plans, tasks, and audit log
 - Global audit trail and object-specific change history
 - Audit logging for system settings changes
 - German UI with i18n-ready structure
-- Shared status badges, filter layout, pagination, and detail-page structure across modules
+- Shared status badges, filter layout, pagination, detail-page structure, and branded header/login layout across modules
 
 ## Roles and Permissions
 
@@ -156,8 +159,9 @@ docker compose exec web python manage.py migrate
 - Set `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` to the correct internal hostnames or IP addresses.
 - `TASK_DASHBOARD_WARNING_DAYS` controls how many days in advance open tasks are shown in the dashboard warning section.
 - Maintenance and qualification plan creation use admin-managed defaults from `/settings/`; changing these defaults only affects future records.
+- Uploaded company logos are stored as media files and served through Django in development and Nginx in the current Docker setup.
 - Nginx is configured as a reverse proxy in front of Gunicorn.
-- Static files are provided through a shared Docker volume.
+- Static files and uploaded media files are provided through shared Docker volumes.
 - For real deployment, add backups, monitoring, TLS for the internal network, and proper secret management.
 - Use explicit role assignment after user creation. Authentication alone does not grant internal access.
 - Audit entries are intentionally read-only and exposed through both Django admin and the application UI.
@@ -168,4 +172,3 @@ docker compose exec web python manage.py migrate
 - Celery
 - Document management
 - Notifications / reminder jobs
-- Export functionality

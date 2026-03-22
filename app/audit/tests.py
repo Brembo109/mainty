@@ -73,8 +73,10 @@ class AuditTrailTests(TestCase):
         entry = AuditLog.objects.get(model_name="Asset", object_id=str(asset.pk), action=AuditLog.ACTION_CREATE)
         self.assertEqual(entry.user, self.admin_user)
         self.assertEqual(entry.change_reason, "Neue Anlage übernommen")
-        self.assertIn("asset_id: A-200", entry.new_value)
-        self.assertIn("name: Abfülllinie", entry.new_value)
+        self.assertIn("Asset-ID: A-200", entry.new_value)
+        self.assertIn("Bezeichnung: Abfülllinie", entry.new_value)
+        self.assertIn("Asset-ID: A-200", entry.new_value_display)
+        self.assertIn("Bezeichnung: Abfülllinie", entry.new_value_display)
 
     def test_update_logs_detect_changed_fields_and_status_changes(self):
         with audit_context(user=self.editor_user, change_reason="Status angepasst"):
@@ -100,6 +102,30 @@ class AuditTrailTests(TestCase):
         self.assertEqual(title_entry.action, AuditLog.ACTION_UPDATE)
         self.assertEqual(title_entry.old_value, "Sichtprüfung durchführen")
         self.assertEqual(title_entry.new_value, "Sichtprüfung gestartet")
+        self.assertEqual(status_entry.field_label, "Status")
+        self.assertEqual(title_entry.field_label, "Titel")
+
+    def test_existing_summary_values_are_rendered_with_readable_labels(self):
+        entry = AuditLog.objects.create(
+            user=self.admin_user,
+            action=AuditLog.ACTION_CREATE,
+            model_name="SystemSettings",
+            object_id="1",
+            object_repr="Systemeinstellungen",
+            new_value=(
+                "singleton_enforcer: Ja; "
+                "default_maintenance_warning_days: 7; "
+                "default_maintenance_interval_value: 30; "
+                "default_maintenance_interval_unit: Tage; "
+                "default_qualification_warning_days: 14"
+            ),
+        )
+
+        self.assertNotIn("singleton_enforcer", entry.new_value_display)
+        self.assertIn("Standard Warnungstage Wartung: 7", entry.new_value_display)
+        self.assertIn("Standard Intervallwert Wartung: 30", entry.new_value_display)
+        self.assertIn("Standard Intervall-Einheit Wartung: Tage", entry.new_value_display)
+        self.assertIn("Standard Warnungstage Qualifizierung: 14", entry.new_value_display)
 
     def test_request_updates_use_authenticated_user_for_audit(self):
         self.client.force_login(self.editor_user)

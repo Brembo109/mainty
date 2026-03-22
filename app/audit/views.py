@@ -67,12 +67,12 @@ class AuditLogListView(RoleRequiredMixin, ListExportMixin, ListView):
                 stringify_export_value(entry.timestamp),
                 entry.user_display,
                 entry.get_action_display(),
-                entry.model_name,
+                entry.model_label,
                 entry.object_id,
                 entry.object_repr,
-                entry.field_name,
-                entry.old_value,
-                entry.new_value,
+                entry.field_label,
+                entry.old_value_display,
+                entry.new_value_display,
                 entry.change_reason,
             ]
             for entry in queryset

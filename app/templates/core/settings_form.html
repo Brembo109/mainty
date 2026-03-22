@@ -14,7 +14,7 @@
 
   <div class="card border-0 shadow-sm">
     <div class="card-body p-4 p-lg-5">
-      <form method="post" novalidate>
+      <form method="post" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
         {% if form.non_field_errors %}
           <div class="alert alert-danger">
@@ -23,6 +23,27 @@
         {% endif %}
 
         <div class="row g-4">
+          <div class="col-12">
+            <div class="border rounded-4 p-4 h-100">
+              <h2 class="h5 mb-4">{% trans "Branding" %}</h2>
+              <div class="row g-4 align-items-start">
+                <div class="col-lg-5">
+                  {% include "includes/form_field.html" with field=form.company_logo %}
+                </div>
+                <div class="col-lg-7">
+                  <div class="small text-secondary mb-2">{% trans "Aktuelle Vorschau" %}</div>
+                  {% if form.instance.company_logo %}
+                    <div class="border rounded-4 bg-body-tertiary p-3 d-inline-flex align-items-center justify-content-center company-logo-preview">
+                      <img src="{{ form.instance.company_logo.url }}" alt="{% trans 'Aktuelles Firmenlogo' %}" class="img-fluid settings-company-logo" />
+                    </div>
+                  {% else %}
+                    <div class="text-secondary">{% trans "Kein Firmenlogo hinterlegt." %}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="col-12">
             <div class="border rounded-4 p-4 h-100">
               <h2 class="h5 mb-4">{% trans "Standardwerte Wartung" %}</h2>

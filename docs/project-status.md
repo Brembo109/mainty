@@ -2,7 +2,7 @@
 
 `mainty` is currently set up as a browser-based internal Django application with a production-oriented infrastructure foundation. The repository already includes Docker Compose, PostgreSQL, Nginx, Gunicorn, Django Templates, Bootstrap 5, and prepared HTMX integration. The application is running on the internal Ubuntu VM and is reachable through the browser.
 
-The current implementation now covers the technical platform, the authentication/authorization baseline, the initial domain model foundation, a production-oriented internal dashboard, a central audit trail, an administrative system settings area, a cross-module UX consistency layer, and server-rendered CRUD UI for assets, maintenance plans/events, qualification plans/events, and operational tasks. Document workflows are not implemented yet.
+The current implementation now covers the technical platform, the authentication/authorization baseline, the initial domain model foundation, a production-oriented internal dashboard, a central audit trail, an administrative system settings area, filter-aware operational exports, configurable branding with company logo support, a cross-module UX consistency layer, and server-rendered CRUD UI for assets, maintenance plans/events, qualification plans/events, and operational tasks. Document workflows are not implemented yet.
 
 ## What Is Already Implemented
 
@@ -16,6 +16,8 @@ The current implementation now covers the technical platform, the authentication
 - Login and logout using Django Auth
 - Protected internal dashboard as the main authenticated entry point
 - Admin-only system settings page in the regular mainty UI
+- Fixed Mainty app logo in header and login page
+- Optional company logo upload in the regular mainty UI
 - Role-based access control using Django Groups
 - Three initial roles:
   - `Admin`
@@ -49,6 +51,18 @@ The current implementation now covers the technical platform, the authentication
   - interval unit
 - Prefilled maintenance and qualification plan create forms using the current system settings
 - Independent per-record persistence after form submission, so later settings changes do not modify existing plans
+- Media-backed company logo setting with:
+  - optional upload via `/settings/`
+  - preview in the settings UI
+  - display in the login page
+  - display in the top application header
+  - audit coverage through the existing system settings tracking
+- Filter-aware CSV and XLSX exports for:
+  - assets
+  - maintenance plans
+  - qualification plans
+  - tasks
+  - audit log
 - Central audit trail with:
   - dedicated `audit` app
   - global `/audit/` page with filters, search, and pagination
@@ -66,6 +80,8 @@ The current implementation now covers the technical platform, the authentication
   - consistent table spacing, action button patterns, and empty states
   - active navigation highlighting for the current module
   - improved detail-page structure and status presentation
+  - two-row header layout with separated account area and module navigation
+  - branding-aware login page and header presentation
 - Domain model foundation for:
   - assets
   - maintenance plans and maintenance events
@@ -106,6 +122,7 @@ The current implementation now covers the technical platform, the authentication
   - unified task status badges and row emphasis
   - linked task section on the asset detail page
 - Environment-based cookie security settings for the current internal HTTP phase and later HTTPS switch-over
+- Shared Docker/Nginx media handling for uploaded company branding files
 
 ## Authorization Model
 
@@ -167,6 +184,13 @@ The shared UX layer additionally provides:
 - reusable list metadata and pagination includes
 - common table/filter styling in the shared stylesheet
 - consistent scanability for list, detail, dashboard, and audit pages
+- a two-row branded top area with fixed app branding and optional company branding
+
+The export layer additionally provides:
+
+- reusable CSV/XLSX response helpers
+- filter-aware exports from the existing list querysets
+- German column labels and timestamped filenames
 
 The currently implemented business UI layers are:
 
@@ -177,6 +201,7 @@ The currently implemented business UI layers are:
 - maintenance plans and maintenance events
 - qualification plans and qualification events
 - operational tasks
+- operational list exports
 
 ## Current Repository Structure
 
@@ -201,8 +226,10 @@ mainty/
     |   `-- settings/
     |       `-- base.py
     |-- core/
+    |   |-- context_processors.py
     |   |-- due_dates.py
     |   |-- dashboard.py
+    |   |-- exports.py
     |   |-- forms.py
     |   |-- intervals.py
     |   |-- ui.py
@@ -210,6 +237,7 @@ mainty/
     |   |   `-- mainty_ui.py
     |   |-- migrations/
     |   |   `-- 0001_initial.py
+    |   |   `-- 0002_systemsettings_company_logo.py
     |   |-- tests.py
     |   |-- urls.py
     |   `-- views.py
@@ -312,7 +340,8 @@ mainty/
     |       |-- editor_demo.html
     |       `-- admin_demo.html
     `-- static/
-        `-- css/app.css
+        |-- css/app.css
+        `-- img/mainty-logo.svg
 ```
 
 ## What Is Not Implemented Yet
@@ -336,3 +365,5 @@ mainty/
 - `c8d8add` Add audit trail system
 - `101319e` Refine UI consistency and docs
 - `2b01f07` Adjust README disclaimer language
+- `eb33267` Add system settings defaults
+- `94df36c` Add filtered list exports

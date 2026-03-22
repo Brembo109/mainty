@@ -14,18 +14,18 @@
               <div>
                 <span class="badge {{ entry.action|audit_action_badge_class }}">{{ entry.get_action_display }}</span>
                 {% if entry.field_name %}
-                  <span class="small text-secondary ms-2">{{ entry.field_name }}</span>
+                  <span class="small text-secondary ms-2">{{ entry.field_label }}</span>
                 {% endif %}
               </div>
               <div class="small text-secondary text-nowrap">{{ entry.timestamp|date:"d.m.Y H:i:s" }}</div>
             </div>
             <div class="small text-secondary mb-1">{{ entry.user_display }}</div>
             {% if entry.field_name %}
-              <div>{{ entry.old_value|default:"-" }} &rarr; {{ entry.new_value|default:"-" }}</div>
-            {% elif entry.new_value %}
-              <div>{{ entry.new_value }}</div>
+              <div>{{ entry.old_value_display|default:"-" }} &rarr; {{ entry.new_value_display|default:"-" }}</div>
+            {% elif entry.new_value_display %}
+              <div>{{ entry.new_value_display }}</div>
             {% else %}
-              <div>{{ entry.old_value|default:"-" }}</div>
+              <div>{{ entry.old_value_display|default:"-" }}</div>
             {% endif %}
             {% if entry.change_reason %}
               <div class="small text-secondary mt-2">{% trans "Grund" %}: {{ entry.change_reason }}</div>

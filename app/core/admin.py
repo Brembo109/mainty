@@ -7,6 +7,7 @@ from .models import SystemSettings
 class SystemSettingsAdmin(admin.ModelAdmin):
     list_display = (
         "id",
+        "company_logo",
         "default_maintenance_interval_value",
         "default_maintenance_interval_unit",
         "default_qualification_interval_value",
