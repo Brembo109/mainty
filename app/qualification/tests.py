@@ -9,6 +9,7 @@ from django.utils import timezone
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 from assets.models import Asset
 from core.due_dates import DUE_STATUS_WARNING
+from core.models import SystemSettings
 
 from .models import QualificationEvent, QualificationPlan
 
@@ -41,6 +42,12 @@ class QualificationPlanModelTests(TestCase):
 
 class QualificationViewTests(TestCase):
     def setUp(self):
+        self.settings = SystemSettings.load()
+        self.settings.default_qualification_interval_value = 9
+        self.settings.default_qualification_interval_unit = QualificationPlan.INTERVAL_MONTHS
+        self.settings.default_qualification_warning_days = 11
+        self.settings.save()
+
         user_model = get_user_model()
         self.admin_group = Group.objects.create(name=ROLE_ADMIN)
         self.editor_group = Group.objects.create(name=ROLE_EDITOR)
@@ -159,3 +166,44 @@ class QualificationViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.plan.title)
         self.assertNotContains(response, "Inactive qualification")
+
+    def test_create_form_uses_system_settings_as_initial_values(self):
+        self.client.force_login(self.editor_user)
+        response = self.client.get(reverse("qualification:plan-create"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["form"].initial["interval_value"], 9)
+        self.assertEqual(
+            response.context["form"].initial["interval_unit"],
+            QualificationPlan.INTERVAL_MONTHS,
+        )
+        self.assertEqual(response.context["form"].initial["warning_days"], 11)
+
+    def test_create_form_allows_overriding_system_defaults(self):
+        self.client.force_login(self.editor_user)
+        response = self.client.post(
+            reverse("qualification:plan-create"),
+            {
+                "asset": self.asset.pk,
+                "title": "Override qualification defaults",
+                "interval_value": 3,
+                "interval_unit": QualificationPlan.INTERVAL_WEEKS,
+                "warning_days": 2,
+                "responsible_person": "Editor User",
+                "is_active": "on",
+                "notes": "",
+            },
+        )
+
+        created_plan = QualificationPlan.objects.get(title="Override qualification defaults")
+        self.assertRedirects(response, reverse("qualification:plan-detail", args=[created_plan.pk]))
+        self.assertEqual(created_plan.interval_value, 3)
+        self.assertEqual(created_plan.interval_unit, QualificationPlan.INTERVAL_WEEKS)
+        self.assertEqual(created_plan.warning_days, 2)
+
+    def test_changing_settings_does_not_affect_existing_plans(self):
+        self.settings.default_qualification_interval_value = 24
+        self.settings.save()
+        self.plan.refresh_from_db()
+
+        self.assertEqual(self.plan.interval_value, 6)

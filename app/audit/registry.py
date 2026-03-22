@@ -1,3 +1,4 @@
+from core.models import SystemSettings
 from assets.models import Asset
 from maintenance.models import MaintenanceEvent, MaintenancePlan
 from qualification.models import QualificationEvent, QualificationPlan
@@ -5,6 +6,7 @@ from tasks.models import Task
 
 
 TRACKED_MODELS = (
+    SystemSettings,
     Asset,
     MaintenancePlan,
     MaintenanceEvent,

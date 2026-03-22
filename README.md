@@ -2,7 +2,7 @@
 
 > Disclaimer: This project was entirely vibecoded with Codex.
 
-Internal browser-based Django application for managing assets, maintenance, qualification cycles, operational tasks, and traceable audit history. The repository provides a production-oriented setup with PostgreSQL, Docker, Nginx, Gunicorn, role-based access, a dashboard, and a read-only audit trail.
+Internal browser-based Django application for managing assets, maintenance, qualification cycles, operational tasks, administratively managed system defaults, and traceable audit history. The repository provides a production-oriented setup with PostgreSQL, Docker, Nginx, Gunicorn, role-based access, a dashboard, and a read-only audit trail.
 
 ## Stack
 
@@ -16,7 +16,7 @@ Internal browser-based Django application for managing assets, maintenance, qual
 - HTMX
 - Bootstrap 5
 - Django Groups based role model
-- Assets, maintenance, qualification, tasks, dashboard, and audit trail
+- Assets, maintenance, qualification, tasks, dashboard, audit trail, and system settings
 
 ## Project Structure
 
@@ -103,21 +103,24 @@ Internal browser-based Django application for managing assets, maintenance, qual
 - Django uses server-rendered templates.
 - HTMX and Bootstrap 5 are already included in the base template.
 - The `core`, `accounts`, `assets`, `maintenance`, `qualification`, `tasks`, and `audit` apps are active parts of the application.
-- The protected pages `/dashboard/`, `/audit/`, `/editor/`, `/admin-area/`, and `/accounts/profile/` demonstrate role checks and internal navigation.
+- The protected pages `/dashboard/`, `/settings/`, `/audit/`, `/editor/`, `/admin-area/`, and `/accounts/profile/` demonstrate role checks and internal navigation.
 - Domain data models are available in Django admin for internal maintenance of master data.
 - The UI uses shared template helpers for consistent badges, filters, pagination, and detail-page layout.
+- Global defaults for new maintenance and qualification plans are managed through the regular mainty UI and remain overridable per plan.
 
 ## Current Functional Scope
 
 - Authentication with login/logout
 - Role-based access with `Admin`, `Editor`, and `Viewer`
 - Dashboard as main landing page after login
+- Admin-managed system settings for default maintenance and qualification plan values
 - CRUD for:
   - assets
   - maintenance plans and events
   - qualification plans and events
   - tasks
 - Global audit trail and object-specific change history
+- Audit logging for system settings changes
 - German UI with i18n-ready structure
 - Shared status badges, filter layout, pagination, and detail-page structure across modules
 
@@ -125,7 +128,7 @@ Internal browser-based Django application for managing assets, maintenance, qual
 
 The application uses Django authentication together with Django Groups for the first authorization layer:
 
-- `Admin`: full access, including user-management related capabilities and future administrative configuration.
+- `Admin`: full access, including user-management related capabilities and administrative system settings.
 - `Editor`: access to internal operational pages and future write-capable module flows.
 - `Viewer`: access to internal read-only pages.
 
@@ -152,6 +155,7 @@ docker compose exec web python manage.py migrate
 - Use `DEBUG=False` outside local development.
 - Set `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` to the correct internal hostnames or IP addresses.
 - `TASK_DASHBOARD_WARNING_DAYS` controls how many days in advance open tasks are shown in the dashboard warning section.
+- Maintenance and qualification plan creation use admin-managed defaults from `/settings/`; changing these defaults only affects future records.
 - Nginx is configured as a reverse proxy in front of Gunicorn.
 - Static files are provided through a shared Docker volume.
 - For real deployment, add backups, monitoring, TLS for the internal network, and proper secret management.

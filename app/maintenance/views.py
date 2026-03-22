@@ -7,6 +7,7 @@ from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from accounts.mixins import RoleRequiredMixin
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 from audit.services import get_audit_entries_for_instance
+from core.models import SystemSettings
 from core.ui import count_active_filters
 
 from .forms import MaintenanceEventForm, MaintenancePlanForm
@@ -131,9 +132,13 @@ class MaintenancePlanCreateView(MaintenanceEditMixin, CreateView):
 
     def get_initial(self):
         initial = super().get_initial()
+        settings = SystemSettings.load()
         asset_id = self.request.GET.get("asset")
         if asset_id:
             initial["asset"] = asset_id
+        initial.setdefault("interval_value", settings.default_maintenance_interval_value)
+        initial.setdefault("interval_unit", settings.default_maintenance_interval_unit)
+        initial.setdefault("warning_days", settings.default_maintenance_warning_days)
         return initial
 
     def form_valid(self, form):

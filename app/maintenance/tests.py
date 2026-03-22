@@ -7,6 +7,7 @@ from django.urls import reverse
 
 from assets.models import Asset
 from core.due_dates import DUE_STATUS_INACTIVE, DUE_STATUS_UNKNOWN, DUE_STATUS_WARNING
+from core.models import SystemSettings
 from qualification.models import QualificationPlan
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 
@@ -72,6 +73,12 @@ class MaintenancePlanModelTests(TestCase):
 
 class MaintenanceViewTests(TestCase):
     def setUp(self):
+        self.settings = SystemSettings.load()
+        self.settings.default_maintenance_interval_value = 21
+        self.settings.default_maintenance_interval_unit = MaintenancePlan.INTERVAL_WEEKS
+        self.settings.default_maintenance_warning_days = 4
+        self.settings.save()
+
         user_model = get_user_model()
         self.admin_group = Group.objects.create(name=ROLE_ADMIN)
         self.editor_group = Group.objects.create(name=ROLE_EDITOR)
@@ -203,3 +210,41 @@ class MaintenanceViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.plan.title)
         self.assertNotContains(response, "Calibration")
+
+    def test_create_form_uses_system_settings_as_initial_values(self):
+        self.client.force_login(self.editor_user)
+        response = self.client.get(reverse("maintenance:plan-create"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["form"].initial["interval_value"], 21)
+        self.assertEqual(response.context["form"].initial["interval_unit"], MaintenancePlan.INTERVAL_WEEKS)
+        self.assertEqual(response.context["form"].initial["warning_days"], 4)
+
+    def test_create_form_allows_overriding_system_defaults(self):
+        self.client.force_login(self.editor_user)
+        response = self.client.post(
+            reverse("maintenance:plan-create"),
+            {
+                "asset": self.asset.pk,
+                "title": "Override defaults",
+                "interval_value": 8,
+                "interval_unit": MaintenancePlan.INTERVAL_DAYS,
+                "warning_days": 1,
+                "responsible_person": "Editor User",
+                "is_active": "on",
+                "notes": "",
+            },
+        )
+
+        created_plan = MaintenancePlan.objects.get(title="Override defaults")
+        self.assertRedirects(response, reverse("maintenance:plan-detail", args=[created_plan.pk]))
+        self.assertEqual(created_plan.interval_value, 8)
+        self.assertEqual(created_plan.interval_unit, MaintenancePlan.INTERVAL_DAYS)
+        self.assertEqual(created_plan.warning_days, 1)
+
+    def test_changing_settings_does_not_affect_existing_plans(self):
+        self.settings.default_maintenance_interval_value = 99
+        self.settings.save()
+        self.plan.refresh_from_db()
+
+        self.assertEqual(self.plan.interval_value, 30)

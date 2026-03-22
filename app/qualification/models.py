@@ -3,21 +3,23 @@ from django.utils.translation import gettext_lazy as _
 
 from assets.models import Asset
 from core.due_dates import add_interval, calculate_due_status
+from core.intervals import (
+    INTERVAL_DAYS,
+    INTERVAL_MONTHS,
+    INTERVAL_UNIT_CHOICES,
+    INTERVAL_WEEKS,
+    INTERVAL_YEARS,
+)
 from core.models import TimeStampedModel
 
 
 class QualificationPlan(TimeStampedModel):
-    INTERVAL_DAYS = "days"
-    INTERVAL_WEEKS = "weeks"
-    INTERVAL_MONTHS = "months"
-    INTERVAL_YEARS = "years"
+    INTERVAL_DAYS = INTERVAL_DAYS
+    INTERVAL_WEEKS = INTERVAL_WEEKS
+    INTERVAL_MONTHS = INTERVAL_MONTHS
+    INTERVAL_YEARS = INTERVAL_YEARS
 
-    INTERVAL_UNIT_CHOICES = [
-        (INTERVAL_DAYS, _("Tage")),
-        (INTERVAL_WEEKS, _("Wochen")),
-        (INTERVAL_MONTHS, _("Monate")),
-        (INTERVAL_YEARS, _("Jahre")),
-    ]
+    INTERVAL_UNIT_CHOICES = INTERVAL_UNIT_CHOICES
 
     asset = models.ForeignKey(
         Asset,

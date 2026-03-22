@@ -63,6 +63,9 @@
               {% endif %}
               {% if can_manage_users %}
                 <li class="nav-item">
+                  <a class="nav-link {% nav_link_active 'core:settings' %}" href="{% url 'core:settings' %}">{% trans "Einstellungen" %}</a>
+                </li>
+                <li class="nav-item">
                   <a class="nav-link {% nav_link_active 'core:admin-demo' %}" href="{% url 'core:admin-demo' %}">{% trans "Admin-Bereich" %}</a>
                 </li>
               {% endif %}

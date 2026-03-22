@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ page_title }} | mainty{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h1 class="h2 mb-1">{{ page_title }}</h1>
+      <p class="text-secondary mb-0">{{ page_description }}</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'core:dashboard' %}">{% trans "Zum Dashboard" %}</a>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4 p-lg-5">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="row g-4">
+          <div class="col-12">
+            <div class="border rounded-4 p-4 h-100">
+              <h2 class="h5 mb-4">{% trans "Standardwerte Wartung" %}</h2>
+              <div class="row g-4">
+                <div class="col-md-4">{% include "includes/form_field.html" with field=form.default_maintenance_interval_value %}</div>
+                <div class="col-md-4">{% include "includes/form_field.html" with field=form.default_maintenance_interval_unit %}</div>
+                <div class="col-md-4">{% include "includes/form_field.html" with field=form.default_maintenance_warning_days %}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="border rounded-4 p-4 h-100">
+              <h2 class="h5 mb-4">{% trans "Standardwerte Qualifizierung" %}</h2>
+              <div class="row g-4">
+                <div class="col-md-4">{% include "includes/form_field.html" with field=form.default_qualification_interval_value %}</div>
+                <div class="col-md-4">{% include "includes/form_field.html" with field=form.default_qualification_interval_unit %}</div>
+                <div class="col-md-4">{% include "includes/form_field.html" with field=form.default_qualification_warning_days %}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+          <button class="btn btn-primary" type="submit">{% trans "Einstellungen speichern" %}</button>
+          <a class="btn btn-outline-secondary" href="{% url 'core:dashboard' %}">{% trans "Abbrechen" %}</a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}

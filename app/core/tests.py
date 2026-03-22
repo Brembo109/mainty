@@ -9,6 +9,8 @@ from django.utils import timezone
 
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 from assets.models import Asset
+from audit.models import AuditLog
+from core.models import SystemSettings
 from maintenance.models import MaintenancePlan
 from qualification.models import QualificationPlan
 from tasks.models import Task
@@ -134,6 +136,43 @@ class CoreViewsTests(TestCase):
         self.client.force_login(self.admin_user)
         response = self.client.get(reverse("core:dashboard"))
         self.assertEqual(response.status_code, 200)
+
+    def test_only_admin_can_access_settings_page(self):
+        self.client.force_login(self.viewer_user)
+        viewer_response = self.client.get(reverse("core:settings"))
+        self.assertEqual(viewer_response.status_code, 403)
+
+        self.client.force_login(self.editor_user)
+        editor_response = self.client.get(reverse("core:settings"))
+        self.assertEqual(editor_response.status_code, 403)
+
+        self.client.force_login(self.admin_user)
+        admin_response = self.client.get(reverse("core:settings"))
+        self.assertEqual(admin_response.status_code, 200)
+
+    def test_settings_values_are_saved_correctly(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.post(
+            reverse("core:settings"),
+            {
+                "default_maintenance_warning_days": 9,
+                "default_maintenance_interval_value": 45,
+                "default_maintenance_interval_unit": MaintenancePlan.INTERVAL_DAYS,
+                "default_qualification_warning_days": 21,
+                "default_qualification_interval_value": 6,
+                "default_qualification_interval_unit": QualificationPlan.INTERVAL_MONTHS,
+            },
+        )
+
+        self.assertRedirects(response, reverse("core:settings"))
+        settings = SystemSettings.load()
+        self.assertEqual(settings.default_maintenance_warning_days, 9)
+        self.assertEqual(settings.default_maintenance_interval_value, 45)
+        self.assertEqual(settings.default_qualification_warning_days, 21)
+        self.assertEqual(settings.default_qualification_interval_value, 6)
+
+        audit_entry = AuditLog.objects.filter(model_name="SystemSettings").latest("id")
+        self.assertEqual(audit_entry.user, self.admin_user)
 
     def test_viewer_cannot_access_editor_page(self):
         self.client.force_login(self.viewer_user)

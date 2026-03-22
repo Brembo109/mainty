@@ -2,7 +2,7 @@
 
 `mainty` is currently set up as a browser-based internal Django application with a production-oriented infrastructure foundation. The repository already includes Docker Compose, PostgreSQL, Nginx, Gunicorn, Django Templates, Bootstrap 5, and prepared HTMX integration. The application is running on the internal Ubuntu VM and is reachable through the browser.
 
-The current implementation now covers the technical platform, the authentication/authorization baseline, the initial domain model foundation, a production-oriented internal dashboard, a central audit trail, a cross-module UX consistency layer, and server-rendered CRUD UI for assets, maintenance plans/events, qualification plans/events, and operational tasks. Document workflows are not implemented yet.
+The current implementation now covers the technical platform, the authentication/authorization baseline, the initial domain model foundation, a production-oriented internal dashboard, a central audit trail, an administrative system settings area, a cross-module UX consistency layer, and server-rendered CRUD UI for assets, maintenance plans/events, qualification plans/events, and operational tasks. Document workflows are not implemented yet.
 
 ## What Is Already Implemented
 
@@ -15,6 +15,7 @@ The current implementation now covers the technical platform, the authentication
 - Public home page
 - Login and logout using Django Auth
 - Protected internal dashboard as the main authenticated entry point
+- Admin-only system settings page in the regular mainty UI
 - Role-based access control using Django Groups
 - Three initial roles:
   - `Admin`
@@ -37,6 +38,17 @@ The current implementation now covers the technical platform, the authentication
   - open and in-progress tasks
   - recently updated operational objects
 - Configurable task warning horizon for dashboard upcoming items via `TASK_DASHBOARD_WARNING_DAYS`
+- Singleton-style `SystemSettings` model for application-wide defaults
+- Admin-managed default values for new maintenance plans:
+  - warning days
+  - interval value
+  - interval unit
+- Admin-managed default values for new qualification plans:
+  - warning days
+  - interval value
+  - interval unit
+- Prefilled maintenance and qualification plan create forms using the current system settings
+- Independent per-record persistence after form submission, so later settings changes do not modify existing plans
 - Central audit trail with:
   - dedicated `audit` app
   - global `/audit/` page with filters, search, and pagination
@@ -46,6 +58,7 @@ The current implementation now covers the technical platform, the authentication
   - action types for create, update, delete, and status changes
   - optional `change_reason` field prepared for later form integration
   - read-only Django admin integration
+  - logging of system settings create/update changes
 - Cross-module UX refinement with:
   - unified status badges for assets, due-statuses, tasks, dashboard, and audit-related UI
   - consistent list filter layout, reset behavior, and active-filter highlighting
@@ -100,7 +113,7 @@ The current authorization model is intentionally simple and Django-native.
 
 - `Admin`
   - full access
-  - intended for user management and future administrative settings
+  - intended for user management and administrative settings
 - `Editor`
   - access to internal operational pages
   - intended for future create/edit workflows in business modules
@@ -112,6 +125,7 @@ Navigation visibility adapts to the signed-in user, but access control is enforc
 
 All three roles can access the operational dashboard in read-only form.
 All three roles can also access the audit trail in read-only form.
+Only `Admin` can access and update `/settings/`.
 
 ## Domain Model Status
 
@@ -121,6 +135,8 @@ The following domain apps and models are already present:
   - `AuditLog`
 - `assets`
   - `Asset`
+- `core`
+  - `SystemSettings`
 - `maintenance`
   - `MaintenancePlan`
   - `MaintenanceEvent`
@@ -155,6 +171,7 @@ The shared UX layer additionally provides:
 The currently implemented business UI layers are:
 
 - internal dashboard
+- system settings
 - audit trail
 - assets
 - maintenance plans and maintenance events
@@ -186,9 +203,13 @@ mainty/
     |-- core/
     |   |-- due_dates.py
     |   |-- dashboard.py
+    |   |-- forms.py
+    |   |-- intervals.py
     |   |-- ui.py
     |   |-- templatetags/
     |   |   `-- mainty_ui.py
+    |   |-- migrations/
+    |   |   `-- 0001_initial.py
     |   |-- tests.py
     |   |-- urls.py
     |   `-- views.py
@@ -285,6 +306,7 @@ mainty/
     |   |   |-- task_form.html
     |   |   `-- task_list.html
     |   `-- core/
+    |       |-- settings_form.html
     |       |-- home.html
     |       |-- dashboard.html
     |       |-- editor_demo.html
@@ -312,3 +334,5 @@ mainty/
 - `de31a8a` Prepare project for future i18n
 - `16ddf26` Add operational dashboard
 - `c8d8add` Add audit trail system
+- `101319e` Refine UI consistency and docs
+- `2b01f07` Adjust README disclaimer language
