@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -30,57 +30,57 @@
           data-bs-target="#mainNav"
           aria-controls="mainNav"
           aria-expanded="false"
-          aria-label="Toggle navigation"
+          aria-label="Navigation umschalten"
         >
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="mainNav">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'core:home' %}">Home</a>
+              <a class="nav-link" href="{% url 'core:home' %}">Startseite</a>
             </li>
             {% if request.user.is_authenticated %}
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'core:dashboard' %}">Dashboard</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="{% url 'assets:list' %}">Assets</a>
+                <a class="nav-link" href="{% url 'assets:list' %}">Anlagen</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="{% url 'maintenance:plan-list' %}">Maintenance</a>
+                <a class="nav-link" href="{% url 'maintenance:plan-list' %}">Wartung</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="{% url 'qualification:plan-list' %}">Qualification</a>
+                <a class="nav-link" href="{% url 'qualification:plan-list' %}">Qualifizierung</a>
               </li>
               {% if can_access_editor_area %}
                 <li class="nav-item">
-                  <a class="nav-link" href="{% url 'core:editor-demo' %}">Editor Area</a>
+                  <a class="nav-link" href="{% url 'core:editor-demo' %}">Editor-Bereich</a>
                 </li>
               {% endif %}
               {% if can_manage_users %}
                 <li class="nav-item">
-                  <a class="nav-link" href="{% url 'core:admin-demo' %}">Admin Area</a>
+                  <a class="nav-link" href="{% url 'core:admin-demo' %}">Admin-Bereich</a>
                 </li>
               {% endif %}
               <li class="nav-item">
-                <a class="nav-link" href="{% url 'accounts:profile' %}">My Profile</a>
+                <a class="nav-link" href="{% url 'accounts:profile' %}">Mein Profil</a>
               </li>
             {% endif %}
           </ul>
           <div class="d-flex gap-2">
             {% if request.user.is_authenticated %}
               <span class="navbar-text text-secondary">
-                Signed in as {{ request.user.username }}
+                Angemeldet als {{ request.user.username }}
                 {% if current_user_role %}
                   <span class="ms-1 badge text-bg-light border">{{ current_user_role }}</span>
                 {% endif %}
               </span>
               <form action="{% url 'accounts:logout' %}" method="post">
                 {% csrf_token %}
-                <button class="btn btn-outline-secondary btn-sm" type="submit">Logout</button>
+                <button class="btn btn-outline-secondary btn-sm" type="submit">Abmelden</button>
               </form>
             {% else %}
-              <a class="btn btn-primary btn-sm" href="{% url 'accounts:login' %}">Login</a>
+              <a class="btn btn-primary btn-sm" href="{% url 'accounts:login' %}">Anmelden</a>
             {% endif %}
           </div>
         </div>

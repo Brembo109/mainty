@@ -1,33 +1,33 @@
 {% extends "base.html" %}
 
-{% block title %}Home | mainty{% endblock %}
+{% block title %}Startseite | mainty{% endblock %}
 
 {% block content %}
   <div class="row g-4 align-items-center">
     <div class="col-lg-7">
-      <span class="badge rounded-pill text-bg-light border mb-3">Authentication foundation</span>
-      <h1 class="display-5 fw-semibold mb-3">Internal platform for machines, maintenance, and qualifications</h1>
+      <span class="badge rounded-pill text-bg-light border mb-3">Technische Grundlage</span>
+      <h1 class="display-5 fw-semibold mb-3">Interne Plattform für Maschinen, Wartungen und Qualifizierungen</h1>
       <p class="lead text-secondary mb-4">
-        This project currently focuses on a clean technical foundation with authentication,
-        role-based authorization, and reusable access control patterns.
+        Dieses Projekt konzentriert sich aktuell auf eine saubere technische Grundlage mit
+        Authentifizierung, rollenbasierter Autorisierung und wiederverwendbaren Zugriffsmustern.
       </p>
       <div class="d-flex gap-2">
-        <a class="btn btn-primary" href="{% url 'core:dashboard' %}">Open Dashboard</a>
+        <a class="btn btn-primary" href="{% url 'core:dashboard' %}">Dashboard öffnen</a>
         {% if not request.user.is_authenticated %}
-          <a class="btn btn-outline-secondary" href="{% url 'accounts:login' %}">Sign In</a>
+          <a class="btn btn-outline-secondary" href="{% url 'accounts:login' %}">Anmelden</a>
         {% endif %}
       </div>
     </div>
     <div class="col-lg-5">
       <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-          <h2 class="h5 mb-3">Current authorization model</h2>
+          <h2 class="h5 mb-3">Aktuelles Berechtigungsmodell</h2>
           <ul class="list-unstyled mb-0 text-secondary">
-            <li class="mb-2">Admin: full internal and user-management access</li>
-            <li class="mb-2">Editor: internal read/write access for future modules</li>
-            <li class="mb-2">Viewer: internal read-only access</li>
-            <li class="mb-2">Server-side checks via reusable mixins</li>
-            <li>Navigation adapts to the signed-in role</li>
+            <li class="mb-2">Admin: vollständiger interner Zugriff inklusive Benutzerverwaltung</li>
+            <li class="mb-2">Editor: interner Lese- und Schreibzugriff für künftige Module</li>
+            <li class="mb-2">Viewer: interner Lesezugriff ohne Bearbeitungsrechte</li>
+            <li class="mb-2">Serverseitige Prüfungen über wiederverwendbare Mixins</li>
+            <li>Die Navigation passt sich an die angemeldete Rolle an</li>
           </ul>
         </div>
       </div>

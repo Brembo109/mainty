@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 {% load assets_query %}
 
-{% block title %}Assets | mainty{% endblock %}
+{% block title %}Anlagen | mainty{% endblock %}
 
 {% block content %}
   <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
     <div>
-      <h1 class="h2 mb-1">Assets</h1>
-      <p class="text-secondary mb-0">Zentrale Stammdatenansicht fuer Maschinen, Anlagen und weiteres Equipment.</p>
+      <h1 class="h2 mb-1">Anlagen</h1>
+      <p class="text-secondary mb-0">Zentrale Stammdatenansicht für Maschinen, Anlagen und weitere Betriebsmittel.</p>
     </div>
     {% if can_access_editor_area %}
-      <a class="btn btn-primary" href="{% url 'assets:create' %}">Asset anlegen</a>
+      <a class="btn btn-primary" href="{% url 'assets:create' %}">Anlage anlegen</a>
     {% endif %}
   </div>
 
@@ -58,14 +58,14 @@
         </div>
         <div class="col-12 d-flex gap-2">
           <button class="btn btn-primary" type="submit">Filter anwenden</button>
-          <a class="btn btn-outline-secondary" href="{% url 'assets:list' %}">Zuruecksetzen</a>
+          <a class="btn btn-outline-secondary" href="{% url 'assets:list' %}">Zurücksetzen</a>
         </div>
       </form>
     </div>
   </div>
 
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <p class="text-secondary mb-0">{{ result_count }} Asset{{ result_count|pluralize }} gefunden</p>
+    <p class="text-secondary mb-0">{{ result_count }} Anlage{{ result_count|pluralize:"n," }} gefunden</p>
     {% if page_obj %}
       <p class="text-secondary mb-0">Seite {{ page_obj.number }} von {{ page_obj.paginator.num_pages }}</p>
     {% endif %}
@@ -107,7 +107,7 @@
                 {% elif asset.status == "inactive" %}
                   <span class="badge text-bg-secondary">Inaktiv</span>
                 {% else %}
-                  <span class="badge text-bg-danger">Ausser Betrieb</span>
+                  <span class="badge text-bg-danger">Außer Betrieb</span>
                 {% endif %}
               </td>
               <td class="text-end">
@@ -116,7 +116,7 @@
             </tr>
           {% empty %}
             <tr>
-              <td colspan="11" class="text-center py-4 text-secondary">Keine Assets fuer die aktuelle Filterung gefunden.</td>
+              <td colspan="11" class="text-center py-4 text-secondary">Keine Anlagen für die aktuelle Filterung gefunden.</td>
             </tr>
           {% endfor %}
         </tbody>
@@ -125,14 +125,14 @@
   </div>
 
   {% if is_paginated %}
-    <nav class="mt-4" aria-label="Asset pagination">
+    <nav class="mt-4" aria-label="Asset-Seiten">
       <ul class="pagination">
         {% if page_obj.has_previous %}
           <li class="page-item">
-            <a class="page-link" href="?{% querystring page=page_obj.previous_page_number %}">Zurueck</a>
+            <a class="page-link" href="?{% querystring page=page_obj.previous_page_number %}">Zurück</a>
           </li>
         {% else %}
-          <li class="page-item disabled"><span class="page-link">Zurueck</span></li>
+          <li class="page-item disabled"><span class="page-link">Zurück</span></li>
         {% endif %}
 
         {% for page_number in page_obj.paginator.page_range %}

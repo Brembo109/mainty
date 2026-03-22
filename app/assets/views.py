@@ -90,7 +90,7 @@ class AssetListView(AssetAccessMixin, ListView):
                     ("status", "Status"),
                     ("location", "Standort"),
                     ("department", "Abteilung"),
-                    ("-updated_at", "Zuletzt geaendert"),
+                    ("-updated_at", "Zuletzt geändert"),
                 ],
             }
         )
@@ -115,7 +115,7 @@ class AssetCreateView(AssetEditAccessMixin, CreateView):
     template_name = "assets/asset_form.html"
 
     def form_valid(self, form):
-        messages.success(self.request, "Asset wurde erfolgreich angelegt.")
+        messages.success(self.request, "Anlage wurde erfolgreich angelegt.")
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -123,8 +123,8 @@ class AssetCreateView(AssetEditAccessMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["page_title"] = "Asset anlegen"
-        context["submit_label"] = "Asset anlegen"
+        context["page_title"] = "Anlage anlegen"
+        context["submit_label"] = "Anlage anlegen"
         context["cancel_url"] = reverse("assets:list")
         return context
 
@@ -135,7 +135,7 @@ class AssetUpdateView(AssetEditAccessMixin, UpdateView):
     template_name = "assets/asset_form.html"
 
     def form_valid(self, form):
-        messages.success(self.request, "Asset wurde erfolgreich aktualisiert.")
+        messages.success(self.request, "Anlage wurde erfolgreich aktualisiert.")
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -143,7 +143,7 @@ class AssetUpdateView(AssetEditAccessMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["page_title"] = "Asset bearbeiten"
-        context["submit_label"] = "Aenderungen speichern"
+        context["page_title"] = "Anlage bearbeiten"
+        context["submit_label"] = "Änderungen speichern"
         context["cancel_url"] = reverse("assets:detail", kwargs={"pk": self.object.pk})
         return context

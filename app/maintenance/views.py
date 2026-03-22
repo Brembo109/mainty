@@ -92,9 +92,9 @@ class MaintenancePlanListView(MaintenanceAccessMixin, ListView):
                 "sort_choices": [
                     ("asset", "Asset"),
                     ("title", "Titel"),
-                    ("next_due_date", "Naechste Faelligkeit"),
-                    ("due_status", "Faelligkeitsstatus"),
-                    ("-updated_at", "Zuletzt geaendert"),
+                    ("next_due_date", "Nächste Fälligkeit"),
+                    ("due_status", "Fälligkeitsstatus"),
+                    ("-updated_at", "Zuletzt geändert"),
                 ],
             }
         )
@@ -163,7 +163,7 @@ class MaintenancePlanUpdateView(MaintenanceEditMixin, UpdateView):
         context.update(
             {
                 "page_title": "Wartungsplan bearbeiten",
-                "submit_label": "Aenderungen speichern",
+                "submit_label": "Änderungen speichern",
                 "cancel_url": reverse("maintenance:plan-detail", kwargs={"pk": self.object.pk}),
             }
         )
@@ -218,7 +218,7 @@ class MaintenanceEventUpdateView(MaintenanceEditMixin, UpdateView):
             {
                 "plan": self.object.plan,
                 "page_title": "Wartungsereignis bearbeiten",
-                "submit_label": "Aenderungen speichern",
+                "submit_label": "Änderungen speichern",
                 "cancel_url": reverse("maintenance:plan-detail", kwargs={"pk": self.object.plan.pk}),
             }
         )

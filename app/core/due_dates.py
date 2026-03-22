@@ -13,8 +13,8 @@ DUE_STATUS_UNKNOWN = "unknown"
 
 DUE_STATUS_LABELS = {
     DUE_STATUS_OK: "OK",
-    DUE_STATUS_WARNING: "Faellig bald",
-    DUE_STATUS_OVERDUE: "Ueberfaellig",
+    DUE_STATUS_WARNING: "Fällig bald",
+    DUE_STATUS_OVERDUE: "Überfällig",
     DUE_STATUS_INACTIVE: "Inaktiv",
     DUE_STATUS_UNKNOWN: "Unbekannt",
 }

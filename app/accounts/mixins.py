@@ -6,7 +6,7 @@ from .roles import normalize_role_name
 
 class RoleRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     allowed_roles: tuple[str, ...] = ()
-    permission_denied_message = "You do not have permission to access this page."
+    permission_denied_message = "Sie haben keine Berechtigung, auf diese Seite zuzugreifen."
 
     def get_allowed_roles(self) -> tuple[str, ...]:
         if not self.allowed_roles:

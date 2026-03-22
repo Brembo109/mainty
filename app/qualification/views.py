@@ -92,9 +92,9 @@ class QualificationPlanListView(QualificationAccessMixin, ListView):
                 "sort_choices": [
                     ("asset", "Asset"),
                     ("title", "Titel"),
-                    ("next_due_date", "Naechste Faelligkeit"),
-                    ("due_status", "Faelligkeitsstatus"),
-                    ("-updated_at", "Zuletzt geaendert"),
+                    ("next_due_date", "Nächste Fälligkeit"),
+                    ("due_status", "Fälligkeitsstatus"),
+                    ("-updated_at", "Zuletzt geändert"),
                 ],
             }
         )
@@ -163,7 +163,7 @@ class QualificationPlanUpdateView(QualificationEditMixin, UpdateView):
         context.update(
             {
                 "page_title": "Qualifizierungsplan bearbeiten",
-                "submit_label": "Aenderungen speichern",
+                "submit_label": "Änderungen speichern",
                 "cancel_url": reverse("qualification:plan-detail", kwargs={"pk": self.object.pk}),
             }
         )
@@ -218,7 +218,7 @@ class QualificationEventUpdateView(QualificationEditMixin, UpdateView):
             {
                 "plan": self.object.plan,
                 "page_title": "Qualifizierungsereignis bearbeiten",
-                "submit_label": "Aenderungen speichern",
+                "submit_label": "Änderungen speichern",
                 "cancel_url": reverse("qualification:plan-detail", kwargs={"pk": self.object.plan.pk}),
             }
         )

@@ -24,9 +24,13 @@ class AssetForm(forms.ModelForm):
             "commissioning_date": forms.DateInput(attrs={"type": "date"}),
             "notes": forms.Textarea(attrs={"rows": 4}),
         }
+        labels = {
+            "name": "Bezeichnung",
+            "commissioning_date": "Inbetriebnahme",
+        }
         help_texts = {
             "asset_id": "Eindeutige interne Kennung des Assets.",
-            "status": "Steuert den operativen Zustand des Assets ohne Loeschworkflow.",
+            "status": "Steuert den operativen Zustand des Assets ohne Löschworkflow.",
         }
 
     def __init__(self, *args, **kwargs):
@@ -38,4 +42,4 @@ class AssetForm(forms.ModelForm):
                 existing_class = field.widget.attrs.get("class", "")
                 field.widget.attrs["class"] = f"{existing_class} form-control".strip()
 
-        self.fields["notes"].widget.attrs["placeholder"] = "Freitext fuer interne Hinweise"
+        self.fields["notes"].widget.attrs["placeholder"] = "Freitext für interne Hinweise"
