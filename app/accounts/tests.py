@@ -21,6 +21,10 @@ class LoginViewTests(TestCase):
     def test_login_page_returns_ok(self):
         response = self.client.get(reverse("accounts:login"))
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'action="/i18n/setlang/"')
+        self.assertContains(response, ">DE<", html=False)
+        self.assertContains(response, ">EN<", html=False)
+        self.assertContains(response, "data-theme-toggle")
 
     def test_login_works_with_valid_credentials(self):
         response = self.client.post(

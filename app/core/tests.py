@@ -219,15 +219,25 @@ class CoreViewsTests(TestCase):
             settings = SystemSettings.load()
             settings.company_logo.save("brand-header.png", self._build_test_logo("brand-header.png"), save=True)
 
+            self.viewer_user.first_name = "Marc"
+            self.viewer_user.last_name = "Heyer"
+            self.viewer_user.save()
+            self.viewer_user.profile.user_code = "MH"
+            self.viewer_user.profile.save()
+
             login_response = self.client.get(reverse("accounts:login"))
             self.assertEqual(login_response.status_code, 200)
             self.assertContains(login_response, settings.company_logo.url)
             self.assertContains(login_response, "img/mainty-logo.svg")
+            self.assertContains(login_response, 'action="/i18n/setlang/"')
+            self.assertContains(login_response, "data-theme-toggle")
 
             self.client.force_login(self.viewer_user)
             dashboard_response = self.client.get(reverse("core:dashboard"))
             self.assertContains(dashboard_response, settings.company_logo.url)
             self.assertContains(dashboard_response, "img/mainty-logo.svg")
+            self.assertContains(dashboard_response, "Marc Heyer [MH]")
+            self.assertContains(dashboard_response, "data-theme-toggle")
 
     def test_viewer_cannot_access_editor_page(self):
         self.client.force_login(self.viewer_user)
