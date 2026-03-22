@@ -2,7 +2,7 @@
 
 > Disclaimer: This project was entirely vibecoded with Codex.
 
-Internal browser-based Django application for managing assets, maintenance, qualification cycles, operational tasks, administratively managed system defaults, practical list exports, traceable audit history, and configurable company branding. The repository provides a production-oriented setup with PostgreSQL, Docker, Nginx, Gunicorn, role-based access, a dashboard, media handling, and a read-only audit trail.
+Internal browser-based Django application for managing assets, maintenance, qualification cycles, operational tasks, internal users, administratively managed system defaults, practical list exports, traceable audit history, configurable company branding, and role/permission assignments on top of Django Groups. The repository provides a production-oriented setup with PostgreSQL, Docker, Nginx, Gunicorn, role-based access, a dashboard, media handling, and a read-only audit trail.
 
 ## Stack
 
@@ -112,7 +112,9 @@ Internal browser-based Django application for managing assets, maintenance, qual
 ## Current Functional Scope
 
 - Authentication with login/logout
-- Role-based access with `Admin`, `Editor`, and `Viewer`
+- Role-based access with `Admin`, `User`, and `Viewer`
+- Admin-managed user administration in the regular mainty UI
+- Admin-managed role/permission matrix for Mainty-relevant Django group permissions
 - Dashboard as main landing page after login
 - Admin-managed system settings for default maintenance and qualification plan values
 - Admin-managed optional company logo for header and login page branding
@@ -129,18 +131,20 @@ Internal browser-based Django application for managing assets, maintenance, qual
 
 ## Roles and Permissions
 
-The application uses Django authentication together with Django Groups for the first authorization layer:
+The application uses Django authentication together with Django Groups and linked user profiles for the authorization layer:
 
-- `Admin`: full access, including user-management related capabilities and administrative system settings.
-- `Editor`: access to internal operational pages and future write-capable module flows.
+- `Admin`: full access, including user administration, permission management, and administrative system settings.
+- `User`: access to internal operational pages and write-capable module flows.
 - `Viewer`: access to internal read-only pages.
 
 Implementation notes:
 
 - Role checks are enforced server-side through reusable mixins in `accounts.mixins`.
 - Role helper functions live in `accounts.roles`.
+- User-specific metadata such as `Kürzel` and role assignment are stored in `accounts.UserProfile`.
+- The regular UI exposes `/accounts/users/` for user administration and `/accounts/permissions/` for the role-permission matrix.
 - Navigation visibility is only a convenience layer. Access control is enforced in the views.
-- The `bootstrap_roles` management command creates the initial groups.
+- The `bootstrap_roles` management command creates the initial groups and applies the Mainty default permission set.
 
 Useful commands:
 
@@ -160,11 +164,13 @@ docker compose exec web python manage.py migrate
 - `TASK_DASHBOARD_WARNING_DAYS` controls how many days in advance open tasks are shown in the dashboard warning section.
 - Maintenance and qualification plan creation use admin-managed defaults from `/settings/`; changing these defaults only affects future records.
 - Uploaded company logos are stored as media files and served through Django in development and Nginx in the current Docker setup.
+- User and role-permission management is available in the regular mainty UI for `Admin` users and remains backed by Django Groups and Permissions.
 - Nginx is configured as a reverse proxy in front of Gunicorn.
 - Static files and uploaded media files are provided through shared Docker volumes.
 - For real deployment, add backups, monitoring, TLS for the internal network, and proper secret management.
 - Use explicit role assignment after user creation. Authentication alone does not grant internal access.
 - Audit entries are intentionally read-only and exposed through both Django admin and the application UI.
+- Audit entries include readable user snapshots with name, `Kürzel`, and role label where available.
 
 ## Intentionally Not Included Yet
 
