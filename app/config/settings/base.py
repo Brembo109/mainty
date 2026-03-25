@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "contracts",
     "maintenance",
     "qualification",
+    "reminders",
     "tasks",
 ]
 
@@ -120,6 +121,7 @@ LOGIN_REDIRECT_URL = "core:dashboard"
 LOGOUT_REDIRECT_URL = "core:home"
 TASK_DASHBOARD_WARNING_DAYS = int(env("TASK_DASHBOARD_WARNING_DAYS", "7"))
 SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", False)
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "noreply@mainty.local")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

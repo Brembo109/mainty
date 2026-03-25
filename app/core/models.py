@@ -87,6 +87,46 @@ class SystemSettings(TimeStampedModel):
         default=default_debug_mode,
         verbose_name=_("Debug-Modus"),
     )
+    notifications_enabled = models.BooleanField(
+        default=False,
+        verbose_name=_("Benachrichtigungen aktiviert"),
+    )
+    notification_from_email = models.EmailField(
+        blank=True,
+        verbose_name=_("Absender E-Mail"),
+    )
+    send_upcoming_reminders = models.BooleanField(
+        default=True,
+        verbose_name=_("Erinnerungen vor Fälligkeit senden"),
+    )
+    send_overdue_reminders = models.BooleanField(
+        default=True,
+        verbose_name=_("Überfällige Einträge melden"),
+    )
+    send_daily_digest = models.BooleanField(
+        default=False,
+        verbose_name=_("Tägliche Zusammenfassung senden"),
+    )
+    send_weekly_digest = models.BooleanField(
+        default=False,
+        verbose_name=_("Wöchentliche Zusammenfassung senden"),
+    )
+    maintenance_upcoming_days = models.PositiveIntegerField(
+        default=7,
+        verbose_name=_("Vorlaufzeit Wartung in Tagen"),
+    )
+    qualification_upcoming_days = models.PositiveIntegerField(
+        default=14,
+        verbose_name=_("Vorlaufzeit Qualifizierung in Tagen"),
+    )
+    overdue_escalation_days = models.PositiveIntegerField(
+        default=0,
+        verbose_name=_("Eskalation bei Überfälligkeit ab Tagen"),
+    )
+    only_notify_once_per_status = models.BooleanField(
+        default=False,
+        verbose_name=_("Nur einmal pro Status benachrichtigen"),
+    )
 
     class Meta:
         verbose_name = _("Systemeinstellung")

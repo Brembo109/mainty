@@ -71,6 +71,62 @@
 
           <div class="col-12">
             <div class="border rounded-4 p-4 h-100">
+              <h2 class="h5 mb-2">{% trans "Benachrichtigungen / Erinnerungen" %}</h2>
+              <p class="text-secondary mb-4">{% trans "E-Mail-Erinnerungen für bald fällige und überfällige Wartungen und Qualifizierungen. Der Versand setzt eine funktionierende Mail-Konfiguration voraus." %}</p>
+              <div class="row g-4">
+                <div class="col-md-6">
+                  <div class="form-check mt-2">
+                    {{ form.notifications_enabled }}
+                    <label class="form-check-label" for="{{ form.notifications_enabled.id_for_label }}">{{ form.notifications_enabled.label }}</label>
+                  </div>
+                  {% if form.notifications_enabled.help_text %}<div class="form-text">{{ form.notifications_enabled.help_text }}</div>{% endif %}
+                  {% if form.notifications_enabled.errors %}<div class="invalid-feedback d-block">{% for error in form.notifications_enabled.errors %}<div>{{ error }}</div>{% endfor %}</div>{% endif %}
+                </div>
+                <div class="col-md-6">{% include "includes/form_field.html" with field=form.notification_from_email %}</div>
+                <div class="col-md-6">
+                  <div class="form-check mt-2">
+                    {{ form.send_upcoming_reminders }}
+                    <label class="form-check-label" for="{{ form.send_upcoming_reminders.id_for_label }}">{{ form.send_upcoming_reminders.label }}</label>
+                  </div>
+                  {% if form.send_upcoming_reminders.help_text %}<div class="form-text">{{ form.send_upcoming_reminders.help_text }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                  <div class="form-check mt-2">
+                    {{ form.send_overdue_reminders }}
+                    <label class="form-check-label" for="{{ form.send_overdue_reminders.id_for_label }}">{{ form.send_overdue_reminders.label }}</label>
+                  </div>
+                  {% if form.send_overdue_reminders.help_text %}<div class="form-text">{{ form.send_overdue_reminders.help_text }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                  <div class="form-check mt-2">
+                    {{ form.send_daily_digest }}
+                    <label class="form-check-label" for="{{ form.send_daily_digest.id_for_label }}">{{ form.send_daily_digest.label }}</label>
+                  </div>
+                  {% if form.send_daily_digest.help_text %}<div class="form-text">{{ form.send_daily_digest.help_text }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                  <div class="form-check mt-2">
+                    {{ form.send_weekly_digest }}
+                    <label class="form-check-label" for="{{ form.send_weekly_digest.id_for_label }}">{{ form.send_weekly_digest.label }}</label>
+                  </div>
+                  {% if form.send_weekly_digest.help_text %}<div class="form-text">{{ form.send_weekly_digest.help_text }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">{% include "includes/form_field.html" with field=form.maintenance_upcoming_days %}</div>
+                <div class="col-md-4">{% include "includes/form_field.html" with field=form.qualification_upcoming_days %}</div>
+                <div class="col-md-4">{% include "includes/form_field.html" with field=form.overdue_escalation_days %}</div>
+                <div class="col-12">
+                  <div class="form-check mt-2">
+                    {{ form.only_notify_once_per_status }}
+                    <label class="form-check-label" for="{{ form.only_notify_once_per_status.id_for_label }}">{{ form.only_notify_once_per_status.label }}</label>
+                  </div>
+                  {% if form.only_notify_once_per_status.help_text %}<div class="form-text">{{ form.only_notify_once_per_status.help_text }}</div>{% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="border rounded-4 p-4 h-100">
               <h2 class="h5 mb-4">{% trans "Netzwerk / Zugriff" %}</h2>
               <div class="row g-4">
                 <div class="col-12">{% include "includes/form_field.html" with field=form.app_public_url %}</div>

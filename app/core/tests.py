@@ -172,6 +172,7 @@ class CoreViewsTests(TestCase):
         admin_response = self.client.get(reverse("core:settings"))
         self.assertEqual(admin_response.status_code, 200)
         self.assertContains(admin_response, "Netzwerk / Zugriff")
+        self.assertContains(admin_response, "Benachrichtigungen / Erinnerungen")
         self.assertContains(
             admin_response,
             "Änderungen an diesen Einstellungen erfordern einen Neustart der Anwendung",
@@ -189,6 +190,15 @@ class CoreViewsTests(TestCase):
                     "default_qualification_warning_days": 21,
                     "default_qualification_interval_value": 6,
                     "default_qualification_interval_unit": QualificationPlan.INTERVAL_MONTHS,
+                    "notifications_enabled": "on",
+                    "notification_from_email": "noreply@example.com",
+                    "send_upcoming_reminders": "on",
+                    "send_overdue_reminders": "on",
+                    "send_daily_digest": "on",
+                    "maintenance_upcoming_days": 10,
+                    "qualification_upcoming_days": 20,
+                    "overdue_escalation_days": 2,
+                    "only_notify_once_per_status": "on",
                     "app_public_url": "https://mainty.example.com",
                     "allowed_hosts": "mainty.example.com, localhost, testserver",
                     "csrf_trusted_origins": "https://mainty.example.com, https://proxy.example.net",
@@ -202,6 +212,12 @@ class CoreViewsTests(TestCase):
             self.assertEqual(system_settings.default_maintenance_interval_value, 45)
             self.assertEqual(system_settings.default_qualification_warning_days, 21)
             self.assertEqual(system_settings.default_qualification_interval_value, 6)
+            self.assertTrue(system_settings.notifications_enabled)
+            self.assertEqual(system_settings.notification_from_email, "noreply@example.com")
+            self.assertEqual(system_settings.maintenance_upcoming_days, 10)
+            self.assertEqual(system_settings.qualification_upcoming_days, 20)
+            self.assertEqual(system_settings.overdue_escalation_days, 2)
+            self.assertTrue(system_settings.only_notify_once_per_status)
             self.assertEqual(system_settings.app_public_url, "https://mainty.example.com")
             self.assertEqual(system_settings.allowed_hosts, "mainty.example.com, localhost, testserver")
             self.assertEqual(
@@ -226,6 +242,18 @@ class CoreViewsTests(TestCase):
                     "default_qualification_warning_days": 14,
                     "default_qualification_interval_value": 12,
                     "default_qualification_interval_unit": QualificationPlan.INTERVAL_MONTHS,
+                    "notifications_enabled": "on",
+                    "notification_from_email": "noreply@example.com",
+                    "send_upcoming_reminders": "on",
+                    "send_overdue_reminders": "on",
+                    "send_daily_digest": "on",
+                    "send_weekly_digest": "on",
+                    "maintenance_upcoming_days": 7,
+                    "qualification_upcoming_days": 14,
+                    "overdue_escalation_days": 0,
+                    "app_public_url": "https://mainty.example.com",
+                    "allowed_hosts": "mainty.example.com, localhost, testserver",
+                    "csrf_trusted_origins": "https://mainty.example.com",
                     "company_logo": self._build_test_logo(),
                 },
             )

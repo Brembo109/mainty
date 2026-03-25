@@ -2,7 +2,7 @@
 
 > Disclaimer: This project was entirely vibecoded with Codex.
 
-Internal browser-based Django application for managing assets, maintenance, qualification cycles, maintenance/service contracts, operational tasks, internal users, administratively managed system defaults, practical list exports, traceable audit history, configurable company branding, reverse-proxy aware access settings, and role/permission assignments on top of Django Groups. The repository provides a production-oriented setup with PostgreSQL, Docker, Nginx, Gunicorn, role-based access, a dashboard, media handling, and a read-only audit trail.
+Internal browser-based Django application for managing assets, maintenance, qualification cycles, maintenance/service contracts, operational tasks, internal users, administratively managed system defaults, practical list exports, traceable audit history, configurable company branding, reverse-proxy aware access settings, role/permission assignments on top of Django Groups, and configurable E-Mail-Erinnerungen für fällige und überfällige Wartungs- und Qualifizierungspläne. The repository provides a production-oriented setup with PostgreSQL, Docker, Nginx, Gunicorn, role-based access, a dashboard, media handling, and a read-only audit trail.
 
 ## Stack
 
@@ -42,6 +42,7 @@ Internal browser-based Django application for managing assets, maintenance, qual
     |-- contracts/
     |-- maintenance/
     |-- qualification/
+    |-- reminders/
     |-- static/
     |-- tasks/
     `-- templates/
@@ -126,6 +127,7 @@ Internal browser-based Django application for managing assets, maintenance, qual
   - maintenance plans and events
   - qualification plans and events
   - tasks
+- E-Mail-Erinnerungen und Digest-Benachrichtigungen für bald fällige und überfällige Wartungs- und Qualifizierungspläne
 - Filter-aware CSV and XLSX exports for assets, maintenance plans, qualification plans, tasks, and audit log
 - Global audit trail and object-specific change history
 - Contract status visualization in contract lists, contract details, asset lists, asset details, and dashboard widgets
@@ -200,6 +202,72 @@ Contract status and remaining runtime are shown in multiple places:
 - asset detail page in the linked contracts section
 - dashboard widgets for expiring and expired contracts
 
+## Reminder System
+
+Mainty includes a pragmatic first reminder implementation based on Django management commands, cron-friendly scheduling, and E-Mail delivery.
+
+- Included objects: active maintenance plans and qualification plans
+- Included states: due soon and overdue
+- Notification types: upcoming reminder, overdue escalation, daily digest, weekly digest
+- Delivery channel: E-Mail only in this implementation step
+- Tracking: lightweight delivery log in the `reminders` app for troubleshooting and spam prevention
+
+### Recipient Resolution
+
+Recipients are resolved centrally:
+
+- first by matching the `Verantwortlich` value against active users with E-Mail address
+- then by users with the `User` role
+- finally by users with the `Admin` role as fallback
+
+Duplicate recipients are removed automatically. Inactive users and users without E-Mail address are ignored.
+
+### Reminder Settings
+
+The admin settings page includes a section `Benachrichtigungen / Erinnerungen` with:
+
+- activation of the reminder system
+- sender address
+- toggles for due reminders, overdue reminders, daily digest, weekly digest
+- separate lead times for maintenance and qualification
+- overdue escalation threshold in days
+- optional `Nur einmal pro Status benachrichtigen`
+
+Changes to these settings are audited through the existing system settings audit trail.
+
+### Scheduling
+
+The first version is designed for cron or similar schedulers. Two management commands are available:
+
+```bash
+docker compose exec -T web python manage.py send_due_reminders
+docker compose exec -T web python manage.py send_digest_notifications --frequency daily
+docker compose exec -T web python manage.py send_digest_notifications --frequency weekly
+```
+
+Optional dry run:
+
+```bash
+docker compose exec -T web python manage.py send_due_reminders --dry-run
+docker compose exec -T web python manage.py send_digest_notifications --frequency daily --dry-run
+```
+
+Typical cron approach:
+
+- daily morning run for `send_due_reminders`
+- daily run for the daily digest
+- weekly run, for example every Monday, for the weekly digest
+
+### Current Limitations
+
+- no in-app notifications yet
+- no per-user preference center
+- no Slack, Teams, SMS, or push integrations
+- no complex escalation matrix
+- responsible person matching is text-based and therefore best effort
+
+The reminder logic is intentionally separated from transport and UI rendering so that in-app notifications can be added later without rewriting the core due-date and recipient selection logic.
+
 ## Production-Oriented Notes
 
 - Use `DEBUG=False` outside local development.
@@ -247,4 +315,3 @@ Important:
 - API layer
 - Celery
 - Document management
-- Notifications / reminder jobs
