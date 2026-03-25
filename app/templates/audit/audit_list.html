@@ -13,7 +13,7 @@
 
   <div class="card border-0 shadow-sm mb-4 filter-panel">
     <div class="card-body p-4">
-      <form method="get" class="row g-3 align-items-end">
+      <form method="get" class="row g-3 align-items-end" data-persist-filters data-persist-key="audit-list">
         <div class="col-12 col-xl-4">
           <label class="form-label" for="searchInput">{% trans "Suche" %}</label>
           <input class="form-control {% if search_query %}filter-active{% endif %}" id="searchInput" type="search" name="q" value="{{ search_query }}" placeholder="{% trans 'Suche nach Objekt oder Objekt-ID ...' %}" />
@@ -45,9 +45,17 @@
             {% endfor %}
           </select>
         </div>
+        <div class="col-sm-6 col-xl-2">
+          <label class="form-label" for="sortSelect">{% trans "Sortierung" %}</label>
+          <select class="form-select" id="sortSelect" name="sort">
+            {% for value, label in sort_choices %}
+              <option value="{{ value }}" {% if current_sort == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
         <div class="col-12 d-flex gap-2">
           <button class="btn btn-primary" type="submit">{% trans "Filter anwenden" %}</button>
-          <a class="btn btn-outline-secondary" href="{% url 'audit:list' %}">{% trans "Zurücksetzen" %}</a>
+          <a class="btn btn-outline-secondary" data-reset-filters="audit-list" href="{% url 'audit:list' %}">{% trans "Zurücksetzen" %}</a>
         </div>
       </form>
     </div>
@@ -73,27 +81,27 @@
         <tbody>
           {% for entry in audit_entries %}
             <tr>
-              <td>{{ entry.timestamp|date:"d.m.Y H:i:s" }}</td>
-              <td>{{ entry.user_display }}</td>
+              <td><span class="text-nowrap">{{ entry.timestamp|date:"d.m.Y H:i:s" }}</span></td>
+              <td><div class="table-cell-truncate" title="{{ entry.user_display }}">{{ entry.user_display }}</div></td>
               <td>
-                <div class="fw-semibold">{{ entry.object_repr }}</div>
+                <div class="fw-semibold table-cell-truncate" title="{{ entry.object_repr }}">{{ entry.object_repr }}</div>
                 <div class="small text-secondary">{{ entry.model_label }} · ID {{ entry.object_id }}</div>
               </td>
               <td><span class="badge {{ entry.action|audit_action_badge_class }}">{{ entry.get_action_display }}</span></td>
-              <td>{{ entry.field_label|default:"-" }}</td>
+              <td><div class="table-cell-truncate" title="{{ entry.field_label|default:'-' }}">{{ entry.field_label|default:"-" }}</div></td>
               <td>
                 {% if entry.field_name %}
-                  <div>{{ entry.old_value_display|default:"-" }} &rarr; {{ entry.new_value_display|default:"-" }}</div>
+                  <div class="table-cell-truncate" title="{{ entry.old_value_display|default:'-' }} → {{ entry.new_value_display|default:'-' }}">{{ entry.old_value_display|default:"-" }} &rarr; {{ entry.new_value_display|default:"-" }}</div>
                 {% elif entry.new_value_display %}
-                  <div>{{ entry.new_value_display }}</div>
+                  <div class="table-cell-truncate" title="{{ entry.new_value_display }}">{{ entry.new_value_display }}</div>
                 {% else %}
-                  <div>{{ entry.old_value_display|default:"-" }}</div>
+                  <div class="table-cell-truncate" title="{{ entry.old_value_display|default:'-' }}">{{ entry.old_value_display|default:"-" }}</div>
                 {% endif %}
               </td>
-              <td>{{ entry.change_reason|default:"-" }}</td>
+              <td><div class="table-cell-truncate" title="{{ entry.change_reason|default:'-' }}">{{ entry.change_reason|default:"-" }}</div></td>
             </tr>
           {% empty %}
-            <tr>
+            <tr class="empty-state-row">
               <td colspan="7" class="text-center py-4 text-secondary">{% trans "Keine Audit-Einträge für die aktuelle Filterung gefunden." %}</td>
             </tr>
           {% endfor %}

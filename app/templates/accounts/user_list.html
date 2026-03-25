@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n mainty_ui %}
 
 {% block title %}{% trans "Benutzer" %} | mainty{% endblock %}
 
@@ -14,7 +14,7 @@
 
   <div class="card border-0 shadow-sm mb-4 filter-panel">
     <div class="card-body p-4">
-      <form method="get" class="row g-3 align-items-end">
+      <form method="get" class="row g-3 align-items-end" data-persist-filters data-persist-key="users-list">
         <div class="col-12 col-xl-5">
           <label class="form-label" for="searchInput">{% trans "Suche" %}</label>
           <input class="form-control {% if search_query %}filter-active{% endif %}" id="searchInput" type="search" name="q" value="{{ search_query }}" placeholder="{% trans 'Suche nach Name, E-Mail, Benutzername oder Kürzel ...' %}" />
@@ -36,9 +36,17 @@
             <option value="inactive" {% if current_active == "inactive" %}selected{% endif %}>{% trans "Inaktiv" %}</option>
           </select>
         </div>
+        <div class="col-sm-6 col-xl-2">
+          <label class="form-label" for="sortSelect">{% trans "Sortierung" %}</label>
+          <select class="form-select" id="sortSelect" name="sort">
+            {% for value, label in sort_choices %}
+              <option value="{{ value }}" {% if current_sort == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
         <div class="col-12 d-flex gap-2">
           <button class="btn btn-primary" type="submit">{% trans "Filter anwenden" %}</button>
-          <a class="btn btn-outline-secondary" href="{% url 'accounts:user-list' %}">{% trans "Zurücksetzen" %}</a>
+          <a class="btn btn-outline-secondary" data-reset-filters="users-list" href="{% url 'accounts:user-list' %}">{% trans "Zurücksetzen" %}</a>
         </div>
       </form>
     </div>
@@ -70,23 +78,21 @@
                   <div class="small text-secondary">[{{ managed_user.profile.user_code }}]</div>
                 {% endif %}
               </td>
-              <td>{{ managed_user.username }}</td>
-              <td>{{ managed_user.email|default:"-" }}</td>
+              <td><div class="table-cell-truncate" title="{{ managed_user.username }}">{{ managed_user.username }}</div></td>
+              <td><div class="table-cell-truncate" title="{{ managed_user.email|default:'-' }}">{{ managed_user.email|default:"-" }}</div></td>
               <td>{{ managed_user.profile.user_code|default:"-" }}</td>
               <td><span class="badge text-bg-light border">{{ managed_user.profile.get_role_display }}</span></td>
               <td>
-                {% if managed_user.is_active %}
-                  <span class="badge text-bg-success">{% trans "Aktiv" %}</span>
-                {% else %}
-                  <span class="badge text-bg-secondary">{% trans "Inaktiv" %}</span>
-                {% endif %}
+                <span class="badge {{ managed_user.is_active|yesno_badge_class }}">{% if managed_user.is_active %}{% trans "Aktiv" %}{% else %}{% trans "Inaktiv" %}{% endif %}</span>
               </td>
               <td class="text-end">
-                <a class="btn btn-sm btn-outline-secondary" href="{% url 'accounts:user-edit' managed_user.pk %}">{% trans "Bearbeiten" %}</a>
+                <div class="table-actions">
+                  <a class="btn btn-sm btn-outline-secondary" href="{% url 'accounts:user-edit' managed_user.pk %}">{% trans "Bearbeiten" %}</a>
+                </div>
               </td>
             </tr>
           {% empty %}
-            <tr>
+            <tr class="empty-state-row">
               <td colspan="7" class="text-center py-4 text-secondary">{% trans "Keine Benutzer für die aktuelle Filterung gefunden." %}</td>
             </tr>
           {% endfor %}

@@ -41,8 +41,19 @@ class UserListView(UserManagementMixin, ListView):
     context_object_name = "users"
     paginate_by = 10
 
+    sort_options = {
+        "name": ("last_name", "first_name", "username"),
+        "-name": ("-last_name", "-first_name", "-username"),
+        "username": ("username",),
+        "-username": ("-username",),
+        "role": ("profile__role", "last_name", "first_name", "username"),
+        "active": ("-is_active", "last_name", "first_name", "username"),
+        "-updated": ("-date_joined",),
+    }
+
     def get_queryset(self):
-        queryset = User.objects.select_related("profile").order_by("last_name", "first_name", "username")
+        sort = self.request.GET.get("sort", "name")
+        queryset = User.objects.select_related("profile").order_by(*self.sort_options.get(sort, self.sort_options["name"]))
         query = self.request.GET.get("q", "").strip()
         role = self.request.GET.get("role", "").strip()
         active = self.request.GET.get("active", "").strip()
@@ -71,10 +82,18 @@ class UserListView(UserManagementMixin, ListView):
                 "search_query": self.request.GET.get("q", "").strip(),
                 "current_role": self.request.GET.get("role", "").strip(),
                 "current_active": self.request.GET.get("active", "").strip(),
+                "current_sort": self.request.GET.get("sort", "name"),
                 "role_choices": UserProfile.ROLE_CHOICES,
                 "result_count": context["paginator"].count if context.get("paginator") else self.get_queryset().count(),
                 "active_filter_count": active_filter_count,
                 "has_active_filters": active_filter_count > 0,
+                "sort_choices": [
+                    ("name", _("Name")),
+                    ("username", _("Benutzername")),
+                    ("role", _("Rolle")),
+                    ("active", _("Status aktiv zuerst")),
+                    ("-updated", _("Neueste zuerst")),
+                ],
             }
         )
         return context

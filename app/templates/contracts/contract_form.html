@@ -12,33 +12,53 @@
     <a class="btn btn-outline-secondary" href="{{ cancel_url }}">{% trans "Abbrechen" %}</a>
   </div>
 
-  <div class="card border-0 shadow-sm">
+  <div class="card border-0 shadow-sm form-shell">
     <div class="card-body p-4 p-lg-5">
       <form method="post" novalidate>
         {% csrf_token %}
         {% if form.non_field_errors %}
-          <div class="alert alert-danger">
+          <div class="alert alert-danger app-alert">
             {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
           </div>
         {% endif %}
-        <div class="row g-4">
-          <div class="col-md-6">{% include "includes/form_field.html" with field=form.title %}</div>
-          <div class="col-md-3">{% include "includes/form_field.html" with field=form.contract_number %}</div>
-          <div class="col-md-3">{% include "includes/form_field.html" with field=form.order_number %}</div>
-          <div class="col-md-4">{% include "includes/form_field.html" with field=form.vendor %}</div>
-          <div class="col-md-2">{% include "includes/form_field.html" with field=form.start_date %}</div>
-          <div class="col-md-2">{% include "includes/form_field.html" with field=form.end_date %}</div>
-          <div class="col-md-2">{% include "includes/form_field.html" with field=form.warning_months %}</div>
-          <div class="col-md-2">{% include "includes/form_field.html" with field=form.maintenance_frequency %}</div>
-          <div class="col-12">{% include "includes/form_field.html" with field=form.assets %}</div>
-          <div class="col-12">{% include "includes/form_field.html" with field=form.notes %}</div>
+        <div class="form-intro">
+          <p class="mb-1">{% trans "Alle mit * markierten Felder sind Pflichtfelder." %}</p>
+          <div class="form-required-note">{% trans "* Pflichtfeld" %}</div>
         </div>
-        <div class="d-flex gap-2 mt-4">
-          <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
-          <a class="btn btn-outline-secondary" href="{{ cancel_url }}">{% trans "Abbrechen" %}</a>
+        <section class="form-section">
+          <h2 class="form-section-title">{% trans "Vertragsdaten" %}</h2>
+          <div class="row g-4">
+            <div class="col-md-6">{% include "includes/form_field.html" with field=form.title %}</div>
+            <div class="col-md-3">{% include "includes/form_field.html" with field=form.contract_number %}</div>
+            <div class="col-md-3">{% include "includes/form_field.html" with field=form.order_number %}</div>
+            <div class="col-md-4">{% include "includes/form_field.html" with field=form.vendor %}</div>
+            <div class="col-md-2">{% include "includes/form_field.html" with field=form.start_date %}</div>
+            <div class="col-md-2">{% include "includes/form_field.html" with field=form.end_date %}</div>
+            <div class="col-md-2">{% include "includes/form_field.html" with field=form.warning_months %}</div>
+            <div class="col-md-2">{% include "includes/form_field.html" with field=form.maintenance_frequency %}</div>
+          </div>
+        </section>
+        <section class="form-section">
+          <h2 class="form-section-title">{% trans "Zugeordnete Assets" %}</h2>
+          <div class="row g-4">
+            <div class="col-12">{% include "includes/form_field.html" with field=form.assets %}</div>
+          </div>
+        </section>
+        <section class="form-section">
+          <h2 class="form-section-title">{% trans "Zusätzliche Informationen" %}</h2>
+          <div class="row g-4">
+            <div class="col-12">{% include "includes/form_field.html" with field=form.notes %}</div>
+          </div>
+        </section>
+        <div class="form-actions">
+          <div class="form-actions-primary">
+            <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
+          </div>
+          <div class="form-actions-secondary">
+            <a class="btn btn-outline-secondary" href="{{ cancel_url }}">{% trans "Abbrechen" %}</a>
+          </div>
         </div>
       </form>
     </div>
   </div>
 {% endblock %}
-

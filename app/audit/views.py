@@ -29,13 +29,22 @@ class AuditLogListView(RoleRequiredMixin, ListExportMixin, ListView):
         "Änderungsgrund",
     ]
 
+    sort_options = {
+        "-timestamp": "-timestamp",
+        "timestamp": "timestamp",
+        "action": "action",
+        "model": "model_name",
+        "user": "user__username",
+    }
+
     def get_queryset(self):
-        return get_audit_list_queryset(
+        queryset = get_audit_list_queryset(
             model_name=self.request.GET.get("model", "").strip(),
             user_id=self.request.GET.get("user", "").strip(),
             action=self.request.GET.get("action", "").strip(),
             query=self.request.GET.get("q", "").strip(),
         )
+        return queryset.order_by(self.sort_options.get(self.request.GET.get("sort", "-timestamp"), "-timestamp"), "-id")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -47,12 +56,20 @@ class AuditLogListView(RoleRequiredMixin, ListExportMixin, ListView):
                 "current_model": self.request.GET.get("model", "").strip(),
                 "current_user": self.request.GET.get("user", "").strip(),
                 "current_action": self.request.GET.get("action", "").strip(),
+                "current_sort": self.request.GET.get("sort", "-timestamp"),
                 "model_choices": filter_choices["model_choices"],
                 "user_choices": filter_choices["user_choices"],
                 "action_choices": AuditLog.ACTION_CHOICES,
                 "result_count": self.get_queryset().count(),
                 "active_filter_count": active_filter_count,
                 "has_active_filters": active_filter_count > 0,
+                "sort_choices": [
+                    ("-timestamp", "Neueste zuerst"),
+                    ("timestamp", "Älteste zuerst"),
+                    ("action", "Aktion"),
+                    ("model", "Modell"),
+                    ("user", "Benutzer"),
+                ],
                 "export_urls": self.get_export_urls(),
             }
         )

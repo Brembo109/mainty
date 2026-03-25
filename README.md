@@ -108,6 +108,7 @@ Internal browser-based Django application for managing assets, maintenance, qual
 - The protected pages `/dashboard/`, `/settings/`, `/audit/`, `/editor/`, `/admin-area/`, and `/accounts/profile/` demonstrate role checks and internal navigation.
 - Domain data models are available in Django admin for internal maintenance of master data.
 - The UI uses shared template helpers for consistent badges, filters, pagination, and detail-page layout.
+- Repeated UI patterns are refined around denser desktop tables, persistent filters, form sections, clearer required-field handling, and dark-mode-safe status badges.
 - Global defaults for new maintenance and qualification plans are managed through the regular mainty UI and remain overridable per plan.
 - Branding is split into a fixed Mainty app logo and an optional company logo managed through system settings.
 
@@ -134,6 +135,7 @@ Internal browser-based Django application for managing assets, maintenance, qual
 - Audit logging for system settings changes
 - German UI with i18n-ready structure
 - Shared status badges, filter layout, pagination, detail-page structure, and branded header/login layout across modules
+- Focused UI/UX refinement pass for list views, forms, dashboard readability, wide-screen usage, and dark mode consistency
 
 ## Roles and Permissions
 
@@ -257,6 +259,36 @@ Typical cron approach:
 - daily morning run for `send_due_reminders`
 - daily run for the daily digest
 - weekly run, for example every Monday, for the weekly digest
+
+## UI / UX Refinements
+
+The current UI layer keeps the existing Django-template architecture and Bootstrap base, but applies shared usability refinements across the main operational pages.
+
+### Lists, Filters, and Sorting
+
+- Main list views use a common filter bar with search, practical status filters, and sort selectors where useful.
+- Active filters stay visible in the UI and are preserved in the query string.
+- Frequently used filter states are persisted per list view in the browser and restored when users return to the page without a query string.
+- Result meta, exports, and pagination use shared partials for consistent behavior across modules.
+
+### Tables and Status Visualization
+
+- Tables are tuned for higher information density on desktop screens with compact row height, sticky headers, clearer action placement, and truncation for long values.
+- Statuses such as `Aktiv`, `Inaktiv`, `Fällig bald`, `Überfällig`, `Abgelaufen`, `Offen`, and `Abgeschlossen` use shared badge styles.
+- Badge colors and table highlighting are designed to stay readable in light mode and dark mode.
+
+### Forms and Required Fields
+
+- Longer forms are grouped into consistent sections such as `Stammdaten`, `Termine und Fristen`, `Verantwortlichkeiten`, `Vertragsdaten`, and `Zusätzliche Informationen`.
+- Required fields are marked consistently with `* Pflichtfeld`.
+- Validation issues are surfaced directly at the affected field and additionally in a form-level alert when necessary.
+- Primary and secondary actions use a shared action layout to keep `Speichern`, `Abbrechen`, `Bearbeiten`, and similar flows predictable.
+
+### Responsive Layout and Dashboard
+
+- The main content area uses a wider fluid container so tables and dashboard widgets make better use of larger screens.
+- Dashboard tables and lists follow the same badge, truncation, and empty-state patterns as operational list views.
+- The responsive behavior stays desktop-oriented, but medium laptop widths and dark mode receive explicit styling instead of fallback rendering.
 
 ### Current Limitations
 

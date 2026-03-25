@@ -16,7 +16,7 @@
 
   <div class="card border-0 shadow-sm mb-4 filter-panel">
     <div class="card-body p-4">
-      <form method="get" class="row g-3 align-items-end">
+      <form method="get" class="row g-3 align-items-end" data-persist-filters data-persist-key="qualification-list">
         <div class="col-12 col-xl-4">
           <label class="form-label" for="searchInput">{% trans "Suche" %}</label>
           <input class="form-control {% if search_query %}filter-active{% endif %}" id="searchInput" type="search" name="q" value="{{ search_query }}" placeholder="{% trans 'Suche nach Titel, Asset oder Verantwortlich ...' %}" />
@@ -77,7 +77,7 @@
         </div>
         <div class="col-12 d-flex gap-2">
           <button class="btn btn-primary" type="submit">{% trans "Filter anwenden" %}</button>
-          <a class="btn btn-outline-secondary" href="{% url 'qualification:plan-list' %}">{% trans "Zurücksetzen" %}</a>
+          <a class="btn btn-outline-secondary" data-reset-filters="qualification-list" href="{% url 'qualification:plan-list' %}">{% trans "Zurücksetzen" %}</a>
         </div>
       </form>
     </div>
@@ -106,17 +106,17 @@
         <tbody>
           {% for plan in plans %}
             <tr class="{{ plan.due_status.code|due_row_class }}">
-              <td class="fw-semibold">{{ plan.asset.asset_id }} - {{ plan.asset.name }}</td>
-              <td>{{ plan.title }}</td>
+              <td class="fw-semibold"><div class="table-cell-truncate" title="{{ plan.asset.asset_id }} - {{ plan.asset.name }}">{{ plan.asset.asset_id }} - {{ plan.asset.name }}</div></td>
+              <td><div class="table-cell-truncate" title="{{ plan.title }}">{{ plan.title }}</div></td>
               <td>{{ plan.interval_value }} {{ plan.get_interval_unit_display }}</td>
               <td>{{ plan.warning_days }}</td>
               <td>{{ plan.latest_event.performed_on|date:"d.m.Y"|default:"-" }}</td>
               <td class="{% if plan.due_status.code == 'overdue' %}fw-semibold text-danger{% elif plan.due_status.code == 'warning' %}fw-semibold text-warning-emphasis{% endif %}">{{ plan.next_due_date|date:"d.m.Y"|default:"-" }}</td>
               <td><span class="badge {{ plan.due_status.code|due_badge_class }}">{{ plan.due_status.label }}</span></td>
-              <td>{{ plan.responsible_person|default:"-" }}</td>
-              <td>{% if plan.is_active %}{% trans "Ja" %}{% else %}{% trans "Nein" %}{% endif %}</td>
+              <td><div class="table-cell-truncate" title="{{ plan.responsible_person|default:'-' }}">{{ plan.responsible_person|default:"-" }}</div></td>
+              <td><span class="badge {{ plan.is_active|yesno_badge_class }}">{% if plan.is_active %}{% trans "Aktiv" %}{% else %}{% trans "Inaktiv" %}{% endif %}</span></td>
               <td class="text-end">
-                <div class="d-flex justify-content-end gap-2">
+                <div class="table-actions">
                   <a class="btn btn-sm btn-outline-primary" href="{% url 'qualification:plan-detail' plan.pk %}">{% trans "Details" %}</a>
                   {% if can_access_editor_area %}
                     <a class="btn btn-sm btn-outline-secondary" href="{% url 'qualification:plan-edit' plan.pk %}">{% trans "Bearbeiten" %}</a>
@@ -125,7 +125,7 @@
               </td>
             </tr>
           {% empty %}
-            <tr>
+            <tr class="empty-state-row">
               <td colspan="10" class="text-center py-4 text-secondary">{% trans "Keine Qualifizierungspläne für die aktuelle Filterung gefunden." %}</td>
             </tr>
           {% endfor %}

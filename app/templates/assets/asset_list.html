@@ -16,7 +16,7 @@
 
   <div class="card border-0 shadow-sm mb-4 filter-panel">
     <div class="card-body p-4">
-      <form method="get" class="row g-3 align-items-end">
+      <form method="get" class="row g-3 align-items-end" data-persist-filters data-persist-key="assets-list">
         <div class="col-12 col-xl-4">
           <label class="form-label" for="searchInput">{% trans "Suche" %}</label>
           <input class="form-control {% if search_query %}filter-active{% endif %}" id="searchInput" type="search" name="q" value="{{ search_query }}" placeholder="{% trans 'Suche nach Asset-ID, Name oder Hersteller ...' %}" />
@@ -58,7 +58,7 @@
         </div>
         <div class="col-12 d-flex gap-2">
           <button class="btn btn-primary" type="submit">{% trans "Filter anwenden" %}</button>
-          <a class="btn btn-outline-secondary" href="{% url 'assets:list' %}">{% trans "Zurücksetzen" %}</a>
+          <a class="btn btn-outline-secondary" data-reset-filters="assets-list" href="{% url 'assets:list' %}">{% trans "Zurücksetzen" %}</a>
         </div>
       </form>
     </div>
@@ -90,11 +90,11 @@
           {% for asset in assets %}
             <tr>
               <td class="fw-semibold">{{ asset.asset_id }}</td>
-              <td>{{ asset.name }}</td>
-              <td>{{ asset.short_name|default:"-" }}</td>
+              <td><div class="table-cell-truncate" title="{{ asset.name }}">{{ asset.name }}</div></td>
+              <td><div class="table-cell-truncate" title="{{ asset.short_name|default:'-' }}">{{ asset.short_name|default:"-" }}</div></td>
               <td>{{ asset.category|default:"-" }}</td>
-              <td>{{ asset.manufacturer|default:"-" }}</td>
-              <td>{{ asset.serial_number|default:"-" }}</td>
+              <td><div class="table-cell-truncate" title="{{ asset.manufacturer|default:'-' }}">{{ asset.manufacturer|default:"-" }}</div></td>
+              <td><div class="table-cell-truncate" title="{{ asset.serial_number|default:'-' }}">{{ asset.serial_number|default:"-" }}</div></td>
               <td>{{ asset.location|default:"-" }}</td>
               <td>{{ asset.department|default:"-" }}</td>
               <td>{{ asset.commissioning_date|date:"d.m.Y"|default:"-" }}</td>
@@ -109,7 +109,7 @@
                 <span class="badge {{ asset.status|asset_badge_class }}">{{ asset.get_status_display }}</span>
               </td>
               <td class="text-end">
-                <div class="d-flex justify-content-end gap-2">
+                <div class="table-actions">
                   <a class="btn btn-sm btn-outline-primary" href="{% url 'assets:detail' asset.pk %}">{% trans "Details" %}</a>
                   {% if can_access_editor_area %}
                     <a class="btn btn-sm btn-outline-secondary" href="{% url 'assets:edit' asset.pk %}">{% trans "Bearbeiten" %}</a>
@@ -118,7 +118,7 @@
               </td>
             </tr>
           {% empty %}
-            <tr>
+            <tr class="empty-state-row">
               <td colspan="12" class="text-center py-4 text-secondary">{% trans "Keine Anlagen für die aktuelle Filterung gefunden." %}</td>
             </tr>
           {% endfor %}

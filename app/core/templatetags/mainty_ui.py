@@ -59,6 +59,11 @@ def asset_badge_class(status_code):
 
 
 @register.filter
+def yesno_badge_class(value):
+    return "text-bg-success" if value else "text-bg-secondary"
+
+
+@register.filter
 def contract_badge_class(status_code):
     return {
         CONTRACT_STATUS_ACTIVE: "text-bg-success",

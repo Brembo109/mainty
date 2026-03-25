@@ -12,43 +12,65 @@
     <a class="btn btn-outline-secondary" href="{{ cancel_url }}">{% trans "Abbrechen" %}</a>
   </div>
 
-  <div class="card border-0 shadow-sm">
+  <div class="card border-0 shadow-sm form-shell">
     <div class="card-body p-4 p-lg-5">
       <form method="post" novalidate>
         {% csrf_token %}
         {% if form.non_field_errors %}
-          <div class="alert alert-danger">
+          <div class="alert alert-danger app-alert">
             {% for error in form.non_field_errors %}
               <div>{{ error }}</div>
             {% endfor %}
           </div>
         {% endif %}
-
-        <div class="row g-4">
-          <div class="col-12"><h2 class="h5 mb-3">{% trans "Identifikation und Einordnung" %}</h2></div>
-          <div class="col-md-4">{% include "includes/form_field.html" with field=form.asset_id %}</div>
-          <div class="col-md-4">{% include "includes/form_field.html" with field=form.name %}</div>
-          <div class="col-md-4">{% include "includes/form_field.html" with field=form.short_name %}</div>
-          <div class="col-md-4">{% include "includes/form_field.html" with field=form.category %}</div>
-          <div class="col-md-4">{% include "includes/form_field.html" with field=form.status %}</div>
-          <div class="col-md-4">{% include "includes/form_field.html" with field=form.commissioning_date %}</div>
-
-          <div class="col-12 mt-2"><h2 class="h5 mb-3">{% trans "Hersteller und technische Angaben" %}</h2></div>
-          <div class="col-md-4">{% include "includes/form_field.html" with field=form.manufacturer %}</div>
-          <div class="col-md-4">{% include "includes/form_field.html" with field=form.model %}</div>
-          <div class="col-md-4">{% include "includes/form_field.html" with field=form.serial_number %}</div>
-
-          <div class="col-12 mt-2"><h2 class="h5 mb-3">{% trans "Organisation und Standort" %}</h2></div>
-          <div class="col-md-6">{% include "includes/form_field.html" with field=form.location %}</div>
-          <div class="col-md-6">{% include "includes/form_field.html" with field=form.department %}</div>
-
-          <div class="col-12 mt-2"><h2 class="h5 mb-3">{% trans "Notizen" %}</h2></div>
-          <div class="col-12">{% include "includes/form_field.html" with field=form.notes %}</div>
+        <div class="form-intro">
+          <p class="mb-1">{% trans "Alle mit * markierten Felder sind Pflichtfelder." %}</p>
+          <div class="form-required-note">{% trans "* Pflichtfeld" %}</div>
         </div>
 
-        <div class="d-flex gap-2 mt-4">
-          <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
-          <a class="btn btn-outline-secondary" href="{{ cancel_url }}">{% trans "Abbrechen" %}</a>
+        <section class="form-section">
+          <h2 class="form-section-title">{% trans "Stammdaten" %}</h2>
+          <div class="row g-4">
+            <div class="col-md-4">{% include "includes/form_field.html" with field=form.asset_id %}</div>
+            <div class="col-md-4">{% include "includes/form_field.html" with field=form.name %}</div>
+            <div class="col-md-4">{% include "includes/form_field.html" with field=form.short_name %}</div>
+            <div class="col-md-4">{% include "includes/form_field.html" with field=form.category %}</div>
+            <div class="col-md-4">{% include "includes/form_field.html" with field=form.status %}</div>
+            <div class="col-md-4">{% include "includes/form_field.html" with field=form.commissioning_date %}</div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2 class="form-section-title">{% trans "Hersteller und Technik" %}</h2>
+          <div class="row g-4">
+            <div class="col-md-4">{% include "includes/form_field.html" with field=form.manufacturer %}</div>
+            <div class="col-md-4">{% include "includes/form_field.html" with field=form.model %}</div>
+            <div class="col-md-4">{% include "includes/form_field.html" with field=form.serial_number %}</div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2 class="form-section-title">{% trans "Organisation und Standort" %}</h2>
+          <div class="row g-4">
+            <div class="col-md-6">{% include "includes/form_field.html" with field=form.location %}</div>
+            <div class="col-md-6">{% include "includes/form_field.html" with field=form.department %}</div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2 class="form-section-title">{% trans "Zusätzliche Informationen" %}</h2>
+          <div class="row g-4">
+            <div class="col-12">{% include "includes/form_field.html" with field=form.notes %}</div>
+          </div>
+        </section>
+
+        <div class="form-actions">
+          <div class="form-actions-primary">
+            <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
+          </div>
+          <div class="form-actions-secondary">
+            <a class="btn btn-outline-secondary" href="{{ cancel_url }}">{% trans "Abbrechen" %}</a>
+          </div>
         </div>
       </form>
     </div>
