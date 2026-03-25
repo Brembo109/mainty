@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "core",
     "accounts",
     "assets",
+    "contracts",
     "maintenance",
     "qualification",
     "tasks",

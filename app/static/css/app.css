@@ -291,6 +291,31 @@ body {
   border-color: var(--mainty-border-strong) !important;
 }
 
+.contract-indicator {
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 999px;
+  background-color: var(--mainty-muted);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.contract-indicator.is-active {
+  background-color: var(--bs-success);
+}
+
+.contract-indicator.is-warning {
+  background-color: var(--bs-warning);
+}
+
+.contract-indicator.is-expired {
+  background-color: var(--bs-danger);
+}
+
+.contract-indicator.is-none {
+  background-color: #98a3b3;
+}
+
 .text-secondary,
 .text-body-secondary,
 .text-muted,

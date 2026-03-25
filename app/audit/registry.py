@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from accounts.models import UserProfile
 from core.models import SystemSettings
 from assets.models import Asset
+from contracts.models import MaintenanceContract
 from maintenance.models import MaintenanceEvent, MaintenancePlan
 from qualification.models import QualificationEvent, QualificationPlan
 from tasks.models import Task
@@ -14,6 +15,7 @@ TRACKED_MODELS = (
     UserProfile,
     SystemSettings,
     Asset,
+    MaintenanceContract,
     MaintenancePlan,
     MaintenanceEvent,
     QualificationPlan,

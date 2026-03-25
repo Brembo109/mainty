@@ -2,7 +2,7 @@
 
 > Disclaimer: This project was entirely vibecoded with Codex.
 
-Internal browser-based Django application for managing assets, maintenance, qualification cycles, operational tasks, internal users, administratively managed system defaults, practical list exports, traceable audit history, configurable company branding, reverse-proxy aware access settings, and role/permission assignments on top of Django Groups. The repository provides a production-oriented setup with PostgreSQL, Docker, Nginx, Gunicorn, role-based access, a dashboard, media handling, and a read-only audit trail.
+Internal browser-based Django application for managing assets, maintenance, qualification cycles, maintenance/service contracts, operational tasks, internal users, administratively managed system defaults, practical list exports, traceable audit history, configurable company branding, reverse-proxy aware access settings, and role/permission assignments on top of Django Groups. The repository provides a production-oriented setup with PostgreSQL, Docker, Nginx, Gunicorn, role-based access, a dashboard, media handling, and a read-only audit trail.
 
 ## Stack
 
@@ -39,6 +39,7 @@ Internal browser-based Django application for managing assets, maintenance, qual
     |-- assets/
     |-- config/
     |-- core/
+    |-- contracts/
     |-- maintenance/
     |-- qualification/
     |-- static/
@@ -102,7 +103,7 @@ Internal browser-based Django application for managing assets, maintenance, qual
 
 - Django uses server-rendered templates.
 - HTMX and Bootstrap 5 are already included in the base template.
-- The `core`, `accounts`, `assets`, `maintenance`, `qualification`, `tasks`, and `audit` apps are active parts of the application.
+- The `core`, `accounts`, `assets`, `contracts`, `maintenance`, `qualification`, `tasks`, and `audit` apps are active parts of the application.
 - The protected pages `/dashboard/`, `/settings/`, `/audit/`, `/editor/`, `/admin-area/`, and `/accounts/profile/` demonstrate role checks and internal navigation.
 - Domain data models are available in Django admin for internal maintenance of master data.
 - The UI uses shared template helpers for consistent badges, filters, pagination, and detail-page layout.
@@ -121,11 +122,13 @@ Internal browser-based Django application for managing assets, maintenance, qual
 - Admin-managed optional company logo for header and login page branding
 - CRUD for:
   - assets
+  - maintenance and service contracts with multi-asset assignment
   - maintenance plans and events
   - qualification plans and events
   - tasks
 - Filter-aware CSV and XLSX exports for assets, maintenance plans, qualification plans, tasks, and audit log
 - Global audit trail and object-specific change history
+- Contract status visualization in contract lists, contract details, asset lists, asset details, and dashboard widgets
 - Audit logging for system settings changes
 - German UI with i18n-ready structure
 - Shared status badges, filter layout, pagination, detail-page structure, and branded header/login layout across modules
@@ -157,6 +160,45 @@ docker compose exec web python manage.py bootstrap_roles
 docker compose exec web python manage.py makemigrations
 docker compose exec web python manage.py migrate
 ```
+
+## Contract Module
+
+The `Verträge` module manages maintenance and service contracts as a dedicated entity instead of storing contract data directly on assets.
+
+- A contract can be linked to one or many assets.
+- An asset can be linked to multiple contracts.
+- Contracts store title, contract number, order number, vendor, start date, end date, warning period in months, maintenance frequency, notes, and linked assets.
+- Contract changes and asset assignment changes are included in the existing audit trail.
+
+### Contract Status Logic
+
+Contract status is calculated dynamically from the current date and the configured warning period for each contract:
+
+- `Aktiv`: contract end date is outside the warning period
+- `Läuft bald aus`: contract is still active but the end date falls within the configured warning period
+- `Abgelaufen`: contract end date is in the past
+
+No manual status field is maintained.
+
+### Warning Periods
+
+Each contract has its own `Vorwarnzeit` in months. This value determines when the contract changes from `Aktiv` to `Läuft bald aus`.
+
+Examples:
+
+- `3` months for short commercial service contracts
+- `6` months for annual review contracts
+- `12` months for long-running service agreements with longer procurement lead times
+
+### Where Contract Status Is Visible
+
+Contract status and remaining runtime are shown in multiple places:
+
+- `Verträge` list with filters, sorting, exports, status badge, and remaining runtime
+- contract detail page with linked assets and audit history
+- asset overview through a compact colored contract indicator
+- asset detail page in the linked contracts section
+- dashboard widgets for expiring and expired contracts
 
 ## Production-Oriented Notes
 

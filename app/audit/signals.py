@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from django.db.models import signals
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from accounts.roles import get_primary_role_label, get_user_code, get_user_display_name
 from audit.context import get_current_audit_user, get_current_change_reason
@@ -16,6 +17,12 @@ def register_audit_signals():
         signals.pre_save.connect(cache_original_instance, sender=model, dispatch_uid=f"audit_pre_save_{model.__name__}")
         signals.post_save.connect(write_save_audit_logs, sender=model, dispatch_uid=f"audit_post_save_{model.__name__}")
         signals.pre_delete.connect(write_delete_audit_log, sender=model, dispatch_uid=f"audit_pre_delete_{model.__name__}")
+        for field in model._meta.many_to_many:
+            signals.m2m_changed.connect(
+                write_m2m_audit_logs,
+                sender=field.remote_field.through,
+                dispatch_uid=f"audit_m2m_{model.__name__}_{field.name}",
+            )
 
 
 def cache_original_instance(sender, instance, **kwargs):
@@ -90,6 +97,44 @@ def write_delete_audit_log(sender, instance, **kwargs):
     )
 
 
+def write_m2m_audit_logs(sender, instance, action, reverse, model, pk_set, **kwargs):
+    if reverse or action not in {"post_add", "post_remove", "post_clear"}:
+        return
+    if instance.__class__ not in TRACKED_MODELS:
+        return
+
+    field = _get_m2m_field_for_sender(instance.__class__, sender)
+    if field is None:
+        return
+
+    related_queryset = model._default_manager.filter(pk__in=pk_set).order_by("pk") if pk_set else model._default_manager.none()
+    if action == "post_add":
+        old_value = ""
+        new_value = "; ".join(str(obj) for obj in related_queryset)
+    elif action == "post_remove":
+        old_value = "; ".join(str(obj) for obj in related_queryset)
+        new_value = ""
+    else:
+        old_value = str(_("Alle Zuordnungen entfernt"))
+        new_value = ""
+
+    user = get_current_audit_user()
+    user_snapshot = _build_user_snapshot(user)
+    AuditLog.objects.create(
+        user=user,
+        user_display_snapshot=user_snapshot["display"],
+        user_role_snapshot=user_snapshot["role"],
+        action=AuditLog.ACTION_UPDATE,
+        model_name=instance.__class__.__name__,
+        object_id=str(instance.pk),
+        object_repr=_truncate(str(instance)),
+        field_name=field.name,
+        old_value=str(old_value),
+        new_value=str(new_value),
+        change_reason=getattr(instance, "_audit_change_reason", "") or get_current_change_reason(),
+    )
+
+
 def _tracked_fields(model):
     fields = []
     for field in model._meta.concrete_fields:
@@ -101,6 +146,13 @@ def _tracked_fields(model):
             continue
         fields.append(field)
     return fields
+
+
+def _get_m2m_field_for_sender(model, sender):
+    for field in model._meta.many_to_many:
+        if field.remote_field.through == sender:
+            return field
+    return None
 
 
 def _raw_field_value(instance, field):

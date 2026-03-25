@@ -9,6 +9,7 @@ from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 from audit.services import get_audit_entries_for_instance
 from core.exports import ListExportMixin, stringify_export_value
 from core.ui import count_active_filters
+from contracts.services import summarize_asset_contract_status
 
 from .forms import AssetForm
 from .models import Asset
@@ -57,7 +58,7 @@ class AssetListView(AssetAccessMixin, ListExportMixin, ListView):
     }
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().prefetch_related("contracts")
         q = self.request.GET.get("q", "").strip()
         status = self.request.GET.get("status", "").strip()
         location = self.request.GET.get("location", "").strip()
@@ -87,6 +88,8 @@ class AssetListView(AssetAccessMixin, ListExportMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        for asset in context["assets"]:
+            asset.contract_summary = summarize_asset_contract_status(asset)
         filters_source = Asset.objects.all()
         context.update(
             {
@@ -151,6 +154,8 @@ class AssetDetailView(AssetAccessMixin, DetailView):
         context["maintenance_plans"] = self.object.maintenance_plans.all()
         context["qualification_plans"] = self.object.qualification_plans.all()
         context["tasks"] = self.object.tasks.select_related("responsible_user").all()
+        context["contracts"] = self.object.contracts.all()
+        context["contract_summary"] = summarize_asset_contract_status(self.object)
         context["audit_entries"] = get_audit_entries_for_instance(self.object, limit=10)
         context["audit_model_name"] = self.object.__class__.__name__
         context["audit_object_id"] = self.object.pk

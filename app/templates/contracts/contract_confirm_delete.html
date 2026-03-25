@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load i18n mainty_ui %}
+
+{% block title %}{% trans "Vertrag löschen" %} | mainty{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <span class="badge {{ contract.status.code|contract_badge_class }}">{{ contract.status.label }}</span>
+      </div>
+      <h1 class="h2 mb-1">{% trans "Vertrag löschen" %}</h1>
+      <p class="text-secondary mb-0">{% trans "Diese Aktion entfernt den Vertrag dauerhaft aus Mainty." %}</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'contracts:detail' contract.pk %}">{% trans "Zurück" %}</a>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4 p-lg-5">
+      <div class="alert alert-danger mb-4">
+        {% trans "Möchtest du diesen Vertrag wirklich löschen? Die Zuordnung zu allen Assets wird dabei ebenfalls entfernt." %}
+      </div>
+
+      <dl class="row mb-4">
+        <dt class="col-sm-3">{% trans "Titel" %}</dt>
+        <dd class="col-sm-9">{{ contract.title }}</dd>
+        <dt class="col-sm-3">{% trans "Vertragsnummer" %}</dt>
+        <dd class="col-sm-9">{{ contract.contract_number|default:"-" }}</dd>
+        <dt class="col-sm-3">{% trans "Dienstleister" %}</dt>
+        <dd class="col-sm-9">{{ contract.vendor }}</dd>
+        <dt class="col-sm-3">{% trans "Enddatum" %}</dt>
+        <dd class="col-sm-9">{{ contract.end_date|date:"d.m.Y" }}</dd>
+        <dt class="col-sm-3">{% trans "Zugeordnete Assets" %}</dt>
+        <dd class="col-sm-9">{% blocktrans count count=contract.assets.count %}{{ count }} Asset{% plural %}{{ count }} Assets{% endblocktrans %}</dd>
+      </dl>
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="d-flex gap-2">
+          <button class="btn btn-danger" type="submit">{% trans "Vertrag endgültig löschen" %}</button>
+          <a class="btn btn-outline-secondary" href="{% url 'contracts:detail' contract.pk %}">{% trans "Abbrechen" %}</a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}

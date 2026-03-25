@@ -35,6 +35,16 @@ PERMISSION_SECTIONS = [
         ],
     ),
     (
+        "vertraege",
+        "Verträge",
+        [
+            PermissionRow("contracts_view", "Verträge anzeigen", (("contracts", "view_maintenancecontract"),)),
+            PermissionRow("contracts_add", "Verträge anlegen", (("contracts", "add_maintenancecontract"),)),
+            PermissionRow("contracts_change", "Verträge bearbeiten", (("contracts", "change_maintenancecontract"),)),
+            PermissionRow("contracts_delete", "Verträge löschen", (("contracts", "delete_maintenancecontract"),)),
+        ],
+    ),
+    (
         "wartung",
         "Wartung",
         [
@@ -119,6 +129,10 @@ ROLE_PERMISSION_DEFAULTS = {
         "assets_view",
         "assets_add",
         "assets_change",
+        "contracts_view",
+        "contracts_add",
+        "contracts_change",
+        "contracts_delete",
         "maintenance_plan_view",
         "maintenance_plan_add",
         "maintenance_plan_change",
@@ -134,6 +148,7 @@ ROLE_PERMISSION_DEFAULTS = {
     },
     ROLE_VIEWER: {
         "assets_view",
+        "contracts_view",
         "maintenance_plan_view",
         "qualification_plan_view",
         "tasks_view",
