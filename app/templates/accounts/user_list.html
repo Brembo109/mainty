@@ -83,11 +83,28 @@
               <td>{{ managed_user.profile.user_code|default:"-" }}</td>
               <td><span class="badge text-bg-light border">{{ managed_user.profile.get_role_display }}</span></td>
               <td>
+                <div class="small text-secondary">{% trans "Kontostatus" %}</div>
                 <span class="badge {{ managed_user.is_active|yesno_badge_class }}">{% if managed_user.is_active %}{% trans "Aktiv" %}{% else %}{% trans "Inaktiv" %}{% endif %}</span>
+                <div class="small text-secondary mt-2">{% trans "Loginstatus" %}</div>
+                {% if managed_user.lockout_status.is_locked %}
+                  <span class="badge text-bg-danger">{% trans "Login gesperrt" %}</span>
+                  <div class="small text-secondary mt-1">
+                    {% blocktrans with count=managed_user.lockout_status.failure_count timestamp=managed_user.lockout_status.last_attempt|date:"d.m.Y H:i" %}{{ count }} Fehlversuche, zuletzt {{ timestamp }}{% endblocktrans %}
+                  </div>
+                {% else %}
+                  <span class="badge text-bg-success">{% trans "Login freigegeben" %}</span>
+                {% endif %}
               </td>
               <td class="text-end">
                 <div class="table-actions">
                   <a class="btn btn-sm btn-outline-secondary" href="{% url 'accounts:user-edit' managed_user.pk %}">{% trans "Bearbeiten" %}</a>
+                  {% if managed_user.lockout_status.is_locked %}
+                    <form method="post" action="{% url 'accounts:user-unlock' managed_user.pk %}" class="d-inline">
+                      {% csrf_token %}
+                      <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                      <button class="btn btn-sm btn-outline-danger" type="submit">{% trans "Entsperren" %}</button>
+                    </form>
+                  {% endif %}
                 </div>
               </td>
             </tr>

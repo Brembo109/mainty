@@ -67,6 +67,10 @@ Internal browser-based Django application for managing assets, maintenance, qual
    - `ALLOWED_HOSTS`
    - `CSRF_TRUSTED_ORIGINS`
    - `TASK_DASHBOARD_WARNING_DAYS` for the task warning horizon shown on the dashboard
+   - optional session and login protection settings:
+     - `SESSION_COOKIE_AGE` in seconds, default `3600`
+     - `AXES_FAILURE_LIMIT`, default `5`
+     - `AXES_COOLOFF_TIME` in minutes, default `15`
    - PostgreSQL credentials
 
 3. Start the containers:
@@ -115,6 +119,8 @@ Internal browser-based Django application for managing assets, maintenance, qual
 ## Current Functional Scope
 
 - Authentication with login/logout
+- Session handling with configurable session lifetime and browser-close session expiry
+- Brute-force login protection with `django-axes`
 - Role-based access with `Admin`, `User`, and `Viewer`
 - Admin-managed user administration in the regular mainty UI
 - Admin-managed role/permission matrix for Mainty-relevant Django group permissions
@@ -153,6 +159,62 @@ Implementation notes:
 - The regular UI exposes `/accounts/users/` for user administration and `/accounts/permissions/` for the role-permission matrix.
 - Navigation visibility is only a convenience layer. Access control is enforced in the views.
 - The `bootstrap_roles` management command creates the initial groups and applies the Mainty default permission set.
+
+## Login Protection
+
+Mainty protects the login view against repeated failed authentication attempts with `django-axes`.
+
+- Default lockout threshold: `5` failed login attempts
+- Default cooldown: `15` minutes
+- Lockout scope: combination of `username` and `ip_address`
+- Successful login resets the recorded failure counter
+- Session lifetime is configurable through `SESSION_COOKIE_AGE` and defaults to `3600` seconds
+- Browser sessions are configured to expire on browser close
+
+### Admin Visibility and Unlock
+
+The regular Mainty user administration distinguishes between two separate states:
+
+- `Kontostatus`: Django user activation state (`Aktiv` or `Inaktiv`)
+- `Loginstatus`: temporary login state managed by `django-axes` (`Login freigegeben` or `Login gesperrt`)
+
+A locked user is not automatically set to `is_active = False`. This means a user can be active and still temporarily locked out from login after repeated failed attempts.
+
+Admins can review the login lockout state directly in `/accounts/users/` and on the user edit page. If a user locks themselves out, an admin can clear the lockout with the built-in `Entsperren` action in the regular Mainty UI.
+
+## Effective Permission Enforcement
+
+Mainty uses the existing Django `Group` and `Permission` model as the effective permission source.
+
+- The `Admin`, `User`, and `Viewer` roles are represented by Django groups.
+- The permissions matrix in the regular UI assigns concrete Django permissions to those role groups.
+- Application views and templates enforce these concrete permissions directly instead of relying on role names alone.
+- There is no implicit application-level bypass for `Admin` or `is_superuser` users in normal Mainty views. Access is granted because the required permissions are assigned.
+
+Backend enforcement is centralized:
+
+- `accounts.permissions` defines the reusable permission mappings and helpers.
+- `accounts.mixins.PermissionRequiredMixin` protects class-based views with a shared 403 behavior.
+- `accounts.context_processors.role_context` exposes permission-derived template flags for navigation and action buttons.
+
+Examples:
+
+- `assets.view_asset` controls access to asset list and detail pages.
+- `assets.change_asset` controls asset edit actions.
+- `contracts.delete_maintenancecontract` controls contract deletion.
+- `core.change_systemsettings` controls access to Mainty system settings.
+
+When permissions are removed in the UI, the effect is immediate on the next request because the application evaluates the assigned Django permissions directly.
+
+## Adding New Permissions
+
+For new modules or features:
+
+1. Add or reuse the relevant Django model permissions.
+2. Add a matching row in `accounts.permissions.PERMISSION_SECTIONS`.
+3. Reuse the generated permission constants or row mappings in the affected views.
+4. Expose the related template visibility through `get_template_permission_context`.
+5. Add view and template tests that prove the permission is enforced and not only displayed in the UI.
 
 Useful commands:
 

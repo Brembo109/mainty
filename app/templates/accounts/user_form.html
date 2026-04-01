@@ -56,6 +56,34 @@
               </div>
             </div>
           </div>
+          {% if object %}
+            <div class="mt-4 rounded-3 border p-3 bg-light-subtle">
+              <div class="small text-secondary mb-2">
+                {% trans "Kontostatus und Loginstatus sind getrennt: Ein aktiver Benutzer kann trotzdem vorübergehend für die Anmeldung gesperrt sein." %}
+              </div>
+              <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div>
+                  <div class="small text-secondary text-uppercase">{% trans "Anmeldeschutz" %}</div>
+                  {% if lockout_status.is_locked %}
+                    <div class="fw-semibold text-danger">{% trans "Login ist aktuell gesperrt." %}</div>
+                    <div class="small text-secondary">
+                      {% blocktrans with count=lockout_status.failure_count timestamp=lockout_status.last_attempt|date:"d.m.Y H:i" %}Der Benutzer kann sich derzeit nicht anmelden. {{ count }} Fehlversuche, zuletzt {{ timestamp }}{% endblocktrans %}
+                    </div>
+                  {% else %}
+                    <div class="fw-semibold">{% trans "Login ist freigegeben" %}</div>
+                    <div class="small text-secondary">{% trans "Der Benutzer kann sich aktuell anmelden, sofern das Konto aktiv ist." %}</div>
+                  {% endif %}
+                </div>
+                {% if lockout_status.is_locked %}
+                  <form method="post" action="{% url 'accounts:user-unlock' object.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                    <button class="btn btn-outline-danger" type="submit">{% trans "Benutzer entsperren" %}</button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
         </section>
         {% if form.password1 %}
           <section class="form-section">
@@ -79,7 +107,7 @@
     </div>
   </div>
 
-  {% if audit_entries %}
+  {% if can_view_audit and audit_entries %}
     <div class="mt-4">
       {% include "audit/partials/object_history.html" %}
     </div>
