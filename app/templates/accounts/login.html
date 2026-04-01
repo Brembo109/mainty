@@ -1,14 +1,28 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 
 {% block title %}{% trans "Anmelden" %} | mainty{% endblock %}
 
 {% block content %}
   <div class="row justify-content-center">
-    <div class="col-md-6 col-xl-4">
+    <div class="col-md-7 col-xl-5">
       <div class="card border-0 shadow-sm">
-        <div class="card-body p-4">
-          <h1 class="h4 mb-4">{% trans "Anmelden" %}</h1>
+        <div class="card-body p-4 p-lg-5">
+          <div class="text-center mb-4">
+            {% if company_logo %}
+              <div class="mb-3">
+                <img src="{{ company_logo.url }}" alt="{% trans 'Firmenlogo' %}" class="company-logo company-logo-login" />
+              </div>
+            {% endif %}
+            <div class="d-inline-flex align-items-center gap-3 login-branding mb-3">
+              <img src="{% static app_logo_static_path %}" alt="{% trans 'mainty Logo' %}" class="mainty-app-logo" />
+              <div class="text-start">
+                <div class="h4 mb-0 fw-semibold">mainty</div>
+              </div>
+            </div>
+            <h1 class="h4 mb-1">{% trans "Anmelden" %}</h1>
+            <p class="text-secondary mb-0">{% trans "Bitte melden Sie sich mit Ihrem Benutzerkonto an." %}</p>
+          </div>
           <form method="post" novalidate>
             {% csrf_token %}
             {% if form.non_field_errors %}

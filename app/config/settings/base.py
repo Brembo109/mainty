@@ -39,14 +39,18 @@ INSTALLED_APPS = [
     "core",
     "accounts",
     "assets",
+    "contracts",
     "maintenance",
     "qualification",
+    "reminders",
     "tasks",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
+    "core.middleware.DynamicAppSettingsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -69,6 +73,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "accounts.context_processors.role_context",
+                "core.context_processors.branding_context",
             ],
         },
     },
@@ -108,11 +113,15 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "core:dashboard"
 LOGOUT_REDIRECT_URL = "core:home"
 TASK_DASHBOARD_WARNING_DAYS = int(env("TASK_DASHBOARD_WARNING_DAYS", "7"))
+SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", False)
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "noreply@mainty.local")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

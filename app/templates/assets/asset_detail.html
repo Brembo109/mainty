@@ -9,6 +9,7 @@
       <div class="d-flex align-items-center gap-2 mb-2">
         <span class="badge text-bg-light border">{{ asset.asset_id }}</span>
         <span class="badge {{ asset.status|asset_badge_class }}">{{ asset.get_status_display }}</span>
+        <span class="badge {{ contract_summary.code|contract_badge_class }}">{{ contract_summary.label }}</span>
       </div>
       <h1 class="h2 mb-1">{{ asset.name }}</h1>
       <p class="text-secondary mb-0">
@@ -58,6 +59,50 @@
           <div class="mb-3">{{ asset.created_at|date:"d.m.Y H:i" }}</div>
           <div class="small text-secondary">{% trans "Aktualisiert am" %}</div>
           <div>{{ asset.updated_at|date:"d.m.Y H:i" }}</div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+          <h2 class="h5 mb-3">{% trans "Verträge" %}</h2>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-secondary small">{% blocktrans count count=contracts|length %}{{ count }} Vertrag{% plural %}{{ count }} Verträge{% endblocktrans %}</span>
+            {% if can_access_editor_area %}
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'contracts:create' %}?asset={{ asset.pk }}">{% trans "Vertrag anlegen" %}</a>
+            {% endif %}
+          </div>
+          {% if contracts %}
+            <div class="table-responsive">
+              <table class="table table-sm align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>{% trans "Titel" %}</th>
+                    <th>{% trans "Vertragsnummer" %}</th>
+                    <th>{% trans "Dienstleister" %}</th>
+                    <th>{% trans "Startdatum" %}</th>
+                    <th>{% trans "Enddatum" %}</th>
+                    <th>{% trans "Status" %}</th>
+                    <th>{% trans "Restlaufzeit" %}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for contract in contracts %}
+                    <tr class="{{ contract.status.code|contract_row_class }}">
+                      <td><a href="{% url 'contracts:detail' contract.pk %}">{{ contract.title }}</a></td>
+                      <td>{{ contract.contract_number|default:"-" }}</td>
+                      <td>{{ contract.vendor }}</td>
+                      <td>{{ contract.start_date|date:"d.m.Y" }}</td>
+                      <td>{{ contract.end_date|date:"d.m.Y" }}</td>
+                      <td><span class="badge {{ contract.status.code|contract_badge_class }}">{{ contract.status.label }}</span></td>
+                      <td>{{ contract.remaining_runtime_display }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-secondary mb-0">{% trans "Noch keine Verträge für diese Anlage vorhanden." %}</p>
+          {% endif %}
         </div>
       </div>
 

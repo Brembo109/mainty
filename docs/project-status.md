@@ -2,7 +2,7 @@
 
 `mainty` is currently set up as a browser-based internal Django application with a production-oriented infrastructure foundation. The repository already includes Docker Compose, PostgreSQL, Nginx, Gunicorn, Django Templates, Bootstrap 5, and prepared HTMX integration. The application is running on the internal Ubuntu VM and is reachable through the browser.
 
-The current implementation now covers the technical platform, the authentication/authorization baseline, the initial domain model foundation, a production-oriented internal dashboard, a central audit trail, an administrative system settings area, a cross-module UX consistency layer, and server-rendered CRUD UI for assets, maintenance plans/events, qualification plans/events, and operational tasks. Document workflows are not implemented yet.
+The current implementation now covers the technical platform, the authentication/authorization baseline, internal user administration, a group-based role and permission management layer, the initial domain model foundation, a production-oriented internal dashboard, a central audit trail, an administrative system settings area, reverse-proxy aware runtime configuration, filter-aware operational exports, configurable branding with company logo support, a cross-module UX consistency layer, and server-rendered CRUD UI for assets, maintenance plans/events, qualification plans/events, and operational tasks. Document workflows are not implemented yet.
 
 ## What Is Already Implemented
 
@@ -16,11 +16,25 @@ The current implementation now covers the technical platform, the authentication
 - Login and logout using Django Auth
 - Protected internal dashboard as the main authenticated entry point
 - Admin-only system settings page in the regular mainty UI
+- Fixed Mainty app logo in header and login page
+- Optional company logo upload in the regular mainty UI
 - Role-based access control using Django Groups
 - Three initial roles:
   - `Admin`
-  - `Editor`
+  - `User`
   - `Viewer`
+- User profile model linked to Django `User` for:
+  - `Kürzel`
+  - role assignment
+- Admin-only user management in the regular mainty UI with:
+  - user list
+  - user create
+  - user update
+  - search, role filter, active/inactive filter, pagination
+- Admin-only role and permission matrix in the regular mainty UI with:
+  - side-by-side columns for `Admin`, `User`, and `Viewer`
+  - grouped Mainty permission rows
+  - direct checkbox-based update of Django group permissions
 - Server-side authorization checks via reusable mixins and helpers
 - Example protected pages for:
   - all authenticated internal users
@@ -49,6 +63,26 @@ The current implementation now covers the technical platform, the authentication
   - interval unit
 - Prefilled maintenance and qualification plan create forms using the current system settings
 - Independent per-record persistence after form submission, so later settings changes do not modify existing plans
+- Media-backed company logo setting with:
+  - optional upload via `/settings/`
+  - preview in the settings UI
+  - display in the login page
+  - display in the top application header
+  - audit coverage through the existing system settings tracking
+- Admin-managed network/access settings with:
+  - public application URL
+  - dynamic allowed hosts
+  - dynamic CSRF trusted origins
+  - HTTPS enforcement flag
+  - debug-mode flag
+  - restart notice in the settings UI
+  - audit coverage through the existing system settings tracking
+- Filter-aware CSV and XLSX exports for:
+  - assets
+  - maintenance plans
+  - qualification plans
+  - tasks
+  - audit log
 - Central audit trail with:
   - dedicated `audit` app
   - global `/audit/` page with filters, search, and pagination
@@ -59,6 +93,9 @@ The current implementation now covers the technical platform, the authentication
   - optional `change_reason` field prepared for later form integration
   - read-only Django admin integration
   - logging of system settings create/update changes
+  - logging of user and user profile changes
+  - readable user snapshots with name, `Kürzel`, and role label
+  - audit entries for role-permission changes on Django groups
 - Cross-module UX refinement with:
   - unified status badges for assets, due-statuses, tasks, dashboard, and audit-related UI
   - consistent list filter layout, reset behavior, and active-filter highlighting
@@ -66,6 +103,8 @@ The current implementation now covers the technical platform, the authentication
   - consistent table spacing, action button patterns, and empty states
   - active navigation highlighting for the current module
   - improved detail-page structure and status presentation
+  - two-row header layout with separated account area and module navigation
+  - branding-aware login page and header presentation
 - Domain model foundation for:
   - assets
   - maintenance plans and maintenance events
@@ -106,6 +145,7 @@ The current implementation now covers the technical platform, the authentication
   - unified task status badges and row emphasis
   - linked task section on the asset detail page
 - Environment-based cookie security settings for the current internal HTTP phase and later HTTPS switch-over
+- Shared Docker/Nginx media handling for uploaded company branding files
 
 ## Authorization Model
 
@@ -113,10 +153,10 @@ The current authorization model is intentionally simple and Django-native.
 
 - `Admin`
   - full access
-  - intended for user management and administrative settings
-- `Editor`
+  - intended for user management, permission management, and administrative settings
+- `User`
   - access to internal operational pages
-  - intended for future create/edit workflows in business modules
+  - intended for create/edit workflows in business modules
 - `Viewer`
   - access to internal read-only areas
   - no edit capabilities
@@ -126,11 +166,14 @@ Navigation visibility adapts to the signed-in user, but access control is enforc
 All three roles can access the operational dashboard in read-only form.
 All three roles can also access the audit trail in read-only form.
 Only `Admin` can access and update `/settings/`.
+Only `Admin` can access `/accounts/users/` and `/accounts/permissions/`.
 
 ## Domain Model Status
 
 The following domain apps and models are already present:
 
+- `accounts`
+  - `UserProfile`
 - `audit`
   - `AuditLog`
 - `assets`
@@ -159,6 +202,7 @@ The audit layer additionally provides:
 - field-level tracking of relevant model changes
 - indexed log storage for model/object lookup and chronological filtering
 - request-aware user attribution through middleware
+- historical user display snapshots for readable attribution after later user changes
 - reusable object-level query helpers for detail pages
 
 The shared UX layer additionally provides:
@@ -167,16 +211,26 @@ The shared UX layer additionally provides:
 - reusable list metadata and pagination includes
 - common table/filter styling in the shared stylesheet
 - consistent scanability for list, detail, dashboard, and audit pages
+- a two-row branded top area with fixed app branding and optional company branding
+
+The export layer additionally provides:
+
+- reusable CSV/XLSX response helpers
+- filter-aware exports from the existing list querysets
+- German column labels and timestamped filenames
 
 The currently implemented business UI layers are:
 
 - internal dashboard
+- user management
+- role and permission management
 - system settings
 - audit trail
 - assets
 - maintenance plans and maintenance events
 - qualification plans and qualification events
 - operational tasks
+- operational list exports
 
 ## Current Repository Structure
 
@@ -201,15 +255,21 @@ mainty/
     |   `-- settings/
     |       `-- base.py
     |-- core/
+    |   |-- context_processors.py
     |   |-- due_dates.py
     |   |-- dashboard.py
+    |   |-- exports.py
     |   |-- forms.py
     |   |-- intervals.py
+    |   |-- middleware.py
+    |   |-- runtime.py
     |   |-- ui.py
     |   |-- templatetags/
     |   |   `-- mainty_ui.py
     |   |-- migrations/
     |   |   `-- 0001_initial.py
+    |   |   `-- 0002_systemsettings_company_logo.py
+    |   |   `-- 0003_systemsettings_network_access.py
     |   |-- tests.py
     |   |-- urls.py
     |   `-- views.py
@@ -227,14 +287,21 @@ mainty/
     |   |-- views.py
     |   |-- migrations/
     |   |   `-- 0001_initial.py
+    |   |   `-- 0003_auditlog_user_snapshots.py
     |   `-- templatetags/
     |       `-- audit_ui.py
     |-- accounts/
     |   |-- admin.py
+    |   |-- apps.py
     |   |-- context_processors.py
     |   |-- forms.py
+    |   |-- migrations/
+    |   |   `-- 0001_initial.py
     |   |-- mixins.py
+    |   |-- models.py
+    |   |-- permissions.py
     |   |-- roles.py
+    |   |-- signals.py
     |   |-- tests.py
     |   |-- urls.py
     |   |-- views.py
@@ -276,7 +343,10 @@ mainty/
     |   |-- base.html
     |   |-- accounts/
     |   |   |-- login.html
-    |   |   `-- profile.html
+    |   |   |-- permission_matrix.html
+    |   |   |-- profile.html
+    |   |   |-- user_form.html
+    |   |   `-- user_list.html
     |   |-- assets/
     |   |   |-- asset_detail.html
     |   |   |-- asset_form.html
@@ -312,7 +382,8 @@ mainty/
     |       |-- editor_demo.html
     |       `-- admin_demo.html
     `-- static/
-        `-- css/app.css
+        |-- css/app.css
+        `-- img/mainty-logo.svg
 ```
 
 ## What Is Not Implemented Yet
@@ -336,3 +407,9 @@ mainty/
 - `c8d8add` Add audit trail system
 - `101319e` Refine UI consistency and docs
 - `2b01f07` Adjust README disclaimer language
+- `eb33267` Add system settings defaults
+- `94df36c` Add filtered list exports
+- `20274f5` Add branding and company logo support
+- `807ccb8` Add user and role permission management
+- `f639533` Update docs for user and permission management
+- `cc753a3` Refine header and dark mode

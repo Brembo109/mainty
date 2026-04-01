@@ -1,3 +1,5 @@
+from io import BytesIO
+
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -5,6 +7,7 @@ from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
+from openpyxl import load_workbook
 
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 from assets.models import Asset
@@ -18,9 +21,9 @@ from tasks.models import Task
 class AuditTrailTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
-        self.admin_group = Group.objects.create(name=ROLE_ADMIN)
-        self.editor_group = Group.objects.create(name=ROLE_EDITOR)
-        self.viewer_group = Group.objects.create(name=ROLE_VIEWER)
+        self.admin_group, _ = Group.objects.get_or_create(name=ROLE_ADMIN)
+        self.editor_group, _ = Group.objects.get_or_create(name=ROLE_EDITOR)
+        self.viewer_group, _ = Group.objects.get_or_create(name=ROLE_VIEWER)
 
         self.admin_user = user_model.objects.create_user(username="admin", password="pass-12345")
         self.editor_user = user_model.objects.create_user(username="editor", password="pass-12345")
@@ -29,6 +32,15 @@ class AuditTrailTests(TestCase):
         self.admin_user.groups.add(self.admin_group)
         self.editor_user.groups.add(self.editor_group)
         self.viewer_user.groups.add(self.viewer_group)
+        self.admin_user.profile.user_code = "AD"
+        self.admin_user.profile.role = ROLE_ADMIN
+        self.admin_user.profile.save()
+        self.editor_user.profile.user_code = "ED"
+        self.editor_user.profile.role = ROLE_EDITOR
+        self.editor_user.profile.save()
+        self.viewer_user.profile.user_code = "VW"
+        self.viewer_user.profile.role = ROLE_VIEWER
+        self.viewer_user.profile.save()
 
         self.asset = Asset.objects.create(
             asset_id="A-100",
@@ -70,8 +82,11 @@ class AuditTrailTests(TestCase):
         entry = AuditLog.objects.get(model_name="Asset", object_id=str(asset.pk), action=AuditLog.ACTION_CREATE)
         self.assertEqual(entry.user, self.admin_user)
         self.assertEqual(entry.change_reason, "Neue Anlage übernommen")
-        self.assertIn("asset_id: A-200", entry.new_value)
-        self.assertIn("name: Abfülllinie", entry.new_value)
+        self.assertIn("Asset-ID: A-200", entry.new_value)
+        self.assertIn("Bezeichnung: Abfülllinie", entry.new_value)
+        self.assertIn("Asset-ID: A-200", entry.new_value_display)
+        self.assertIn("Bezeichnung: Abfülllinie", entry.new_value_display)
+        self.assertEqual(entry.user_display, "admin [AD] - Admin")
 
     def test_update_logs_detect_changed_fields_and_status_changes(self):
         with audit_context(user=self.editor_user, change_reason="Status angepasst"):
@@ -97,6 +112,31 @@ class AuditTrailTests(TestCase):
         self.assertEqual(title_entry.action, AuditLog.ACTION_UPDATE)
         self.assertEqual(title_entry.old_value, "Sichtprüfung durchführen")
         self.assertEqual(title_entry.new_value, "Sichtprüfung gestartet")
+        self.assertEqual(status_entry.field_label, "Status")
+        self.assertEqual(title_entry.field_label, "Titel")
+        self.assertEqual(status_entry.user_display, "editor [ED] - Benutzer")
+
+    def test_existing_summary_values_are_rendered_with_readable_labels(self):
+        entry = AuditLog.objects.create(
+            user=self.admin_user,
+            action=AuditLog.ACTION_CREATE,
+            model_name="SystemSettings",
+            object_id="1",
+            object_repr="Systemeinstellungen",
+            new_value=(
+                "singleton_enforcer: Ja; "
+                "default_maintenance_warning_days: 7; "
+                "default_maintenance_interval_value: 30; "
+                "default_maintenance_interval_unit: Tage; "
+                "default_qualification_warning_days: 14"
+            ),
+        )
+
+        self.assertNotIn("singleton_enforcer", entry.new_value_display)
+        self.assertIn("Standard Warnungstage Wartung: 7", entry.new_value_display)
+        self.assertIn("Standard Intervallwert Wartung: 30", entry.new_value_display)
+        self.assertIn("Standard Intervall-Einheit Wartung: Tage", entry.new_value_display)
+        self.assertIn("Standard Warnungstage Qualifizierung: 14", entry.new_value_display)
 
     def test_request_updates_use_authenticated_user_for_audit(self):
         self.client.force_login(self.editor_user)
@@ -180,3 +220,29 @@ class AuditTrailTests(TestCase):
         self.assertContains(maintenance_response, "Team Blau")
         self.assertContains(qualification_response, "QA Team")
         self.assertContains(task_response, "In Bearbeitung")
+
+    def test_viewer_can_export_filtered_audit_log_as_xlsx(self):
+        with audit_context(user=self.admin_user):
+            self.asset.status = Asset.STATUS_OUT_OF_SERVICE
+            self.asset.save()
+            self.task.title = "Andere Maßnahme"
+            self.task.save()
+
+        self.client.force_login(self.viewer_user)
+        response = self.client.get(
+            reverse("audit:list"),
+            {"model": "Asset", "action": AuditLog.ACTION_STATUS_CHANGE, "export": "xlsx"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response["Content-Type"],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        workbook = load_workbook(BytesIO(response.content))
+        sheet = workbook.active
+
+        self.assertEqual(sheet["A1"].value, "Zeitpunkt")
+        self.assertEqual(sheet["C2"].value, "Statuswechsel")
+        self.assertEqual(sheet["D2"].value, "Asset")
+        self.assertNotEqual(sheet.max_row, 1)

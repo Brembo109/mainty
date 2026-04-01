@@ -6,7 +6,15 @@
       <span class="badge text-bg-primary">{{ active_filter_count }} {% trans "aktive Filter" %}</span>
     {% endif %}
   </div>
-  {% if page_obj %}
-    <p class="text-secondary mb-0">{% blocktrans with page=page_obj.number pages=page_obj.paginator.num_pages %}Seite {{ page }} von {{ pages }}{% endblocktrans %}</p>
-  {% endif %}
+  <div class="d-flex flex-wrap align-items-center gap-2">
+    {% if export_urls %}
+      <div class="btn-group" role="group" aria-label="{% trans 'Export' %}">
+        <a class="btn btn-sm btn-outline-secondary" href="{{ export_urls.csv }}">{% trans "CSV Export" %}</a>
+        <a class="btn btn-sm btn-outline-secondary" href="{{ export_urls.xlsx }}">{% trans "Excel Export" %}</a>
+      </div>
+    {% endif %}
+    {% if page_obj %}
+      <p class="text-secondary mb-0">{% blocktrans with page=page_obj.number pages=page_obj.paginator.num_pages %}Seite {{ page }} von {{ pages }}{% endblocktrans %}</p>
+    {% endif %}
+  </div>
 </div>

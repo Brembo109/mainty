@@ -9,6 +9,7 @@ from accounts.mixins import RoleRequiredMixin
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 from audit.services import get_audit_entries_for_instance
 from assets.models import Asset
+from core.exports import ListExportMixin, stringify_export_value
 from core.ui import count_active_filters
 
 from .forms import TaskForm
@@ -23,11 +24,22 @@ class TaskEditMixin(RoleRequiredMixin):
     allowed_roles = (ROLE_ADMIN, ROLE_EDITOR)
 
 
-class TaskListView(TaskAccessMixin, ListView):
+class TaskListView(TaskAccessMixin, ListExportMixin, ListView):
     model = Task
     template_name = "tasks/task_list.html"
     context_object_name = "tasks"
     paginate_by = 10
+    export_filename_prefix = "massnahmen"
+    export_headers = [
+        "Titel",
+        "Anlage",
+        "Fällig am",
+        "Priorität",
+        "Status",
+        "Verantwortlicher Benutzer",
+        "Abgeschlossen am",
+        "Beschreibung",
+    ]
 
     sort_options = {
         "due_date": "due_date",
@@ -115,6 +127,7 @@ class TaskListView(TaskAccessMixin, ListView):
                     ("-completed_at", _("Zuletzt abgeschlossen")),
                     ("-updated_at", _("Zuletzt geändert")),
                 ],
+                "export_urls": self.get_export_urls(),
             }
         )
         return context
@@ -128,6 +141,24 @@ class TaskListView(TaskAccessMixin, ListView):
             .distinct()
         )
         return queryset
+
+    def get_export_queryset(self):
+        return list(self.get_queryset())
+
+    def get_export_rows(self, queryset):
+        return [
+            [
+                task.title,
+                str(task.asset) if task.asset else "",
+                stringify_export_value(task.due_date),
+                task.get_priority_display(),
+                task.get_status_display(),
+                task.responsible_user.username if task.responsible_user else "",
+                stringify_export_value(task.completed_at),
+                task.description,
+            ]
+            for task in queryset
+        ]
 
 
 class TaskDetailView(TaskAccessMixin, DetailView):

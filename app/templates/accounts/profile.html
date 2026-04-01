@@ -12,8 +12,12 @@
           <dl class="row mb-0">
             <dt class="col-sm-4">{% trans "Benutzername" %}</dt>
             <dd class="col-sm-8">{{ request.user.username }}</dd>
+            <dt class="col-sm-4">{% trans "Name" %}</dt>
+            <dd class="col-sm-8">{{ request.user.get_full_name|default:"-" }}</dd>
             <dt class="col-sm-4">{% trans "E-Mail" %}</dt>
             <dd class="col-sm-8">{{ request.user.email|default:"-" }}</dd>
+            <dt class="col-sm-4">{% trans "Kürzel" %}</dt>
+            <dd class="col-sm-8">{{ current_user_code|default:"-" }}</dd>
             <dt class="col-sm-4">{% trans "Primäre Rolle" %}</dt>
             <dd class="col-sm-8">{% if current_user_role %}{{ current_user_role }}{% else %}{% trans "Nicht zugewiesen" %}{% endif %}</dd>
             <dt class="col-sm-4">{% trans "Alle Rollen" %}</dt>

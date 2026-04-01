@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% load i18n mainty_ui %}
+
+{% block title %}{% trans "Verträge" %} | mainty{% endblock %}
+
+{% block content %}
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+    <div>
+      <h1 class="h2 mb-1">{% trans "Verträge" %}</h1>
+      <p class="text-secondary mb-0">{% trans "Verwaltung von Wartungs- und Serviceverträgen für einzelne oder mehrere Assets." %}</p>
+    </div>
+    {% if can_access_editor_area %}
+      <a class="btn btn-primary" href="{% url 'contracts:create' %}">{% trans "Vertrag anlegen" %}</a>
+    {% endif %}
+  </div>
+
+  <div class="card border-0 shadow-sm mb-4 filter-panel">
+    <div class="card-body p-4">
+      <form method="get" class="row g-3 align-items-end">
+        <div class="col-12 col-xl-4">
+          <label class="form-label" for="searchInput">{% trans "Suche" %}</label>
+          <input class="form-control {% if search_query %}filter-active{% endif %}" id="searchInput" type="search" name="q" value="{{ search_query }}" placeholder="{% trans 'Suche nach Titel, Vertragsnummer oder Dienstleister ...' %}" />
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <label class="form-label" for="statusSelect">{% trans "Status" %}</label>
+          <select class="form-select {% if current_status %}filter-active{% endif %}" id="statusSelect" name="status">
+            <option value="">{% trans "Alle" %}</option>
+            <option value="active" {% if current_status == "active" %}selected{% endif %}>{% trans "Aktiv" %}</option>
+            <option value="warning" {% if current_status == "warning" %}selected{% endif %}>{% trans "Läuft bald aus" %}</option>
+            <option value="expired" {% if current_status == "expired" %}selected{% endif %}>{% trans "Abgelaufen" %}</option>
+          </select>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <label class="form-label" for="vendorSelect">{% trans "Dienstleister" %}</label>
+          <select class="form-select {% if current_vendor %}filter-active{% endif %}" id="vendorSelect" name="vendor">
+            <option value="">{% trans "Alle" %}</option>
+            {% for vendor in vendor_choices %}
+              <option value="{{ vendor }}" {% if current_vendor == vendor %}selected{% endif %}>{{ vendor }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <label class="form-label" for="assetSelect">{% trans "Asset" %}</label>
+          <select class="form-select {% if current_asset %}filter-active{% endif %}" id="assetSelect" name="asset">
+            <option value="">{% trans "Alle" %}</option>
+            {% for asset_pk, asset_code, asset_name in asset_choices %}
+              <option value="{{ asset_pk }}" {% if current_asset == asset_pk|stringformat:"s" %}selected{% endif %}>{{ asset_code }} - {{ asset_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <label class="form-label" for="sortSelect">{% trans "Sortierung" %}</label>
+          <select class="form-select" id="sortSelect" name="sort">
+            {% for value, label in sort_choices %}
+              <option value="{{ value }}" {% if current_sort == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 d-flex gap-2">
+          <button class="btn btn-primary" type="submit">{% trans "Filter anwenden" %}</button>
+          <a class="btn btn-outline-secondary" href="{% url 'contracts:list' %}">{% trans "Zurücksetzen" %}</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% blocktrans count count=result_count asvar result_text %}{{ count }} Vertrag gefunden{% plural %}{{ count }} Verträge gefunden{% endblocktrans %}
+  {% include "includes/list_meta.html" with result_text=result_text %}
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>{% trans "Titel" %}</th>
+            <th>{% trans "Vertragsnummer" %}</th>
+            <th>{% trans "Auftragsnummer" %}</th>
+            <th>{% trans "Dienstleister" %}</th>
+            <th>{% trans "Startdatum" %}</th>
+            <th>{% trans "Enddatum" %}</th>
+            <th>{% trans "Restlaufzeit" %}</th>
+            <th>{% trans "Status" %}</th>
+            <th>{% trans "Assets" %}</th>
+            <th class="text-end">{% trans "Aktionen" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for contract in contracts %}
+            <tr class="{{ contract.status.code|contract_row_class }}">
+              <td class="fw-semibold">{{ contract.title }}</td>
+              <td>{{ contract.contract_number|default:"-" }}</td>
+              <td>{{ contract.order_number|default:"-" }}</td>
+              <td>{{ contract.vendor }}</td>
+              <td>{{ contract.start_date|date:"d.m.Y" }}</td>
+              <td>{{ contract.end_date|date:"d.m.Y" }}</td>
+              <td>{{ contract.remaining_runtime_display }}</td>
+              <td><span class="badge {{ contract.status.code|contract_badge_class }}">{{ contract.status.label }}</span></td>
+              <td>{{ contract.assets.count }}</td>
+              <td class="text-end">
+                <div class="d-flex justify-content-end gap-2">
+                  <a class="btn btn-sm btn-outline-primary" href="{% url 'contracts:detail' contract.pk %}">{% trans "Details" %}</a>
+                  {% if can_access_editor_area %}
+                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'contracts:edit' contract.pk %}">{% trans "Bearbeiten" %}</a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="10" class="text-center py-4 text-secondary">{% trans "Keine Verträge für die aktuelle Filterung gefunden." %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% trans "Vertrags-Seiten" as pagination_aria_label %}
+  {% include "includes/pagination.html" with aria_label=pagination_aria_label %}
+{% endblock %}
+

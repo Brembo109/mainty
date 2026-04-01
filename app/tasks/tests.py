@@ -54,9 +54,9 @@ class TaskModelTests(TestCase):
 class TaskViewTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
-        self.admin_group = Group.objects.create(name=ROLE_ADMIN)
-        self.editor_group = Group.objects.create(name=ROLE_EDITOR)
-        self.viewer_group = Group.objects.create(name=ROLE_VIEWER)
+        self.admin_group, _ = Group.objects.get_or_create(name=ROLE_ADMIN)
+        self.editor_group, _ = Group.objects.get_or_create(name=ROLE_EDITOR)
+        self.viewer_group, _ = Group.objects.get_or_create(name=ROLE_VIEWER)
 
         self.admin_user = user_model.objects.create_user(username="admin", password="pass-12345")
         self.editor_user = user_model.objects.create_user(username="editor", password="pass-12345")
@@ -233,3 +233,21 @@ class TaskViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.task.title)
         self.assertNotContains(response, "Unassigned example")
+
+    def test_viewer_can_export_filtered_tasks(self):
+        Task.objects.create(
+            title="Closed task",
+            asset=self.asset,
+            due_date=timezone.localdate() - timedelta(days=5),
+            priority=Task.PRIORITY_LOW,
+            status=Task.STATUS_DONE,
+        )
+        self.client.force_login(self.viewer_user)
+
+        response = self.client.get(reverse("tasks:list"), {"overdue": "yes", "export": "csv"})
+
+        content = response.content.decode("utf-8-sig")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/csv; charset=utf-8")
+        self.assertIn("Inspect safety guard", content)
+        self.assertNotIn("Closed task", content)

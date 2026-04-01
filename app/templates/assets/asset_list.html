@@ -81,6 +81,7 @@
             <th>{% trans "Standort" %}</th>
             <th>{% trans "Abteilung" %}</th>
             <th>{% trans "Inbetriebnahme" %}</th>
+            <th>{% trans "Vertrag" %}</th>
             <th>{% trans "Status" %}</th>
             <th class="text-end">{% trans "Aktionen" %}</th>
           </tr>
@@ -98,6 +99,13 @@
               <td>{{ asset.department|default:"-" }}</td>
               <td>{{ asset.commissioning_date|date:"d.m.Y"|default:"-" }}</td>
               <td>
+                <span
+                  class="contract-indicator {{ asset.contract_summary.code|contract_indicator_class }}"
+                  title="{{ asset.contract_summary.label }}"
+                  aria-label="{{ asset.contract_summary.label }}"
+                ></span>
+              </td>
+              <td>
                 <span class="badge {{ asset.status|asset_badge_class }}">{{ asset.get_status_display }}</span>
               </td>
               <td class="text-end">
@@ -111,7 +119,7 @@
             </tr>
           {% empty %}
             <tr>
-              <td colspan="11" class="text-center py-4 text-secondary">{% trans "Keine Anlagen für die aktuelle Filterung gefunden." %}</td>
+              <td colspan="12" class="text-center py-4 text-secondary">{% trans "Keine Anlagen für die aktuelle Filterung gefunden." %}</td>
             </tr>
           {% endfor %}
         </tbody>

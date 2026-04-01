@@ -168,6 +168,69 @@
     </div>
 
     <div class="col-12 col-xxl-5">
+      <section class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h2 class="h4 mb-1">{% trans "Erinnerungsübersicht" %}</h2>
+              <p class="text-secondary mb-0">{% trans "Dieselben Fälligkeitsdaten wie im E-Mail-Reminder-System, gruppiert nach Modul." %}</p>
+            </div>
+          </div>
+          <div class="row g-4">
+            <div class="col-12">
+              <h3 class="h6 mb-2">{% trans "Wartung" %}</h3>
+              <div class="small text-secondary mb-2">{% trans "Bald fällig" %}</div>
+              <ul class="list-group list-group-flush mb-3">
+                {% for item in due_soon_maintenance_items %}
+                  <li class="list-group-item px-0 d-flex justify-content-between gap-3">
+                    <a class="text-decoration-none" href="{{ item.detail_url }}">{{ item.title }}</a>
+                    <span class="small text-secondary">{{ item.due_date|date:"d.m.Y" }}</span>
+                  </li>
+                {% empty %}
+                  <li class="list-group-item px-0 text-secondary">{% trans "Keine bald fälligen Wartungen." %}</li>
+                {% endfor %}
+              </ul>
+              <div class="small text-secondary mb-2">{% trans "Überfällig" %}</div>
+              <ul class="list-group list-group-flush">
+                {% for item in overdue_maintenance_items %}
+                  <li class="list-group-item px-0 d-flex justify-content-between gap-3">
+                    <a class="text-decoration-none" href="{{ item.detail_url }}">{{ item.title }}</a>
+                    <span class="small text-danger">{{ item.due_date|date:"d.m.Y" }}</span>
+                  </li>
+                {% empty %}
+                  <li class="list-group-item px-0 text-secondary">{% trans "Keine überfälligen Wartungen." %}</li>
+                {% endfor %}
+              </ul>
+            </div>
+            <div class="col-12">
+              <h3 class="h6 mb-2">{% trans "Qualifizierung" %}</h3>
+              <div class="small text-secondary mb-2">{% trans "Bald fällig" %}</div>
+              <ul class="list-group list-group-flush mb-3">
+                {% for item in due_soon_qualification_items %}
+                  <li class="list-group-item px-0 d-flex justify-content-between gap-3">
+                    <a class="text-decoration-none" href="{{ item.detail_url }}">{{ item.title }}</a>
+                    <span class="small text-secondary">{{ item.due_date|date:"d.m.Y" }}</span>
+                  </li>
+                {% empty %}
+                  <li class="list-group-item px-0 text-secondary">{% trans "Keine bald fälligen Qualifizierungen." %}</li>
+                {% endfor %}
+              </ul>
+              <div class="small text-secondary mb-2">{% trans "Überfällig" %}</div>
+              <ul class="list-group list-group-flush">
+                {% for item in overdue_qualification_items %}
+                  <li class="list-group-item px-0 d-flex justify-content-between gap-3">
+                    <a class="text-decoration-none" href="{{ item.detail_url }}">{{ item.title }}</a>
+                    <span class="small text-danger">{{ item.due_date|date:"d.m.Y" }}</span>
+                  </li>
+                {% empty %}
+                  <li class="list-group-item px-0 text-secondary">{% trans "Keine überfälligen Qualifizierungen." %}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="card border-0 shadow-sm">
         <div class="card-body p-4">
           <div class="d-flex justify-content-between align-items-center mb-3">

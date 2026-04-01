@@ -2,15 +2,17 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 
 from django.conf import settings
-from django.db.models import OuterRef, Subquery
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from assets.models import Asset
-from core.due_dates import DUE_STATUS_OVERDUE, DUE_STATUS_WARNING, add_interval, calculate_due_status
-from maintenance.models import MaintenanceEvent, MaintenancePlan
-from qualification.models import QualificationEvent, QualificationPlan
+from contracts.models import MaintenanceContract
+from contracts.services import CONTRACT_STATUS_ACTIVE, CONTRACT_STATUS_EXPIRED, CONTRACT_STATUS_WARNING
+from core.due_dates import DUE_STATUS_OVERDUE, DUE_STATUS_WARNING
+from maintenance.models import MaintenancePlan
+from qualification.models import QualificationPlan
+from reminders.services import get_dashboard_due_sections
 from tasks.models import Task
 
 
@@ -45,32 +47,23 @@ def build_dashboard_context(*, today: date | None = None, section_limit: int = D
     reference_date = today or timezone.localdate()
     task_warning_days = settings.TASK_DASHBOARD_WARNING_DAYS
 
-    maintenance_items = _build_plan_items(
-        model=MaintenancePlan,
-        event_model=MaintenanceEvent,
-        category="maintenance",
-        category_label=_("Wartung"),
-        detail_url_name="maintenance:plan-detail",
-        today=reference_date,
-    )
-    qualification_items = _build_plan_items(
-        model=QualificationPlan,
-        event_model=QualificationEvent,
-        category="qualification",
-        category_label=_("Qualifizierung"),
-        detail_url_name="qualification:plan-detail",
-        today=reference_date,
-    )
+    due_sections = get_dashboard_due_sections(today=reference_date)
+    maintenance_items = due_sections["maintenance_all"]
+    qualification_items = due_sections["qualification_all"]
     open_task_items, overdue_task_items, upcoming_task_items = _build_task_groups(
         today=reference_date,
         task_warning_days=task_warning_days,
     )
+    contract_items = _build_contract_items(today=reference_date)
+    expired_contracts = [item for item in contract_items if item.status_code == CONTRACT_STATUS_EXPIRED][:section_limit]
+    expiring_contracts = [item for item in contract_items if item.status_code == CONTRACT_STATUS_WARNING][:section_limit]
 
     overdue_items = sorted(
         [
             *[item for item in maintenance_items if item.status_code == DUE_STATUS_OVERDUE],
             *[item for item in qualification_items if item.status_code == DUE_STATUS_OVERDUE],
             *overdue_task_items,
+            *expired_contracts,
         ],
         key=lambda item: (item.due_date is None, item.due_date, item.title.lower()),
     )[:section_limit]
@@ -79,6 +72,7 @@ def build_dashboard_context(*, today: date | None = None, section_limit: int = D
             *[item for item in maintenance_items if item.status_code == DUE_STATUS_WARNING],
             *[item for item in qualification_items if item.status_code == DUE_STATUS_WARNING],
             *upcoming_task_items,
+            *expiring_contracts,
         ],
         key=lambda item: (item.due_date is None, item.due_date, item.title.lower()),
     )[:section_limit]
@@ -94,6 +88,9 @@ def build_dashboard_context(*, today: date | None = None, section_limit: int = D
         "maintenance_plans": MaintenancePlan.objects.count(),
         "qualification_plans": QualificationPlan.objects.count(),
         "open_tasks": len(open_task_items),
+        "active_contracts": sum(1 for item in contract_items if item.status_code == CONTRACT_STATUS_ACTIVE),
+        "expiring_contracts": len(expiring_contracts),
+        "expired_contracts": len(expired_contracts),
         "overdue_tasks": len(overdue_task_items),
         "overdue_maintenance_plans": sum(
             1 for item in maintenance_items if item.status_code == DUE_STATUS_OVERDUE
@@ -129,6 +126,24 @@ def build_dashboard_context(*, today: date | None = None, section_limit: int = D
             "accent": "primary",
         },
         {
+            "title": _("Aktive Verträge"),
+            "value": metrics["active_contracts"],
+            "url": reverse("contracts:list") + "?status=active",
+            "accent": "success",
+        },
+        {
+            "title": _("Bald endende Verträge"),
+            "value": metrics["expiring_contracts"],
+            "url": reverse("contracts:list") + "?status=warning",
+            "accent": "warning",
+        },
+        {
+            "title": _("Abgelaufene Verträge"),
+            "value": metrics["expired_contracts"],
+            "url": reverse("contracts:list") + "?status=expired",
+            "accent": "danger",
+        },
+        {
             "title": _("Überfällige Maßnahmen"),
             "value": metrics["overdue_tasks"],
             "url": reverse("tasks:list") + "?overdue=yes",
@@ -155,61 +170,15 @@ def build_dashboard_context(*, today: date | None = None, section_limit: int = D
         "overdue_items": overdue_items,
         "upcoming_items": upcoming_items,
         "open_tasks": open_task_items[:section_limit],
+        "expiring_contracts": expiring_contracts,
+        "expired_contracts": expired_contracts,
         "recent_items": recent_items,
         "task_warning_days": task_warning_days,
+        "due_soon_maintenance_items": due_sections["maintenance_due_soon"][:5],
+        "overdue_maintenance_items": due_sections["maintenance_overdue"][:5],
+        "due_soon_qualification_items": due_sections["qualification_due_soon"][:5],
+        "overdue_qualification_items": due_sections["qualification_overdue"][:5],
     }
-
-
-def _build_plan_items(*, model, event_model, category: str, category_label, detail_url_name: str, today: date):
-    latest_event_subquery = Subquery(
-        event_model.objects.filter(plan_id=OuterRef("pk"))
-        .order_by("-performed_on", "-pk")
-        .values("performed_on")[:1]
-    )
-    queryset = (
-        model.objects.select_related("asset")
-        .annotate(latest_event_date=latest_event_subquery)
-        .only(
-            "pk",
-            "title",
-            "interval_value",
-            "interval_unit",
-            "warning_days",
-            "is_active",
-            "updated_at",
-            "asset__id",
-            "asset__asset_id",
-            "asset__name",
-            "asset__commissioning_date",
-        )
-    )
-
-    items = []
-    for plan in queryset:
-        base_date = plan.latest_event_date or plan.asset.commissioning_date
-        next_due_date = (
-            add_interval(base_date, plan.interval_value, plan.interval_unit) if base_date is not None else None
-        )
-        due_status = calculate_due_status(
-            next_due_date=next_due_date,
-            warning_days=plan.warning_days,
-            is_active=plan.is_active,
-            today=today,
-        )
-        items.append(
-            DashboardItem(
-                category=category,
-                category_label=category_label,
-                title=plan.title,
-                asset_label=_format_asset_label(plan.asset),
-                due_date=next_due_date,
-                status_code=due_status.code,
-                status_label=due_status.label,
-                detail_url=reverse(detail_url_name, kwargs={"pk": plan.pk}),
-                updated_at=plan.updated_at,
-            )
-        )
-    return items
 
 
 def _build_task_groups(*, today: date, task_warning_days: int):
@@ -271,6 +240,27 @@ def _build_task_groups(*, today: date, task_warning_days: int):
             )
 
     return open_items, overdue_items, upcoming_items
+
+
+def _build_contract_items(*, today: date):
+    contracts = list(MaintenanceContract.objects.prefetch_related("assets").order_by("end_date", "title"))
+    items = []
+    for contract in contracts:
+        asset_labels = [asset.asset_id for asset in contract.assets.all()]
+        items.append(
+            DashboardItem(
+                category="contract",
+                category_label=_("Vertrag"),
+                title=contract.title,
+                asset_label=", ".join(asset_labels) if asset_labels else "-",
+                due_date=contract.end_date,
+                status_code=contract.status.code,
+                status_label=contract.status.label,
+                detail_url=reverse("contracts:detail", kwargs={"pk": contract.pk}),
+                updated_at=contract.updated_at,
+            )
+        )
+    return items
 
 
 def _build_recent_items(*, maintenance_items, qualification_items, open_task_items, section_limit: int):

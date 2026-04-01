@@ -1,6 +1,12 @@
 from django import template
 from django.utils.translation import gettext_lazy as _
 
+from contracts.services import (
+    CONTRACT_STATUS_ACTIVE,
+    CONTRACT_STATUS_EXPIRED,
+    CONTRACT_STATUS_NONE,
+    CONTRACT_STATUS_WARNING,
+)
 from core.due_dates import (
     DUE_STATUS_INACTIVE,
     DUE_STATUS_OK,
@@ -53,6 +59,34 @@ def asset_badge_class(status_code):
 
 
 @register.filter
+def contract_badge_class(status_code):
+    return {
+        CONTRACT_STATUS_ACTIVE: "text-bg-success",
+        CONTRACT_STATUS_WARNING: "text-bg-warning",
+        CONTRACT_STATUS_EXPIRED: "text-bg-danger",
+        CONTRACT_STATUS_NONE: "text-bg-secondary",
+    }.get(status_code, "text-bg-light border")
+
+
+@register.filter
+def contract_row_class(status_code):
+    return {
+        CONTRACT_STATUS_WARNING: "table-warning",
+        CONTRACT_STATUS_EXPIRED: "table-danger",
+    }.get(status_code, "")
+
+
+@register.filter
+def contract_indicator_class(status_code):
+    return {
+        CONTRACT_STATUS_ACTIVE: "is-active",
+        CONTRACT_STATUS_WARNING: "is-warning",
+        CONTRACT_STATUS_EXPIRED: "is-expired",
+        CONTRACT_STATUS_NONE: "is-none",
+    }.get(status_code, "is-none")
+
+
+@register.filter
 def task_badge_class(task):
     if getattr(task, "is_overdue", False) or getattr(task, "status_code", "") == "overdue":
         return "text-bg-danger"
@@ -89,6 +123,8 @@ def nav_link_active(context, target: str):
         return ""
     current_url_name = resolver_match.view_name or ""
     current_app_name = resolver_match.app_name or ""
+    if target.endswith("*"):
+        return "active" if current_url_name.startswith(target[:-1]) else ""
     if (
         target == current_app_name
         or current_url_name == target

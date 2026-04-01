@@ -22,8 +22,8 @@
           <label class="form-label" for="modelSelect">{% trans "Modell" %}</label>
           <select class="form-select {% if current_model %}filter-active{% endif %}" id="modelSelect" name="model">
             <option value="">{% trans "Alle" %}</option>
-            {% for model_name in model_choices %}
-              <option value="{{ model_name }}" {% if current_model == model_name %}selected{% endif %}>{{ model_name }}</option>
+            {% for model_name, model_label in model_choices %}
+              <option value="{{ model_name }}" {% if current_model == model_name %}selected{% endif %}>{{ model_label }}</option>
             {% endfor %}
           </select>
         </div>
@@ -77,17 +77,17 @@
               <td>{{ entry.user_display }}</td>
               <td>
                 <div class="fw-semibold">{{ entry.object_repr }}</div>
-                <div class="small text-secondary">{{ entry.model_name }} · ID {{ entry.object_id }}</div>
+                <div class="small text-secondary">{{ entry.model_label }} · ID {{ entry.object_id }}</div>
               </td>
               <td><span class="badge {{ entry.action|audit_action_badge_class }}">{{ entry.get_action_display }}</span></td>
-              <td>{{ entry.field_name|default:"-" }}</td>
+              <td>{{ entry.field_label|default:"-" }}</td>
               <td>
                 {% if entry.field_name %}
-                  <div>{{ entry.old_value|default:"-" }} &rarr; {{ entry.new_value|default:"-" }}</div>
-                {% elif entry.new_value %}
-                  <div>{{ entry.new_value }}</div>
+                  <div>{{ entry.old_value_display|default:"-" }} &rarr; {{ entry.new_value_display|default:"-" }}</div>
+                {% elif entry.new_value_display %}
+                  <div>{{ entry.new_value_display }}</div>
                 {% else %}
-                  <div>{{ entry.old_value|default:"-" }}</div>
+                  <div>{{ entry.old_value_display|default:"-" }}</div>
                 {% endif %}
               </td>
               <td>{{ entry.change_reason|default:"-" }}</td>
