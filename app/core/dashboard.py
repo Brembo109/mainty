@@ -6,6 +6,15 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from accounts.permissions import (
+    ASSETS_VIEW,
+    AUDIT_VIEW,
+    CONTRACTS_VIEW,
+    MAINTENANCE_PLAN_VIEW,
+    QUALIFICATION_PLAN_VIEW,
+    TASKS_VIEW,
+    user_has_permissions,
+)
 from assets.models import Asset
 from contracts.models import MaintenanceContract
 from contracts.services import CONTRACT_STATUS_ACTIVE, CONTRACT_STATUS_EXPIRED, CONTRACT_STATUS_WARNING
@@ -43,18 +52,26 @@ class RecentDashboardItem:
     detail_url: str
 
 
-def build_dashboard_context(*, today: date | None = None, section_limit: int = DEFAULT_SECTION_LIMIT) -> dict:
+def build_dashboard_context(*, user=None, today: date | None = None, section_limit: int = DEFAULT_SECTION_LIMIT) -> dict:
     reference_date = today or timezone.localdate()
     task_warning_days = settings.TASK_DASHBOARD_WARNING_DAYS
 
+    can_view_assets = user_has_permissions(user, ASSETS_VIEW)
+    can_view_contracts = user_has_permissions(user, CONTRACTS_VIEW)
+    can_view_maintenance = user_has_permissions(user, MAINTENANCE_PLAN_VIEW)
+    can_view_qualification = user_has_permissions(user, QUALIFICATION_PLAN_VIEW)
+    can_view_tasks = user_has_permissions(user, TASKS_VIEW)
+    can_view_audit = user_has_permissions(user, AUDIT_VIEW)
+
     due_sections = get_dashboard_due_sections(today=reference_date)
-    maintenance_items = due_sections["maintenance_all"]
-    qualification_items = due_sections["qualification_all"]
-    open_task_items, overdue_task_items, upcoming_task_items = _build_task_groups(
-        today=reference_date,
-        task_warning_days=task_warning_days,
+    maintenance_items = due_sections["maintenance_all"] if can_view_maintenance else []
+    qualification_items = due_sections["qualification_all"] if can_view_qualification else []
+    open_task_items, overdue_task_items, upcoming_task_items = (
+        _build_task_groups(today=reference_date, task_warning_days=task_warning_days)
+        if can_view_tasks
+        else ([], [], [])
     )
-    contract_items = _build_contract_items(today=reference_date)
+    contract_items = _build_contract_items(today=reference_date) if can_view_contracts else []
     expired_contracts = [item for item in contract_items if item.status_code == CONTRACT_STATUS_EXPIRED][:section_limit]
     expiring_contracts = [item for item in contract_items if item.status_code == CONTRACT_STATUS_WARNING][:section_limit]
 
@@ -77,6 +94,7 @@ def build_dashboard_context(*, today: date | None = None, section_limit: int = D
         key=lambda item: (item.due_date is None, item.due_date, item.title.lower()),
     )[:section_limit]
     recent_items = _build_recent_items(
+        can_view_assets=can_view_assets,
         maintenance_items=maintenance_items,
         qualification_items=qualification_items,
         open_task_items=open_task_items,
@@ -84,9 +102,9 @@ def build_dashboard_context(*, today: date | None = None, section_limit: int = D
     )
 
     metrics = {
-        "active_assets": Asset.objects.filter(status=Asset.STATUS_ACTIVE).count(),
-        "maintenance_plans": MaintenancePlan.objects.count(),
-        "qualification_plans": QualificationPlan.objects.count(),
+        "active_assets": Asset.objects.filter(status=Asset.STATUS_ACTIVE).count() if can_view_assets else 0,
+        "maintenance_plans": MaintenancePlan.objects.count() if can_view_maintenance else 0,
+        "qualification_plans": QualificationPlan.objects.count() if can_view_qualification else 0,
         "open_tasks": len(open_task_items),
         "active_contracts": sum(1 for item in contract_items if item.status_code == CONTRACT_STATUS_ACTIVE),
         "expiring_contracts": len(expiring_contracts),
@@ -100,73 +118,100 @@ def build_dashboard_context(*, today: date | None = None, section_limit: int = D
         ),
     }
 
-    metric_cards = [
-        {
-            "title": _("Aktive Assets"),
-            "value": metrics["active_assets"],
-            "url": reverse("assets:list"),
-            "accent": "primary",
-        },
-        {
-            "title": _("Wartungspläne"),
-            "value": metrics["maintenance_plans"],
-            "url": reverse("maintenance:plan-list"),
-            "accent": "info",
-        },
-        {
-            "title": _("Qualifizierungspläne"),
-            "value": metrics["qualification_plans"],
-            "url": reverse("qualification:plan-list"),
-            "accent": "info",
-        },
-        {
-            "title": _("Offene Maßnahmen"),
-            "value": metrics["open_tasks"],
-            "url": reverse("tasks:list"),
-            "accent": "primary",
-        },
-        {
-            "title": _("Aktive Verträge"),
-            "value": metrics["active_contracts"],
-            "url": reverse("contracts:list") + "?status=active",
-            "accent": "success",
-        },
-        {
-            "title": _("Bald endende Verträge"),
-            "value": metrics["expiring_contracts"],
-            "url": reverse("contracts:list") + "?status=warning",
-            "accent": "warning",
-        },
-        {
-            "title": _("Abgelaufene Verträge"),
-            "value": metrics["expired_contracts"],
-            "url": reverse("contracts:list") + "?status=expired",
-            "accent": "danger",
-        },
-        {
-            "title": _("Überfällige Maßnahmen"),
-            "value": metrics["overdue_tasks"],
-            "url": reverse("tasks:list") + "?overdue=yes",
-            "accent": "danger",
-        },
-        {
-            "title": _("Überfällige Wartungspläne"),
-            "value": metrics["overdue_maintenance_plans"],
-            "url": reverse("maintenance:plan-list") + "?due_status=overdue",
-            "accent": "danger",
-        },
-        {
-            "title": _("Überfällige Qualifizierungspläne"),
-            "value": metrics["overdue_qualification_plans"],
-            "url": reverse("qualification:plan-list") + "?due_status=overdue",
-            "accent": "danger",
-        },
-    ]
+    metric_cards = []
+    if can_view_assets:
+        metric_cards.append(
+            {
+                "title": _("Aktive Assets"),
+                "value": metrics["active_assets"],
+                "url": reverse("assets:list"),
+                "accent": "primary",
+            }
+        )
+    if can_view_maintenance:
+        metric_cards.extend(
+            [
+                {
+                    "title": _("Wartungspläne"),
+                    "value": metrics["maintenance_plans"],
+                    "url": reverse("maintenance:plan-list"),
+                    "accent": "info",
+                },
+                {
+                    "title": _("Überfällige Wartungspläne"),
+                    "value": metrics["overdue_maintenance_plans"],
+                    "url": reverse("maintenance:plan-list") + "?due_status=overdue",
+                    "accent": "danger",
+                },
+            ]
+        )
+    if can_view_qualification:
+        metric_cards.extend(
+            [
+                {
+                    "title": _("Qualifizierungspläne"),
+                    "value": metrics["qualification_plans"],
+                    "url": reverse("qualification:plan-list"),
+                    "accent": "info",
+                },
+                {
+                    "title": _("Überfällige Qualifizierungspläne"),
+                    "value": metrics["overdue_qualification_plans"],
+                    "url": reverse("qualification:plan-list") + "?due_status=overdue",
+                    "accent": "danger",
+                },
+            ]
+        )
+    if can_view_tasks:
+        metric_cards.extend(
+            [
+                {
+                    "title": _("Offene Maßnahmen"),
+                    "value": metrics["open_tasks"],
+                    "url": reverse("tasks:list"),
+                    "accent": "primary",
+                },
+                {
+                    "title": _("Überfällige Maßnahmen"),
+                    "value": metrics["overdue_tasks"],
+                    "url": reverse("tasks:list") + "?overdue=yes",
+                    "accent": "danger",
+                },
+            ]
+        )
+    if can_view_contracts:
+        metric_cards.extend(
+            [
+                {
+                    "title": _("Aktive Verträge"),
+                    "value": metrics["active_contracts"],
+                    "url": reverse("contracts:list") + "?status=active",
+                    "accent": "success",
+                },
+                {
+                    "title": _("Bald endende Verträge"),
+                    "value": metrics["expiring_contracts"],
+                    "url": reverse("contracts:list") + "?status=warning",
+                    "accent": "warning",
+                },
+                {
+                    "title": _("Abgelaufene Verträge"),
+                    "value": metrics["expired_contracts"],
+                    "url": reverse("contracts:list") + "?status=expired",
+                    "accent": "danger",
+                },
+            ]
+        )
 
     return {
         "reference_date": reference_date,
         "metrics": metrics,
         "metric_cards": metric_cards,
+        "can_view_audit": can_view_audit,
+        "can_view_contracts": can_view_contracts,
+        "can_view_maintenance_plans": can_view_maintenance,
+        "can_view_qualification_plans": can_view_qualification,
+        "can_view_tasks": can_view_tasks,
         "overdue_items": overdue_items,
         "upcoming_items": upcoming_items,
         "open_tasks": open_task_items[:section_limit],
@@ -174,10 +219,10 @@ def build_dashboard_context(*, today: date | None = None, section_limit: int = D
         "expired_contracts": expired_contracts,
         "recent_items": recent_items,
         "task_warning_days": task_warning_days,
-        "due_soon_maintenance_items": due_sections["maintenance_due_soon"][:5],
-        "overdue_maintenance_items": due_sections["maintenance_overdue"][:5],
-        "due_soon_qualification_items": due_sections["qualification_due_soon"][:5],
-        "overdue_qualification_items": due_sections["qualification_overdue"][:5],
+        "due_soon_maintenance_items": due_sections["maintenance_due_soon"][:5] if can_view_maintenance else [],
+        "overdue_maintenance_items": due_sections["maintenance_overdue"][:5] if can_view_maintenance else [],
+        "due_soon_qualification_items": due_sections["qualification_due_soon"][:5] if can_view_qualification else [],
+        "overdue_qualification_items": due_sections["qualification_overdue"][:5] if can_view_qualification else [],
     }
 
 
@@ -263,7 +308,7 @@ def _build_contract_items(*, today: date):
     return items
 
 
-def _build_recent_items(*, maintenance_items, qualification_items, open_task_items, section_limit: int):
+def _build_recent_items(*, can_view_assets: bool, maintenance_items, qualification_items, open_task_items, section_limit: int):
     recent_items = [
         *[
             RecentDashboardItem(
@@ -295,18 +340,22 @@ def _build_recent_items(*, maintenance_items, qualification_items, open_task_ite
             )
             for item in open_task_items
         ],
-        *[
-            RecentDashboardItem(
-                category_label=_("Asset"),
-                title=asset.name,
-                asset_label=asset.asset_id,
-                updated_at=asset.updated_at,
-                detail_url=reverse("assets:detail", kwargs={"pk": asset.pk}),
-            )
-            for asset in Asset.objects.only("id", "asset_id", "name", "updated_at").order_by("-updated_at")[
-                :section_limit
+        *(
+            [
+                RecentDashboardItem(
+                    category_label=_("Asset"),
+                    title=asset.name,
+                    asset_label=asset.asset_id,
+                    updated_at=asset.updated_at,
+                    detail_url=reverse("assets:detail", kwargs={"pk": asset.pk}),
+                )
+                for asset in Asset.objects.only("id", "asset_id", "name", "updated_at").order_by("-updated_at")[
+                    :section_limit
+                ]
             ]
-        ],
+            if can_view_assets
+            else []
+        ),
     ]
     return sorted(recent_items, key=lambda item: item.updated_at, reverse=True)[:section_limit]
 

@@ -9,7 +9,9 @@
       <div class="d-flex align-items-center gap-2 mb-2">
         <span class="badge text-bg-light border">{{ asset.asset_id }}</span>
         <span class="badge {{ asset.status|asset_badge_class }}">{{ asset.get_status_display }}</span>
-        <span class="badge {{ contract_summary.code|contract_badge_class }}">{{ contract_summary.label }}</span>
+        {% if contract_summary %}
+          <span class="badge {{ contract_summary.code|contract_badge_class }}">{{ contract_summary.label }}</span>
+        {% endif %}
       </div>
       <h1 class="h2 mb-1">{{ asset.name }}</h1>
       <p class="text-secondary mb-0">
@@ -19,7 +21,7 @@
     </div>
     <div class="d-flex gap-2">
       <a class="btn btn-outline-secondary" href="{% url 'assets:list' %}">{% trans "Zur Liste" %}</a>
-      {% if can_access_editor_area %}
+      {% if can_change_assets %}
         <a class="btn btn-primary" href="{% url 'assets:edit' asset.pk %}">{% trans "Bearbeiten" %}</a>
       {% endif %}
     </div>
@@ -62,147 +64,157 @@
         </div>
       </div>
 
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-          <h2 class="h5 mb-3">{% trans "Verträge" %}</h2>
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <span class="text-secondary small">{% blocktrans count count=contracts|length %}{{ count }} Vertrag{% plural %}{{ count }} Verträge{% endblocktrans %}</span>
-            {% if can_access_editor_area %}
-              <a class="btn btn-sm btn-outline-primary" href="{% url 'contracts:create' %}?asset={{ asset.pk }}">{% trans "Vertrag anlegen" %}</a>
-            {% endif %}
-          </div>
-          {% if contracts %}
-            <div class="table-responsive">
-              <table class="table table-sm align-middle mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th>{% trans "Titel" %}</th>
-                    <th>{% trans "Vertragsnummer" %}</th>
-                    <th>{% trans "Dienstleister" %}</th>
-                    <th>{% trans "Startdatum" %}</th>
-                    <th>{% trans "Enddatum" %}</th>
-                    <th>{% trans "Status" %}</th>
-                    <th>{% trans "Restlaufzeit" %}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for contract in contracts %}
-                    <tr class="{{ contract.status.code|contract_row_class }}">
-                      <td><a href="{% url 'contracts:detail' contract.pk %}">{{ contract.title }}</a></td>
-                      <td>{{ contract.contract_number|default:"-" }}</td>
-                      <td>{{ contract.vendor }}</td>
-                      <td>{{ contract.start_date|date:"d.m.Y" }}</td>
-                      <td>{{ contract.end_date|date:"d.m.Y" }}</td>
-                      <td><span class="badge {{ contract.status.code|contract_badge_class }}">{{ contract.status.label }}</span></td>
-                      <td>{{ contract.remaining_runtime_display }}</td>
+      {% if can_view_contracts %}
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body p-4">
+            <h2 class="h5 mb-3">{% trans "Verträge" %}</h2>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span class="text-secondary small">{% blocktrans count count=contracts|length %}{{ count }} Vertrag{% plural %}{{ count }} Verträge{% endblocktrans %}</span>
+              {% if can_add_contracts %}
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'contracts:create' %}?asset={{ asset.pk }}">{% trans "Vertrag anlegen" %}</a>
+              {% endif %}
+            </div>
+            {% if contracts %}
+              <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>{% trans "Titel" %}</th>
+                      <th>{% trans "Vertragsnummer" %}</th>
+                      <th>{% trans "Dienstleister" %}</th>
+                      <th>{% trans "Startdatum" %}</th>
+                      <th>{% trans "Enddatum" %}</th>
+                      <th>{% trans "Status" %}</th>
+                      <th>{% trans "Restlaufzeit" %}</th>
                     </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          {% else %}
-            <p class="text-secondary mb-0">{% trans "Noch keine Verträge für diese Anlage vorhanden." %}</p>
-          {% endif %}
-        </div>
-      </div>
-
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-          <h2 class="h5 mb-3">{% trans "Wartungspläne" %}</h2>
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <span class="text-secondary small">{% blocktrans count count=maintenance_plans|length %}{{ count }} Plan{% plural %}{{ count }} Plaene{% endblocktrans %}</span>
-            {% if can_access_editor_area %}
-              <a class="btn btn-sm btn-outline-primary" href="{% url 'maintenance:plan-create' %}?asset={{ asset.pk }}">{% trans "Plan anlegen" %}</a>
+                  </thead>
+                  <tbody>
+                    {% for contract in contracts %}
+                      <tr class="{{ contract.status.code|contract_row_class }}">
+                        <td><a href="{% url 'contracts:detail' contract.pk %}">{{ contract.title }}</a></td>
+                        <td>{{ contract.contract_number|default:"-" }}</td>
+                        <td>{{ contract.vendor }}</td>
+                        <td>{{ contract.start_date|date:"d.m.Y" }}</td>
+                        <td>{{ contract.end_date|date:"d.m.Y" }}</td>
+                        <td><span class="badge {{ contract.status.code|contract_badge_class }}">{{ contract.status.label }}</span></td>
+                        <td>{{ contract.remaining_runtime_display }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <p class="text-secondary mb-0">{% trans "Noch keine Verträge für diese Anlage vorhanden." %}</p>
             {% endif %}
           </div>
-          {% if maintenance_plans %}
-            <div class="list-group list-group-flush">
-              {% for plan in maintenance_plans %}
-                <a href="{% url 'maintenance:plan-detail' plan.pk %}" class="list-group-item list-group-item-action px-0">
-                  <div class="d-flex justify-content-between align-items-start gap-2">
-                    <div>
-                      <div class="fw-semibold">{{ plan.title }}</div>
-                      <div class="small text-secondary">
-                        {{ plan.next_due_date|date:"d.m.Y"|default:"-" }} · {% if plan.is_active %}{% trans "Aktiv" %}{% else %}{% trans "Inaktiv" %}{% endif %}
-                      </div>
-                    </div>
-                    <span class="badge {{ plan.due_status.code|due_badge_class }}">{{ plan.due_status.label }}</span>
-                  </div>
-                </a>
-              {% endfor %}
-            </div>
-          {% else %}
-            <p class="text-secondary mb-0">{% trans "Noch keine Wartungspläne für diese Anlage vorhanden." %}</p>
-          {% endif %}
         </div>
-      </div>
+      {% endif %}
 
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-          <h2 class="h5 mb-3">{% trans "Qualifizierungspläne" %}</h2>
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <span class="text-secondary small">{% blocktrans count count=qualification_plans|length %}{{ count }} Plan{% plural %}{{ count }} Plaene{% endblocktrans %}</span>
-            {% if can_access_editor_area %}
-              <a class="btn btn-sm btn-outline-primary" href="{% url 'qualification:plan-create' %}?asset={{ asset.pk }}">{% trans "Plan anlegen" %}</a>
+      {% if can_view_maintenance_plans %}
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body p-4">
+            <h2 class="h5 mb-3">{% trans "Wartungspläne" %}</h2>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span class="text-secondary small">{% blocktrans count count=maintenance_plans|length %}{{ count }} Plan{% plural %}{{ count }} Plaene{% endblocktrans %}</span>
+              {% if can_add_maintenance_plans %}
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'maintenance:plan-create' %}?asset={{ asset.pk }}">{% trans "Plan anlegen" %}</a>
+              {% endif %}
+            </div>
+            {% if maintenance_plans %}
+              <div class="list-group list-group-flush">
+                {% for plan in maintenance_plans %}
+                  <a href="{% url 'maintenance:plan-detail' plan.pk %}" class="list-group-item list-group-item-action px-0">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                      <div>
+                        <div class="fw-semibold">{{ plan.title }}</div>
+                        <div class="small text-secondary">
+                          {{ plan.next_due_date|date:"d.m.Y"|default:"-" }} · {% if plan.is_active %}{% trans "Aktiv" %}{% else %}{% trans "Inaktiv" %}{% endif %}
+                        </div>
+                      </div>
+                      <span class="badge {{ plan.due_status.code|due_badge_class }}">{{ plan.due_status.label }}</span>
+                    </div>
+                  </a>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="text-secondary mb-0">{% trans "Noch keine Wartungspläne für diese Anlage vorhanden." %}</p>
             {% endif %}
           </div>
-          {% if qualification_plans %}
-            <div class="list-group list-group-flush">
-              {% for plan in qualification_plans %}
-                <a href="{% url 'qualification:plan-detail' plan.pk %}" class="list-group-item list-group-item-action px-0">
-                  <div class="d-flex justify-content-between align-items-start gap-2">
-                    <div>
-                      <div class="fw-semibold">{{ plan.title }}</div>
-                      <div class="small text-secondary">
-                        {{ plan.next_due_date|date:"d.m.Y"|default:"-" }} · {% if plan.is_active %}{% trans "Aktiv" %}{% else %}{% trans "Inaktiv" %}{% endif %}
-                      </div>
-                    </div>
-                    <span class="badge {{ plan.due_status.code|due_badge_class }}">{{ plan.due_status.label }}</span>
-                  </div>
-                </a>
-              {% endfor %}
-            </div>
-          {% else %}
-            <p class="text-secondary mb-0">{% trans "Noch keine Qualifizierungspläne für diese Anlage vorhanden." %}</p>
-          {% endif %}
         </div>
-      </div>
+      {% endif %}
 
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-          <h2 class="h5 mb-3">{% trans "Aufgaben / Maßnahmen" %}</h2>
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <span class="text-secondary small">{% blocktrans count count=tasks|length %}{{ count }} Maßnahme{% plural %}{{ count }} Maßnahmen{% endblocktrans %}</span>
-            {% if can_access_editor_area %}
-              <a class="btn btn-sm btn-outline-primary" href="{% url 'tasks:create' %}?asset={{ asset.pk }}">{% trans "Maßnahme anlegen" %}</a>
+      {% if can_view_qualification_plans %}
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body p-4">
+            <h2 class="h5 mb-3">{% trans "Qualifizierungspläne" %}</h2>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span class="text-secondary small">{% blocktrans count count=qualification_plans|length %}{{ count }} Plan{% plural %}{{ count }} Plaene{% endblocktrans %}</span>
+              {% if can_add_qualification_plans %}
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'qualification:plan-create' %}?asset={{ asset.pk }}">{% trans "Plan anlegen" %}</a>
+              {% endif %}
+            </div>
+            {% if qualification_plans %}
+              <div class="list-group list-group-flush">
+                {% for plan in qualification_plans %}
+                  <a href="{% url 'qualification:plan-detail' plan.pk %}" class="list-group-item list-group-item-action px-0">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                      <div>
+                        <div class="fw-semibold">{{ plan.title }}</div>
+                        <div class="small text-secondary">
+                          {{ plan.next_due_date|date:"d.m.Y"|default:"-" }} · {% if plan.is_active %}{% trans "Aktiv" %}{% else %}{% trans "Inaktiv" %}{% endif %}
+                        </div>
+                      </div>
+                      <span class="badge {{ plan.due_status.code|due_badge_class }}">{{ plan.due_status.label }}</span>
+                    </div>
+                  </a>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="text-secondary mb-0">{% trans "Noch keine Qualifizierungspläne für diese Anlage vorhanden." %}</p>
             {% endif %}
           </div>
-          {% if tasks %}
-            <div class="list-group list-group-flush">
-              {% for task in tasks %}
-                <a href="{% url 'tasks:detail' task.pk %}" class="list-group-item list-group-item-action px-0">
-                  <div class="d-flex justify-content-between align-items-start gap-2">
-                    <div>
-                      <div class="fw-semibold">{{ task.title }}</div>
-                      <div class="small text-secondary">
-                        {{ task.due_date|date:"d.m.Y"|default:"-" }} · {{ task.get_priority_display }} · {{ task|task_status_label }}
-                      </div>
-                      <div class="small text-secondary">
-                        {{ task.responsible_user.username|default:"-" }}
-                      </div>
-                    </div>
-                    <span class="badge {{ task|task_badge_class }}">{{ task|task_status_label }}</span>
-                  </div>
-                </a>
-              {% endfor %}
-            </div>
-          {% else %}
-            <p class="text-secondary mb-0">{% trans "Noch keine Maßnahmen für diese Anlage vorhanden." %}</p>
-          {% endif %}
         </div>
-      </div>
+      {% endif %}
 
-      {% include "audit/partials/object_history.html" %}
+      {% if can_view_tasks %}
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body p-4">
+            <h2 class="h5 mb-3">{% trans "Aufgaben / Maßnahmen" %}</h2>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span class="text-secondary small">{% blocktrans count count=tasks|length %}{{ count }} Maßnahme{% plural %}{{ count }} Maßnahmen{% endblocktrans %}</span>
+              {% if can_add_tasks %}
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'tasks:create' %}?asset={{ asset.pk }}">{% trans "Maßnahme anlegen" %}</a>
+              {% endif %}
+            </div>
+            {% if tasks %}
+              <div class="list-group list-group-flush">
+                {% for task in tasks %}
+                  <a href="{% url 'tasks:detail' task.pk %}" class="list-group-item list-group-item-action px-0">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                      <div>
+                        <div class="fw-semibold">{{ task.title }}</div>
+                        <div class="small text-secondary">
+                          {{ task.due_date|date:"d.m.Y"|default:"-" }} · {{ task.get_priority_display }} · {{ task|task_status_label }}
+                        </div>
+                        <div class="small text-secondary">
+                          {{ task.responsible_user.username|default:"-" }}
+                        </div>
+                      </div>
+                      <span class="badge {{ task|task_badge_class }}">{{ task|task_status_label }}</span>
+                    </div>
+                  </a>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="text-secondary mb-0">{% trans "Noch keine Maßnahmen für diese Anlage vorhanden." %}</p>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+
+      {% if can_view_audit %}
+        {% include "audit/partials/object_history.html" %}
+      {% endif %}
     </div>
   </div>
 {% endblock %}

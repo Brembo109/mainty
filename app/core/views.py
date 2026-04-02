@@ -5,8 +5,8 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 from django.views.generic.edit import UpdateView
 
-from accounts.mixins import RoleRequiredMixin
-from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
+from accounts.mixins import PermissionRequiredMixin, RoleRequiredMixin
+from accounts.permissions import DASHBOARD_VIEW_PERMISSIONS, EDITOR_AREA_PERMISSIONS, SETTINGS_MANAGE
 from core.dashboard import build_dashboard_context
 from core.forms import SystemSettingsForm
 from core.models import SystemSettings
@@ -21,18 +21,19 @@ class HomeView(TemplateView):
         return super().dispatch(request, *args, **kwargs)
 
 
-class DashboardView(RoleRequiredMixin, TemplateView):
-    allowed_roles = (ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER)
+class DashboardView(PermissionRequiredMixin, TemplateView):
+    required_permissions = DASHBOARD_VIEW_PERMISSIONS
+    require_all_permissions = False
     template_name = "core/dashboard.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update(build_dashboard_context())
+        context.update(build_dashboard_context(user=self.request.user))
         return context
 
 
-class SystemSettingsView(RoleRequiredMixin, UpdateView):
-    allowed_roles = (ROLE_ADMIN,)
+class SystemSettingsView(PermissionRequiredMixin, UpdateView):
+    required_permissions = SETTINGS_MANAGE
     form_class = SystemSettingsForm
     template_name = "core/settings_form.html"
 
@@ -59,11 +60,12 @@ class SystemSettingsView(RoleRequiredMixin, UpdateView):
         return context
 
 
-class EditorDemoView(RoleRequiredMixin, TemplateView):
-    allowed_roles = (ROLE_ADMIN, ROLE_EDITOR)
+class EditorDemoView(PermissionRequiredMixin, TemplateView):
+    required_permissions = EDITOR_AREA_PERMISSIONS
+    require_all_permissions = False
     template_name = "core/editor_demo.html"
 
 
-class AdminDemoView(RoleRequiredMixin, TemplateView):
-    allowed_roles = (ROLE_ADMIN,)
+class AdminDemoView(PermissionRequiredMixin, TemplateView):
+    required_permissions = SETTINGS_MANAGE
     template_name = "core/admin_demo.html"

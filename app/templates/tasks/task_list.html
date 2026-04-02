@@ -9,7 +9,7 @@
       <h1 class="h2 mb-1">{% trans "Maßnahmen" %}</h1>
       <p class="text-secondary mb-0">{% trans "Operative Aufgaben und Maßnahmen für Anlagen und interne Abläufe." %}</p>
     </div>
-    {% if can_access_editor_area %}
+    {% if can_add_tasks %}
       <a class="btn btn-primary" href="{% url 'tasks:create' %}">{% trans "Maßnahme anlegen" %}</a>
     {% endif %}
   </div>
@@ -123,7 +123,7 @@
               <td class="text-end">
                 <div class="table-actions">
                   <a class="btn btn-sm btn-outline-primary" href="{% url 'tasks:detail' task.pk %}">{% trans "Details" %}</a>
-                  {% if can_access_editor_area %}
+                  {% if can_change_tasks %}
                     <a class="btn btn-sm btn-outline-secondary" href="{% url 'tasks:edit' task.pk %}">{% trans "Bearbeiten" %}</a>
                   {% endif %}
                 </div>

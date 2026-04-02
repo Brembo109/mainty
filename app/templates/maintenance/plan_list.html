@@ -9,7 +9,7 @@
       <h1 class="h2 mb-1">{% trans "Wartungspläne" %}</h1>
       <p class="text-secondary mb-0">{% trans "Planung, Fälligkeiten und operative Nachverfolgung für Wartungen." %}</p>
     </div>
-    {% if can_access_editor_area %}
+    {% if can_add_maintenance_plans %}
       <a class="btn btn-primary" href="{% url 'maintenance:plan-create' %}">{% trans "Wartungsplan anlegen" %}</a>
     {% endif %}
   </div>
@@ -118,7 +118,7 @@
               <td class="text-end">
                 <div class="table-actions">
                   <a class="btn btn-sm btn-outline-primary" href="{% url 'maintenance:plan-detail' plan.pk %}">{% trans "Details" %}</a>
-                  {% if can_access_editor_area %}
+                  {% if can_change_maintenance_plans %}
                     <a class="btn btn-sm btn-outline-secondary" href="{% url 'maintenance:plan-edit' plan.pk %}">{% trans "Bearbeiten" %}</a>
                   {% endif %}
                 </div>

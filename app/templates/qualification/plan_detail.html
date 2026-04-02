@@ -18,8 +18,10 @@
     </div>
     <div class="d-flex gap-2">
       <a class="btn btn-outline-secondary" href="{% url 'qualification:plan-list' %}">{% trans "Zur Liste" %}</a>
-      {% if can_access_editor_area %}
+      {% if can_add_qualification_events %}
         <a class="btn btn-outline-primary" href="{% url 'qualification:event-create' plan.pk %}">{% trans "Ereignis erfassen" %}</a>
+      {% endif %}
+      {% if can_change_qualification_plans %}
         <a class="btn btn-primary" href="{% url 'qualification:plan-edit' plan.pk %}">{% trans "Bearbeiten" %}</a>
       {% endif %}
     </div>
@@ -31,7 +33,7 @@
         <div class="card-body p-4">
           <h2 class="h5 mb-4">{% trans "Planstammdaten" %}</h2>
           <div class="row g-3">
-            <div class="col-md-6"><div class="small text-secondary">{% trans "Asset" %}</div><div><a href="{% url 'assets:detail' plan.asset.pk %}">{{ plan.asset.asset_id }} - {{ plan.asset.name }}</a></div></div>
+            <div class="col-md-6"><div class="small text-secondary">{% trans "Asset" %}</div><div>{% if can_view_assets %}<a href="{% url 'assets:detail' plan.asset.pk %}">{{ plan.asset.asset_id }} - {{ plan.asset.name }}</a>{% else %}{{ plan.asset.asset_id }} - {{ plan.asset.name }}{% endif %}</div></div>
             <div class="col-md-6"><div class="small text-secondary">{% trans "Intervall" %}</div><div>{{ plan.interval_value }} {{ plan.get_interval_unit_display }}</div></div>
             <div class="col-md-6"><div class="small text-secondary">{% trans "Warnungstage" %}</div><div>{{ plan.warning_days }}</div></div>
             <div class="col-md-6"><div class="small text-secondary">{% trans "Verantwortlich" %}</div><div>{{ plan.responsible_person|default:"-" }}</div></div>
@@ -50,7 +52,7 @@
         <div class="card-body p-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="h5 mb-0">{% trans "Ereignishistorie" %}</h2>
-            {% if can_access_editor_area %}
+            {% if can_add_qualification_events %}
               <a class="btn btn-sm btn-primary" href="{% url 'qualification:event-create' plan.pk %}">{% trans "Ereignis erfassen" %}</a>
             {% endif %}
           </div>
@@ -61,7 +63,7 @@
                   <th>{% trans "Datum" %}</th>
                   <th>{% trans "Durchgeführt von" %}</th>
                   <th>{% trans "Notizen" %}</th>
-                  {% if can_access_editor_area %}<th class="text-end">{% trans "Aktion" %}</th>{% endif %}
+                  {% if can_change_qualification_events %}<th class="text-end">{% trans "Aktion" %}</th>{% endif %}
                 </tr>
               </thead>
               <tbody>
@@ -70,13 +72,13 @@
                     <td>{{ event.performed_on|date:"d.m.Y" }}</td>
                     <td>{{ event.performed_by|default:"-" }}</td>
                     <td>{{ event.notes|default:"-" }}</td>
-                    {% if can_access_editor_area %}
+                    {% if can_change_qualification_events %}
                       <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{% url 'qualification:event-edit' event.pk %}">{% trans "Bearbeiten" %}</a></td>
                     {% endif %}
                   </tr>
                 {% empty %}
                   <tr>
-                    <td colspan="{% if can_access_editor_area %}4{% else %}3{% endif %}" class="text-center py-3 text-secondary">{% trans "Noch keine Qualifizierungsereignisse vorhanden." %}</td>
+                    <td colspan="{% if can_change_qualification_events %}4{% else %}3{% endif %}" class="text-center py-3 text-secondary">{% trans "Noch keine Qualifizierungsereignisse vorhanden." %}</td>
                   </tr>
                 {% endfor %}
               </tbody>
@@ -97,7 +99,9 @@
         </div>
       </div>
 
-      {% include "audit/partials/object_history.html" %}
+      {% if can_view_audit %}
+        {% include "audit/partials/object_history.html" %}
+      {% endif %}
     </div>
   </div>
 {% endblock %}

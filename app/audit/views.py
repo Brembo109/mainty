@@ -1,7 +1,7 @@
 from django.views.generic import ListView
 
-from accounts.mixins import RoleRequiredMixin
-from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
+from accounts.mixins import PermissionRequiredMixin
+from accounts.permissions import AUDIT_VIEW
 from core.exports import ListExportMixin, stringify_export_value
 from core.ui import count_active_filters
 
@@ -9,8 +9,8 @@ from .models import AuditLog
 from .services import get_audit_filter_choices, get_audit_list_queryset
 
 
-class AuditLogListView(RoleRequiredMixin, ListExportMixin, ListView):
-    allowed_roles = (ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER)
+class AuditLogListView(PermissionRequiredMixin, ListExportMixin, ListView):
+    required_permissions = AUDIT_VIEW
     model = AuditLog
     template_name = "audit/audit_list.html"
     context_object_name = "audit_entries"

@@ -9,7 +9,7 @@
       <h1 class="h2 mb-1">{% trans "Anlagen" %}</h1>
       <p class="text-secondary mb-0">{% trans "Zentrale Stammdatenansicht für Maschinen, Anlagen und weitere Betriebsmittel." %}</p>
     </div>
-    {% if can_access_editor_area %}
+    {% if can_add_assets %}
       <a class="btn btn-primary" href="{% url 'assets:create' %}">{% trans "Anlage anlegen" %}</a>
     {% endif %}
   </div>
@@ -111,7 +111,7 @@
               <td class="text-end">
                 <div class="table-actions">
                   <a class="btn btn-sm btn-outline-primary" href="{% url 'assets:detail' asset.pk %}">{% trans "Details" %}</a>
-                  {% if can_access_editor_area %}
+                  {% if can_change_assets %}
                     <a class="btn btn-sm btn-outline-secondary" href="{% url 'assets:edit' asset.pk %}">{% trans "Bearbeiten" %}</a>
                   {% endif %}
                 </div>

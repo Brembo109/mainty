@@ -106,34 +106,52 @@
           <div class="collapse navbar-collapse" id="mainNav">
             <ul class="navbar-nav gap-lg-2 py-2 py-lg-1">
               {% if request.user.is_authenticated %}
-                <li class="nav-item">
-                  <a class="nav-link fw-semibold {% nav_link_active 'core' %}" href="{% url 'core:dashboard' %}">{% trans "Dashboard" %}</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link {% nav_link_active 'assets' %}" href="{% url 'assets:list' %}">{% trans "Geräte" %}</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link {% nav_link_active 'contracts' %}" href="{% url 'contracts:list' %}">{% trans "Verträge" %}</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link {% nav_link_active 'maintenance' %}" href="{% url 'maintenance:plan-list' %}">{% trans "Wartung" %}</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link {% nav_link_active 'qualification' %}" href="{% url 'qualification:plan-list' %}">{% trans "Qualifizierung" %}</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link {% nav_link_active 'tasks' %}" href="{% url 'tasks:list' %}">{% trans "Maßnahmen" %}</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link {% nav_link_active 'audit' %}" href="{% url 'audit:list' %}">{% trans "Audit" %}</a>
-                </li>
+                {% if can_view_dashboard %}
+                  <li class="nav-item">
+                    <a class="nav-link fw-semibold {% nav_link_active 'core' %}" href="{% url 'core:dashboard' %}">{% trans "Dashboard" %}</a>
+                  </li>
+                {% endif %}
+                {% if can_view_assets %}
+                  <li class="nav-item">
+                    <a class="nav-link {% nav_link_active 'assets' %}" href="{% url 'assets:list' %}">{% trans "Geräte" %}</a>
+                  </li>
+                {% endif %}
+                {% if can_view_contracts %}
+                  <li class="nav-item">
+                    <a class="nav-link {% nav_link_active 'contracts' %}" href="{% url 'contracts:list' %}">{% trans "Verträge" %}</a>
+                  </li>
+                {% endif %}
+                {% if can_view_maintenance_plans %}
+                  <li class="nav-item">
+                    <a class="nav-link {% nav_link_active 'maintenance' %}" href="{% url 'maintenance:plan-list' %}">{% trans "Wartung" %}</a>
+                  </li>
+                {% endif %}
+                {% if can_view_qualification_plans %}
+                  <li class="nav-item">
+                    <a class="nav-link {% nav_link_active 'qualification' %}" href="{% url 'qualification:plan-list' %}">{% trans "Qualifizierung" %}</a>
+                  </li>
+                {% endif %}
+                {% if can_view_tasks %}
+                  <li class="nav-item">
+                    <a class="nav-link {% nav_link_active 'tasks' %}" href="{% url 'tasks:list' %}">{% trans "Maßnahmen" %}</a>
+                  </li>
+                {% endif %}
+                {% if can_view_audit %}
+                  <li class="nav-item">
+                    <a class="nav-link {% nav_link_active 'audit' %}" href="{% url 'audit:list' %}">{% trans "Audit" %}</a>
+                  </li>
+                {% endif %}
                 {% if can_manage_users %}
                   <li class="nav-item">
                     <a class="nav-link {% nav_link_active 'accounts:user-*' %}" href="{% url 'accounts:user-list' %}">{% trans "Benutzer" %}</a>
                   </li>
+                {% endif %}
+                {% if can_manage_roles %}
                   <li class="nav-item">
                     <a class="nav-link {% nav_link_active 'accounts:permission-*' %}" href="{% url 'accounts:permission-matrix' %}">{% trans "Rollen & Rechte" %}</a>
                   </li>
+                {% endif %}
+                {% if can_manage_settings %}
                   <li class="nav-item">
                     <a class="nav-link {% nav_link_active 'core:settings' %}" href="{% url 'core:settings' %}">{% trans "Einstellungen" %}</a>
                   </li>

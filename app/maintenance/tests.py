@@ -5,11 +5,12 @@ from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.urls import reverse
 
+from accounts.permissions import assign_default_role_permissions
+from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 from assets.models import Asset
 from core.due_dates import DUE_STATUS_INACTIVE, DUE_STATUS_UNKNOWN, DUE_STATUS_WARNING
 from core.models import SystemSettings
 from qualification.models import QualificationPlan
-from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 
 from .models import MaintenanceEvent, MaintenancePlan
 
@@ -74,6 +75,7 @@ class MaintenancePlanModelTests(TestCase):
 class MaintenanceViewTests(TestCase):
     def setUp(self):
         self.settings = SystemSettings.load()
+        assign_default_role_permissions()
         self.settings.default_maintenance_interval_value = 21
         self.settings.default_maintenance_interval_unit = MaintenancePlan.INTERVAL_WEEKS
         self.settings.default_maintenance_warning_days = 4

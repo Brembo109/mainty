@@ -1,12 +1,13 @@
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from accounts.permissions import assign_default_role_permissions
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 from assets.models import Asset
 
@@ -54,6 +55,7 @@ class TaskModelTests(TestCase):
 class TaskViewTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
+        assign_default_role_permissions()
         self.admin_group, _ = Group.objects.get_or_create(name=ROLE_ADMIN)
         self.editor_group, _ = Group.objects.get_or_create(name=ROLE_EDITOR)
         self.viewer_group, _ = Group.objects.get_or_create(name=ROLE_VIEWER)
@@ -136,6 +138,33 @@ class TaskViewTests(TestCase):
 
         created_task = Task.objects.get(title="Admin task")
         self.assertRedirects(response, reverse("tasks:detail", args=[created_task.pk]))
+
+    def test_create_redirects_to_list_without_task_view_permission(self):
+        task_view_permission = Permission.objects.get(
+            content_type__app_label="tasks",
+            codename="view_task",
+        )
+        self.editor_group.permissions.remove(task_view_permission)
+
+        self.client.force_login(self.editor_user)
+        response = self.client.post(
+            reverse("tasks:create"),
+            {
+                "title": "Create-only task",
+                "description": "Created without task view permission",
+                "asset": self.asset.pk,
+                "due_date": "2026-04-01",
+                "priority": Task.PRIORITY_MEDIUM,
+                "status": Task.STATUS_OPEN,
+                "responsible_user": self.assignee_user.pk,
+            },
+        )
+
+        created_task = Task.objects.get(title="Create-only task")
+        self.assertEqual(created_task.asset, self.asset)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("tasks:list"), fetch_redirect_response=False)
+        self.assertNotEqual(response.status_code, 403)
 
     def test_admin_can_edit_task(self):
         self.client.force_login(self.admin_user)

@@ -132,7 +132,6 @@ ROLE_PERMISSION_DEFAULTS = {
         "contracts_view",
         "contracts_add",
         "contracts_change",
-        "contracts_delete",
         "maintenance_plan_view",
         "maintenance_plan_add",
         "maintenance_plan_change",
@@ -161,6 +160,96 @@ def get_permission_rows():
     return PERMISSION_SECTIONS
 
 
+def permission_codes_to_names(permission_codes: tuple[tuple[str, str], ...]) -> tuple[str, ...]:
+    return tuple(f"{app_label}.{codename}" for app_label, codename in permission_codes)
+
+
+PERMISSION_ROW_MAP = {
+    row.key: row
+    for _, _, rows in PERMISSION_SECTIONS
+    for row in rows
+}
+
+PERMISSION_NAME_MAP = {
+    row_key: permission_codes_to_names(row.permission_codes)
+    for row_key, row in PERMISSION_ROW_MAP.items()
+}
+
+ASSETS_VIEW = PERMISSION_NAME_MAP["assets_view"]
+ASSETS_ADD = PERMISSION_NAME_MAP["assets_add"]
+ASSETS_CHANGE = PERMISSION_NAME_MAP["assets_change"]
+
+CONTRACTS_VIEW = PERMISSION_NAME_MAP["contracts_view"]
+CONTRACTS_ADD = PERMISSION_NAME_MAP["contracts_add"]
+CONTRACTS_CHANGE = PERMISSION_NAME_MAP["contracts_change"]
+CONTRACTS_DELETE = PERMISSION_NAME_MAP["contracts_delete"]
+
+MAINTENANCE_PLAN_VIEW = PERMISSION_NAME_MAP["maintenance_plan_view"]
+MAINTENANCE_PLAN_ADD = PERMISSION_NAME_MAP["maintenance_plan_add"]
+MAINTENANCE_PLAN_CHANGE = PERMISSION_NAME_MAP["maintenance_plan_change"]
+MAINTENANCE_EVENT_MANAGE = PERMISSION_NAME_MAP["maintenance_event_manage"]
+MAINTENANCE_EVENT_ADD = ("maintenance.add_maintenanceevent",)
+MAINTENANCE_EVENT_CHANGE = ("maintenance.change_maintenanceevent",)
+
+QUALIFICATION_PLAN_VIEW = PERMISSION_NAME_MAP["qualification_plan_view"]
+QUALIFICATION_PLAN_ADD = PERMISSION_NAME_MAP["qualification_plan_add"]
+QUALIFICATION_PLAN_CHANGE = PERMISSION_NAME_MAP["qualification_plan_change"]
+QUALIFICATION_EVENT_MANAGE = PERMISSION_NAME_MAP["qualification_event_manage"]
+QUALIFICATION_EVENT_ADD = ("qualification.add_qualificationevent",)
+QUALIFICATION_EVENT_CHANGE = ("qualification.change_qualificationevent",)
+
+TASKS_VIEW = PERMISSION_NAME_MAP["tasks_view"]
+TASKS_ADD = PERMISSION_NAME_MAP["tasks_add"]
+TASKS_CHANGE = PERMISSION_NAME_MAP["tasks_change"]
+
+AUDIT_VIEW = PERMISSION_NAME_MAP["audit_view"]
+SETTINGS_MANAGE = PERMISSION_NAME_MAP["settings_manage"]
+USERS_MANAGE = PERMISSION_NAME_MAP["users_manage"]
+ROLES_MANAGE = PERMISSION_NAME_MAP["roles_manage"]
+
+DASHBOARD_VIEW_PERMISSIONS = tuple(
+    sorted(
+        {
+            *ASSETS_VIEW,
+            *CONTRACTS_VIEW,
+            *MAINTENANCE_PLAN_VIEW,
+            *QUALIFICATION_PLAN_VIEW,
+            *TASKS_VIEW,
+            *AUDIT_VIEW,
+            *USERS_MANAGE,
+            *SETTINGS_MANAGE,
+        }
+    )
+)
+
+EDITOR_AREA_PERMISSIONS = tuple(
+    sorted(
+        {
+            *ASSETS_ADD,
+            *ASSETS_CHANGE,
+            *CONTRACTS_ADD,
+            *CONTRACTS_CHANGE,
+            *CONTRACTS_DELETE,
+            *MAINTENANCE_PLAN_ADD,
+            *MAINTENANCE_PLAN_CHANGE,
+            *MAINTENANCE_EVENT_MANAGE,
+            *QUALIFICATION_PLAN_ADD,
+            *QUALIFICATION_PLAN_CHANGE,
+            *QUALIFICATION_EVENT_MANAGE,
+            *TASKS_ADD,
+            *TASKS_CHANGE,
+            *SETTINGS_MANAGE,
+            *USERS_MANAGE,
+            *ROLES_MANAGE,
+        }
+    )
+)
+
+
+def get_permission_names_for_row(row_key: str) -> tuple[str, ...]:
+    return PERMISSION_NAME_MAP[row_key]
+
+
 def get_role_groups():
     groups = {}
     for role_name in ROLE_NAMES:
@@ -173,6 +262,82 @@ def get_permission_objects_for_row(row: PermissionRow):
     for app_label, codename in row.permission_codes:
         permissions.append(Permission.objects.get(content_type__app_label=app_label, codename=codename))
     return permissions
+
+
+def get_user_permission_names(user) -> set[str]:
+    if not getattr(user, "is_authenticated", False):
+        return set()
+
+    cached = getattr(user, "_mainty_permission_names_cache", None)
+    if cached is not None:
+        return cached
+
+    direct_permissions = user.user_permissions.values_list("content_type__app_label", "codename")
+    group_permissions = Permission.objects.filter(group__user=user).values_list("content_type__app_label", "codename")
+    permissions = {
+        f"{app_label}.{codename}"
+        for app_label, codename in [*direct_permissions, *group_permissions]
+    }
+    setattr(user, "_mainty_permission_names_cache", permissions)
+    return permissions
+
+
+def invalidate_user_permission_cache(user):
+    if hasattr(user, "_mainty_permission_names_cache"):
+        delattr(user, "_mainty_permission_names_cache")
+
+
+def user_has_permissions(user, permissions: tuple[str, ...] | list[str] | set[str], *, require_all: bool = True) -> bool:
+    if getattr(user, "is_superuser", False):
+        return True
+
+    if not getattr(user, "is_authenticated", False):
+        return False
+
+    required_permissions = tuple(permissions)
+    if not required_permissions:
+        return True
+
+    assigned_permissions = get_user_permission_names(user)
+    if require_all:
+        return all(permission_name in assigned_permissions for permission_name in required_permissions)
+    return any(permission_name in assigned_permissions for permission_name in required_permissions)
+
+
+def user_has_row_permission(user, row_key: str) -> bool:
+    return user_has_permissions(user, get_permission_names_for_row(row_key))
+
+
+def get_template_permission_context(user) -> dict:
+    return {
+        "can_view_dashboard": user_has_permissions(user, DASHBOARD_VIEW_PERMISSIONS, require_all=False),
+        "can_access_internal_area": user_has_permissions(user, DASHBOARD_VIEW_PERMISSIONS, require_all=False),
+        "can_access_editor_area": user_has_permissions(user, EDITOR_AREA_PERMISSIONS, require_all=False),
+        "can_view_assets": user_has_permissions(user, ASSETS_VIEW),
+        "can_add_assets": user_has_permissions(user, ASSETS_ADD),
+        "can_change_assets": user_has_permissions(user, ASSETS_CHANGE),
+        "can_view_contracts": user_has_permissions(user, CONTRACTS_VIEW),
+        "can_add_contracts": user_has_permissions(user, CONTRACTS_ADD),
+        "can_change_contracts": user_has_permissions(user, CONTRACTS_CHANGE),
+        "can_delete_contracts": user_has_permissions(user, CONTRACTS_DELETE),
+        "can_view_maintenance_plans": user_has_permissions(user, MAINTENANCE_PLAN_VIEW),
+        "can_add_maintenance_plans": user_has_permissions(user, MAINTENANCE_PLAN_ADD),
+        "can_change_maintenance_plans": user_has_permissions(user, MAINTENANCE_PLAN_CHANGE),
+        "can_add_maintenance_events": user_has_permissions(user, MAINTENANCE_EVENT_ADD),
+        "can_change_maintenance_events": user_has_permissions(user, MAINTENANCE_EVENT_CHANGE),
+        "can_view_qualification_plans": user_has_permissions(user, QUALIFICATION_PLAN_VIEW),
+        "can_add_qualification_plans": user_has_permissions(user, QUALIFICATION_PLAN_ADD),
+        "can_change_qualification_plans": user_has_permissions(user, QUALIFICATION_PLAN_CHANGE),
+        "can_add_qualification_events": user_has_permissions(user, QUALIFICATION_EVENT_ADD),
+        "can_change_qualification_events": user_has_permissions(user, QUALIFICATION_EVENT_CHANGE),
+        "can_view_tasks": user_has_permissions(user, TASKS_VIEW),
+        "can_add_tasks": user_has_permissions(user, TASKS_ADD),
+        "can_change_tasks": user_has_permissions(user, TASKS_CHANGE),
+        "can_view_audit": user_has_permissions(user, AUDIT_VIEW),
+        "can_manage_settings": user_has_permissions(user, SETTINGS_MANAGE),
+        "can_manage_users": user_has_permissions(user, USERS_MANAGE),
+        "can_manage_roles": user_has_permissions(user, ROLES_MANAGE),
+    }
 
 
 def build_permissions_matrix():

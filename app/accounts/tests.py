@@ -14,6 +14,7 @@ from accounts.permissions import (
     assign_default_role_permissions,
     build_permissions_matrix,
     get_permission_objects_for_row,
+    user_has_permissions,
 )
 from accounts.roles import ROLE_ADMIN, ROLE_USER, ROLE_VIEWER
 
@@ -192,6 +193,7 @@ class UserManagementTests(TestCase):
         self.assertEqual(created_user.profile.role, ROLE_USER)
         self.assertTrue(created_user.groups.filter(name=ROLE_USER).exists())
 
+
     def test_role_changes_are_persisted(self):
         self.client.force_login(self.admin_user)
         response = self.client.post(
@@ -260,6 +262,18 @@ class UserManagementTests(TestCase):
 
         self.assertIn("Marc Heyer [MH]", audit_entry.user_display)
         self.assertIn("Admin", audit_entry.user_display)
+
+
+class PermissionRegressionTests(TestCase):
+    def test_superuser_bypasses_permission_checks_without_group_membership(self):
+        superuser = get_user_model().objects.create_superuser(
+            username="superadmin",
+            email="superadmin@example.com",
+            password="strong-pass-123",
+        )
+        superuser.groups.clear()
+
+        self.assertTrue(user_has_permissions(superuser, ("core.change_systemsettings",)))
 
 
 class PermissionMatrixTests(TestCase):

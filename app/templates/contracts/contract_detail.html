@@ -17,10 +17,10 @@
     </div>
     <div class="d-flex gap-2">
       <a class="btn btn-outline-secondary" href="{% url 'contracts:list' %}">{% trans "Zur Liste" %}</a>
-      {% if can_access_editor_area %}
+      {% if can_change_contracts %}
         <a class="btn btn-primary" href="{% url 'contracts:edit' contract.pk %}">{% trans "Bearbeiten" %}</a>
       {% endif %}
-      {% if can_delete_contract %}
+      {% if can_delete_contracts %}
         <a class="btn btn-outline-danger" href="{% url 'contracts:delete' contract.pk %}">{% trans "Löschen" %}</a>
       {% endif %}
     </div>
@@ -70,7 +70,7 @@
                     <td class="fw-semibold">{{ asset.asset_id }}</td>
                     <td>{{ asset.name }}</td>
                     <td>{{ asset.location|default:"-" }}</td>
-                    <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'assets:detail' asset.pk %}">{% trans "Asset öffnen" %}</a></td>
+                    <td class="text-end">{% if can_view_assets %}<a class="btn btn-sm btn-outline-primary" href="{% url 'assets:detail' asset.pk %}">{% trans "Asset öffnen" %}</a>{% else %}-{% endif %}</td>
                   </tr>
                 {% empty %}
                   <tr>
@@ -95,7 +95,9 @@
         </div>
       </div>
 
-      {% include "audit/partials/object_history.html" %}
+      {% if can_view_audit %}
+        {% include "audit/partials/object_history.html" %}
+      {% endif %}
     </div>
   </div>
 {% endblock %}

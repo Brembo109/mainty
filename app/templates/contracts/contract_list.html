@@ -9,7 +9,7 @@
       <h1 class="h2 mb-1">{% trans "Verträge" %}</h1>
       <p class="text-secondary mb-0">{% trans "Verwaltung von Wartungs- und Serviceverträgen für einzelne oder mehrere Assets." %}</p>
     </div>
-    {% if can_access_editor_area %}
+    {% if can_add_contracts %}
       <a class="btn btn-primary" href="{% url 'contracts:create' %}">{% trans "Vertrag anlegen" %}</a>
     {% endif %}
   </div>
@@ -99,7 +99,7 @@
               <td class="text-end">
                 <div class="table-actions">
                   <a class="btn btn-sm btn-outline-primary" href="{% url 'contracts:detail' contract.pk %}">{% trans "Details" %}</a>
-                  {% if can_access_editor_area %}
+                  {% if can_change_contracts %}
                     <a class="btn btn-sm btn-outline-secondary" href="{% url 'contracts:edit' contract.pk %}">{% trans "Bearbeiten" %}</a>
                   {% endif %}
                 </div>
