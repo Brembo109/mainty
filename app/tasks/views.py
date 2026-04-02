@@ -5,8 +5,8 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
-from accounts.mixins import RoleRequiredMixin
-from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
+from accounts.mixins import PermissionRequiredMixin
+from accounts.permissions import AUDIT_VIEW, TASKS_ADD, TASKS_CHANGE, TASKS_VIEW, user_has_permissions
 from audit.services import get_audit_entries_for_instance
 from assets.models import Asset
 from core.exports import ListExportMixin, stringify_export_value
@@ -16,12 +16,16 @@ from .forms import TaskForm
 from .models import Task
 
 
-class TaskAccessMixin(RoleRequiredMixin):
-    allowed_roles = (ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER)
+class TaskAccessMixin(PermissionRequiredMixin):
+    required_permissions = TASKS_VIEW
 
 
-class TaskEditMixin(RoleRequiredMixin):
-    allowed_roles = (ROLE_ADMIN, ROLE_EDITOR)
+class TaskCreateMixin(PermissionRequiredMixin):
+    required_permissions = TASKS_ADD
+
+
+class TaskUpdateMixin(PermissionRequiredMixin):
+    required_permissions = TASKS_CHANGE
 
 
 class TaskListView(TaskAccessMixin, ListExportMixin, ListView):
@@ -171,13 +175,14 @@ class TaskDetailView(TaskAccessMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["audit_entries"] = get_audit_entries_for_instance(self.object, limit=10)
-        context["audit_model_name"] = self.object.__class__.__name__
-        context["audit_object_id"] = self.object.pk
+        if user_has_permissions(self.request.user, AUDIT_VIEW):
+            context["audit_entries"] = get_audit_entries_for_instance(self.object, limit=10)
+            context["audit_model_name"] = self.object.__class__.__name__
+            context["audit_object_id"] = self.object.pk
         return context
 
 
-class TaskCreateView(TaskEditMixin, CreateView):
+class TaskCreateView(TaskCreateMixin, CreateView):
     model = Task
     form_class = TaskForm
     template_name = "tasks/task_form.html"
@@ -194,6 +199,8 @@ class TaskCreateView(TaskEditMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
+        if not user_has_permissions(self.request.user, TASKS_VIEW):
+            return reverse("tasks:list")
         return reverse("tasks:detail", kwargs={"pk": self.object.pk})
 
     def get_context_data(self, **kwargs):
@@ -208,7 +215,7 @@ class TaskCreateView(TaskEditMixin, CreateView):
         return context
 
 
-class TaskUpdateView(TaskEditMixin, UpdateView):
+class TaskUpdateView(TaskUpdateMixin, UpdateView):
     model = Task
     form_class = TaskForm
     template_name = "tasks/task_form.html"
@@ -218,6 +225,8 @@ class TaskUpdateView(TaskEditMixin, UpdateView):
         return super().form_valid(form)
 
     def get_success_url(self):
+        if not user_has_permissions(self.request.user, TASKS_VIEW):
+            return reverse("tasks:list")
         return reverse("tasks:detail", kwargs={"pk": self.object.pk})
 
     def get_context_data(self, **kwargs):

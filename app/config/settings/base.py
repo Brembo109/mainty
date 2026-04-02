@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "maintenance",
     "qualification",
     "reminders",
+    "axes",
     "tasks",
 ]
 
@@ -55,6 +56,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "audit.middleware.AuditContextMiddleware",
+    "axes.middleware.AxesMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -100,6 +102,18 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+# django-axes: brute-force protection
+AXES_FAILURE_LIMIT = int(env("AXES_FAILURE_LIMIT", "5"))
+AXES_COOLOFF_TIME = int(env("AXES_COOLOFF_TIME", "15"))  # minutes
+AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]
+AXES_RESET_ON_SUCCESS = True
+AXES_ENABLE_ADMIN = True
+
 LANGUAGE_CODE = "de"
 LANGUAGES = [
     ("de", _("Deutsch")),
@@ -128,3 +142,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", not DEBUG)
 CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", not DEBUG)
+SESSION_COOKIE_AGE = int(env("SESSION_COOKIE_AGE", "3600"))
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True

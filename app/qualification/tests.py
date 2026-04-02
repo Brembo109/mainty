@@ -6,6 +6,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from accounts.permissions import assign_default_role_permissions
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 from assets.models import Asset
 from core.due_dates import DUE_STATUS_WARNING
@@ -43,6 +44,7 @@ class QualificationPlanModelTests(TestCase):
 class QualificationViewTests(TestCase):
     def setUp(self):
         self.settings = SystemSettings.load()
+        assign_default_role_permissions()
         self.settings.default_qualification_interval_value = 9
         self.settings.default_qualification_interval_unit = QualificationPlan.INTERVAL_MONTHS
         self.settings.default_qualification_warning_days = 11

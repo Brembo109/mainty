@@ -1,12 +1,17 @@
 from io import BytesIO
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 from openpyxl import load_workbook
 
+from accounts.permissions import assign_default_role_permissions
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
+from contracts.models import MaintenanceContract
+
+from datetime import timedelta
 
 from .models import Asset
 
@@ -27,6 +32,7 @@ class AssetModelTests(TestCase):
 class AssetViewTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
+        assign_default_role_permissions()
         self.admin_group, _ = Group.objects.get_or_create(name=ROLE_ADMIN)
         self.editor_group, _ = Group.objects.get_or_create(name=ROLE_EDITOR)
         self.viewer_group, _ = Group.objects.get_or_create(name=ROLE_VIEWER)
@@ -203,3 +209,31 @@ class AssetViewTests(TestCase):
         self.assertEqual(sheet["B1"].value, "Bezeichnung")
         self.assertEqual(sheet["A2"].value, "A-1000")
         self.assertEqual(sheet["B2"].value, "Packaging Line 1")
+
+    def test_asset_detail_hides_contract_status_without_contract_view_permission(self):
+        contract = MaintenanceContract.objects.create(
+            title="Vollwartung Linie 1",
+            contract_number="VT-1000",
+            order_number="PO-1000",
+            vendor="ACME Service",
+            start_date=timezone.localdate() - timedelta(days=60),
+            end_date=timezone.localdate() + timedelta(days=45),
+            warning_months=3,
+            maintenance_frequency=MaintenanceContract.FREQUENCY_ANNUAL,
+            notes="Testvertrag",
+        )
+        contract.assets.add(self.asset)
+        contract_view_permission = Permission.objects.get(
+            content_type__app_label="contracts",
+            codename="view_maintenancecontract",
+        )
+        self.viewer_group.permissions.remove(contract_view_permission)
+
+        self.client.force_login(self.viewer_user)
+        response = self.client.get(reverse("assets:detail", args=[self.asset.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.context["contract_summary"])
+        self.assertEqual(list(response.context["contracts"]), [])
+        self.assertNotContains(response, contract.status.label)
+        self.assertNotContains(response, "Vollwartung Linie 1")

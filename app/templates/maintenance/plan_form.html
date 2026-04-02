@@ -12,35 +12,59 @@
     <a class="btn btn-outline-secondary" href="{{ cancel_url }}">{% trans "Abbrechen" %}</a>
   </div>
 
-  <div class="card border-0 shadow-sm">
+  <div class="card border-0 shadow-sm form-shell">
     <div class="card-body p-4 p-lg-5">
       <form method="post" novalidate>
         {% csrf_token %}
         {% if form.non_field_errors %}
-          <div class="alert alert-danger">
+          <div class="alert alert-danger app-alert">
             {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
           </div>
         {% endif %}
-        <div class="row g-4">
-          <div class="col-md-6">{% include "includes/form_field.html" with field=form.asset %}</div>
-          <div class="col-md-6">{% include "includes/form_field.html" with field=form.title %}</div>
-          <div class="col-md-3">{% include "includes/form_field.html" with field=form.interval_value %}</div>
-          <div class="col-md-3">{% include "includes/form_field.html" with field=form.interval_unit %}</div>
-          <div class="col-md-3">{% include "includes/form_field.html" with field=form.warning_days %}</div>
-          <div class="col-md-3">
-            <div class="form-check mt-4 pt-2">
-              {{ form.is_active }}
-              <label class="form-check-label" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
-            </div>
-            {% if form.is_active.help_text %}<div class="form-text">{{ form.is_active.help_text }}</div>{% endif %}
-            {% if form.is_active.errors %}<div class="invalid-feedback d-block">{% for error in form.is_active.errors %}<div>{{ error }}</div>{% endfor %}</div>{% endif %}
-          </div>
-          <div class="col-md-6">{% include "includes/form_field.html" with field=form.responsible_person %}</div>
-          <div class="col-12">{% include "includes/form_field.html" with field=form.notes %}</div>
+        <div class="form-intro">
+          <p class="mb-1">{% trans "Alle mit * markierten Felder sind Pflichtfelder." %}</p>
+          <div class="form-required-note">{% trans "* Pflichtfeld" %}</div>
         </div>
-        <div class="d-flex gap-2 mt-4">
-          <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
-          <a class="btn btn-outline-secondary" href="{{ cancel_url }}">{% trans "Abbrechen" %}</a>
+        <section class="form-section">
+          <h2 class="form-section-title">{% trans "Stammdaten" %}</h2>
+          <div class="row g-4">
+            <div class="col-md-6">{% include "includes/form_field.html" with field=form.asset %}</div>
+            <div class="col-md-6">{% include "includes/form_field.html" with field=form.title %}</div>
+            <div class="col-md-6">{% include "includes/form_field.html" with field=form.responsible_person %}</div>
+            <div class="col-md-6">
+              <div class="form-field{% if form.is_active.errors %} has-error{% endif %}">
+                <label class="form-label d-block">{% trans "Status" %}</label>
+                <div class="form-check mt-2">
+                  {{ form.is_active }}
+                  <label class="form-check-label" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+                </div>
+                {% if form.is_active.help_text %}<div class="form-text">{{ form.is_active.help_text }}</div>{% endif %}
+                {% if form.is_active.errors %}<div class="invalid-feedback d-block">{% for error in form.is_active.errors %}<div>{{ error }}</div>{% endfor %}</div>{% endif %}
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="form-section">
+          <h2 class="form-section-title">{% trans "Termine und Fristen" %}</h2>
+          <div class="row g-4">
+            <div class="col-md-4">{% include "includes/form_field.html" with field=form.interval_value %}</div>
+            <div class="col-md-4">{% include "includes/form_field.html" with field=form.interval_unit %}</div>
+            <div class="col-md-4">{% include "includes/form_field.html" with field=form.warning_days %}</div>
+          </div>
+        </section>
+        <section class="form-section">
+          <h2 class="form-section-title">{% trans "Zusätzliche Informationen" %}</h2>
+          <div class="row g-4">
+            <div class="col-12">{% include "includes/form_field.html" with field=form.notes %}</div>
+          </div>
+        </section>
+        <div class="form-actions">
+          <div class="form-actions-primary">
+            <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
+          </div>
+          <div class="form-actions-secondary">
+            <a class="btn btn-outline-secondary" href="{{ cancel_url }}">{% trans "Abbrechen" %}</a>
+          </div>
         </div>
       </form>
     </div>

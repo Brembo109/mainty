@@ -12,27 +12,43 @@
     <a class="btn btn-outline-secondary" href="{{ cancel_url }}">{% trans "Abbrechen" %}</a>
   </div>
 
-  <div class="card border-0 shadow-sm">
+  <div class="card border-0 shadow-sm form-shell">
     <div class="card-body p-4 p-lg-5">
       <form method="post" novalidate>
         {% csrf_token %}
         {% if form.non_field_errors %}
-          <div class="alert alert-danger">
+          <div class="alert alert-danger app-alert">
             {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
           </div>
         {% endif %}
-        <div class="row g-4">
-          <div class="col-md-8">{% include "includes/form_field.html" with field=form.title %}</div>
-          <div class="col-md-4">{% include "includes/form_field.html" with field=form.status %}</div>
-          <div class="col-12">{% include "includes/form_field.html" with field=form.description %}</div>
-          <div class="col-md-6">{% include "includes/form_field.html" with field=form.asset %}</div>
-          <div class="col-md-6">{% include "includes/form_field.html" with field=form.responsible_user %}</div>
-          <div class="col-md-6">{% include "includes/form_field.html" with field=form.due_date %}</div>
-          <div class="col-md-6">{% include "includes/form_field.html" with field=form.priority %}</div>
+        <div class="form-intro">
+          <p class="mb-1">{% trans "Alle mit * markierten Felder sind Pflichtfelder." %}</p>
+          <div class="form-required-note">{% trans "* Pflichtfeld" %}</div>
         </div>
-        <div class="d-flex gap-2 mt-4">
-          <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
-          <a class="btn btn-outline-secondary" href="{{ cancel_url }}">{% trans "Abbrechen" %}</a>
+        <section class="form-section">
+          <h2 class="form-section-title">{% trans "Stammdaten" %}</h2>
+          <div class="row g-4">
+            <div class="col-md-8">{% include "includes/form_field.html" with field=form.title %}</div>
+            <div class="col-md-4">{% include "includes/form_field.html" with field=form.status %}</div>
+            <div class="col-12">{% include "includes/form_field.html" with field=form.description %}</div>
+          </div>
+        </section>
+        <section class="form-section">
+          <h2 class="form-section-title">{% trans "Verantwortlichkeiten und Fristen" %}</h2>
+          <div class="row g-4">
+            <div class="col-md-6">{% include "includes/form_field.html" with field=form.asset %}</div>
+            <div class="col-md-6">{% include "includes/form_field.html" with field=form.responsible_user %}</div>
+            <div class="col-md-6">{% include "includes/form_field.html" with field=form.due_date %}</div>
+            <div class="col-md-6">{% include "includes/form_field.html" with field=form.priority %}</div>
+          </div>
+        </section>
+        <div class="form-actions">
+          <div class="form-actions-primary">
+            <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
+          </div>
+          <div class="form-actions-secondary">
+            <a class="btn btn-outline-secondary" href="{{ cancel_url }}">{% trans "Abbrechen" %}</a>
+          </div>
         </div>
       </form>
     </div>

@@ -4,8 +4,18 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
-from accounts.mixins import RoleRequiredMixin
-from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
+from accounts.mixins import PermissionRequiredMixin
+from accounts.permissions import (
+    ASSETS_ADD,
+    ASSETS_CHANGE,
+    ASSETS_VIEW,
+    AUDIT_VIEW,
+    CONTRACTS_VIEW,
+    MAINTENANCE_PLAN_VIEW,
+    QUALIFICATION_PLAN_VIEW,
+    TASKS_VIEW,
+    user_has_permissions,
+)
 from audit.services import get_audit_entries_for_instance
 from core.exports import ListExportMixin, stringify_export_value
 from core.ui import count_active_filters
@@ -15,12 +25,16 @@ from .forms import AssetForm
 from .models import Asset
 
 
-class AssetAccessMixin(RoleRequiredMixin):
-    allowed_roles = (ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER)
+class AssetAccessMixin(PermissionRequiredMixin):
+    required_permissions = ASSETS_VIEW
 
 
-class AssetEditAccessMixin(RoleRequiredMixin):
-    allowed_roles = (ROLE_ADMIN, ROLE_EDITOR)
+class AssetCreateAccessMixin(PermissionRequiredMixin):
+    required_permissions = ASSETS_ADD
+
+
+class AssetUpdateAccessMixin(PermissionRequiredMixin):
+    required_permissions = ASSETS_CHANGE
 
 
 class AssetListView(AssetAccessMixin, ListExportMixin, ListView):
@@ -151,18 +165,33 @@ class AssetDetailView(AssetAccessMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["maintenance_plans"] = self.object.maintenance_plans.all()
-        context["qualification_plans"] = self.object.qualification_plans.all()
-        context["tasks"] = self.object.tasks.select_related("responsible_user").all()
-        context["contracts"] = self.object.contracts.all()
-        context["contract_summary"] = summarize_asset_contract_status(self.object)
-        context["audit_entries"] = get_audit_entries_for_instance(self.object, limit=10)
-        context["audit_model_name"] = self.object.__class__.__name__
-        context["audit_object_id"] = self.object.pk
+        user = self.request.user
+        context["maintenance_plans"] = (
+            self.object.maintenance_plans.all()
+            if user_has_permissions(user, MAINTENANCE_PLAN_VIEW)
+            else []
+        )
+        context["qualification_plans"] = (
+            self.object.qualification_plans.all()
+            if user_has_permissions(user, QUALIFICATION_PLAN_VIEW)
+            else []
+        )
+        context["tasks"] = (
+            self.object.tasks.select_related("responsible_user").all()
+            if user_has_permissions(user, TASKS_VIEW)
+            else []
+        )
+        can_view_contracts = user_has_permissions(user, CONTRACTS_VIEW)
+        context["contracts"] = self.object.contracts.all() if can_view_contracts else []
+        context["contract_summary"] = summarize_asset_contract_status(self.object) if can_view_contracts else None
+        if user_has_permissions(user, AUDIT_VIEW):
+            context["audit_entries"] = get_audit_entries_for_instance(self.object, limit=10)
+            context["audit_model_name"] = self.object.__class__.__name__
+            context["audit_object_id"] = self.object.pk
         return context
 
 
-class AssetCreateView(AssetEditAccessMixin, CreateView):
+class AssetCreateView(AssetCreateAccessMixin, CreateView):
     model = Asset
     form_class = AssetForm
     template_name = "assets/asset_form.html"
@@ -172,6 +201,8 @@ class AssetCreateView(AssetEditAccessMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
+        if not user_has_permissions(self.request.user, ASSETS_VIEW):
+            return reverse("assets:list")
         return reverse("assets:detail", kwargs={"pk": self.object.pk})
 
     def get_context_data(self, **kwargs):
@@ -182,7 +213,7 @@ class AssetCreateView(AssetEditAccessMixin, CreateView):
         return context
 
 
-class AssetUpdateView(AssetEditAccessMixin, UpdateView):
+class AssetUpdateView(AssetUpdateAccessMixin, UpdateView):
     model = Asset
     form_class = AssetForm
     template_name = "assets/asset_form.html"
@@ -192,6 +223,8 @@ class AssetUpdateView(AssetEditAccessMixin, UpdateView):
         return super().form_valid(form)
 
     def get_success_url(self):
+        if not user_has_permissions(self.request.user, ASSETS_VIEW):
+            return reverse("assets:list")
         return reverse("assets:detail", kwargs={"pk": self.object.pk})
 
     def get_context_data(self, **kwargs):

@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 from openpyxl import load_workbook
 
+from accounts.permissions import assign_default_role_permissions
 from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
 from assets.models import Asset
 from audit.context import audit_context
@@ -21,6 +22,7 @@ from tasks.models import Task
 class AuditTrailTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
+        assign_default_role_permissions()
         self.admin_group, _ = Group.objects.get_or_create(name=ROLE_ADMIN)
         self.editor_group, _ = Group.objects.get_or_create(name=ROLE_EDITOR)
         self.viewer_group, _ = Group.objects.get_or_create(name=ROLE_VIEWER)

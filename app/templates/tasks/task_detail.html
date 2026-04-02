@@ -21,7 +21,7 @@
     </div>
     <div class="d-flex gap-2">
       <a class="btn btn-outline-secondary" href="{% url 'tasks:list' %}">{% trans "Zur Liste" %}</a>
-      {% if can_access_editor_area %}
+      {% if can_change_tasks %}
         <a class="btn btn-primary" href="{% url 'tasks:edit' task.pk %}">{% trans "Bearbeiten" %}</a>
       {% endif %}
     </div>
@@ -43,7 +43,11 @@
               <div class="small text-secondary">{% trans "Anlage" %}</div>
               <div>
                 {% if task.asset %}
-                  <a href="{% url 'assets:detail' task.asset.pk %}">{{ task.asset.asset_id }} - {{ task.asset.name }}</a>
+                  {% if can_view_assets %}
+                    <a href="{% url 'assets:detail' task.asset.pk %}">{{ task.asset.asset_id }} - {{ task.asset.name }}</a>
+                  {% else %}
+                    {{ task.asset.asset_id }} - {{ task.asset.name }}
+                  {% endif %}
                 {% else %}
                   -
                 {% endif %}
@@ -68,7 +72,9 @@
         </div>
       </div>
 
-      {% include "audit/partials/object_history.html" %}
+      {% if can_view_audit %}
+        {% include "audit/partials/object_history.html" %}
+      {% endif %}
     </div>
   </div>
 {% endblock %}

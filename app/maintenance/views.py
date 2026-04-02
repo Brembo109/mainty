@@ -4,8 +4,16 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
-from accounts.mixins import RoleRequiredMixin
-from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
+from accounts.mixins import PermissionRequiredMixin
+from accounts.permissions import (
+    AUDIT_VIEW,
+    MAINTENANCE_EVENT_ADD,
+    MAINTENANCE_EVENT_CHANGE,
+    MAINTENANCE_PLAN_ADD,
+    MAINTENANCE_PLAN_CHANGE,
+    MAINTENANCE_PLAN_VIEW,
+    user_has_permissions,
+)
 from audit.services import get_audit_entries_for_instance
 from core.exports import ListExportMixin, stringify_export_value
 from core.models import SystemSettings
@@ -15,12 +23,24 @@ from .forms import MaintenanceEventForm, MaintenancePlanForm
 from .models import MaintenanceEvent, MaintenancePlan
 
 
-class MaintenanceAccessMixin(RoleRequiredMixin):
-    allowed_roles = (ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER)
+class MaintenanceAccessMixin(PermissionRequiredMixin):
+    required_permissions = MAINTENANCE_PLAN_VIEW
 
 
-class MaintenanceEditMixin(RoleRequiredMixin):
-    allowed_roles = (ROLE_ADMIN, ROLE_EDITOR)
+class MaintenancePlanCreateMixin(PermissionRequiredMixin):
+    required_permissions = MAINTENANCE_PLAN_ADD
+
+
+class MaintenancePlanUpdateMixin(PermissionRequiredMixin):
+    required_permissions = MAINTENANCE_PLAN_CHANGE
+
+
+class MaintenanceEventCreateMixin(PermissionRequiredMixin):
+    required_permissions = MAINTENANCE_EVENT_ADD
+
+
+class MaintenanceEventUpdateMixin(PermissionRequiredMixin):
+    required_permissions = MAINTENANCE_EVENT_CHANGE
 
 
 class MaintenancePlanListView(MaintenanceAccessMixin, ListExportMixin, ListView):
@@ -156,13 +176,14 @@ class MaintenancePlanDetailView(MaintenanceAccessMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["event_history"] = self.object.events.all()
-        context["audit_entries"] = get_audit_entries_for_instance(self.object, limit=10)
-        context["audit_model_name"] = self.object.__class__.__name__
-        context["audit_object_id"] = self.object.pk
+        if user_has_permissions(self.request.user, AUDIT_VIEW):
+            context["audit_entries"] = get_audit_entries_for_instance(self.object, limit=10)
+            context["audit_model_name"] = self.object.__class__.__name__
+            context["audit_object_id"] = self.object.pk
         return context
 
 
-class MaintenancePlanCreateView(MaintenanceEditMixin, CreateView):
+class MaintenancePlanCreateView(MaintenancePlanCreateMixin, CreateView):
     model = MaintenancePlan
     form_class = MaintenancePlanForm
     template_name = "maintenance/plan_form.html"
@@ -183,6 +204,8 @@ class MaintenancePlanCreateView(MaintenanceEditMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
+        if not user_has_permissions(self.request.user, MAINTENANCE_PLAN_VIEW):
+            return reverse("maintenance:plan-list")
         return reverse("maintenance:plan-detail", kwargs={"pk": self.object.pk})
 
     def get_context_data(self, **kwargs):
@@ -197,7 +220,7 @@ class MaintenancePlanCreateView(MaintenanceEditMixin, CreateView):
         return context
 
 
-class MaintenancePlanUpdateView(MaintenanceEditMixin, UpdateView):
+class MaintenancePlanUpdateView(MaintenancePlanUpdateMixin, UpdateView):
     model = MaintenancePlan
     form_class = MaintenancePlanForm
     template_name = "maintenance/plan_form.html"
@@ -207,6 +230,8 @@ class MaintenancePlanUpdateView(MaintenanceEditMixin, UpdateView):
         return super().form_valid(form)
 
     def get_success_url(self):
+        if not user_has_permissions(self.request.user, MAINTENANCE_PLAN_VIEW):
+            return reverse("maintenance:plan-list")
         return reverse("maintenance:plan-detail", kwargs={"pk": self.object.pk})
 
     def get_context_data(self, **kwargs):
@@ -221,7 +246,7 @@ class MaintenancePlanUpdateView(MaintenanceEditMixin, UpdateView):
         return context
 
 
-class MaintenanceEventCreateView(MaintenanceEditMixin, CreateView):
+class MaintenanceEventCreateView(MaintenanceEventCreateMixin, CreateView):
     model = MaintenanceEvent
     form_class = MaintenanceEventForm
     template_name = "maintenance/event_form.html"
@@ -236,6 +261,8 @@ class MaintenanceEventCreateView(MaintenanceEditMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
+        if not user_has_permissions(self.request.user, MAINTENANCE_PLAN_VIEW):
+            return reverse("maintenance:plan-list")
         return reverse("maintenance:plan-detail", kwargs={"pk": self.plan.pk})
 
     def get_context_data(self, **kwargs):
@@ -251,7 +278,7 @@ class MaintenanceEventCreateView(MaintenanceEditMixin, CreateView):
         return context
 
 
-class MaintenanceEventUpdateView(MaintenanceEditMixin, UpdateView):
+class MaintenanceEventUpdateView(MaintenanceEventUpdateMixin, UpdateView):
     model = MaintenanceEvent
     form_class = MaintenanceEventForm
     template_name = "maintenance/event_form.html"
@@ -261,6 +288,8 @@ class MaintenanceEventUpdateView(MaintenanceEditMixin, UpdateView):
         return super().form_valid(form)
 
     def get_success_url(self):
+        if not user_has_permissions(self.request.user, MAINTENANCE_PLAN_VIEW):
+            return reverse("maintenance:plan-list")
         return reverse("maintenance:plan-detail", kwargs={"pk": self.object.plan.pk})
 
     def get_context_data(self, **kwargs):

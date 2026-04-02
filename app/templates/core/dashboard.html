@@ -60,14 +60,14 @@
                 {% for item in overdue_items %}
                   <tr class="{{ item.status_code|due_row_class }}">
                     <td>{{ item.category_label }}</td>
-                    <td class="fw-semibold">{{ item.title }}</td>
-                    <td>{{ item.asset_label }}</td>
-                    <td>{{ item.due_date|date:"d.m.Y"|default:"-" }}</td>
+                    <td class="fw-semibold"><div class="table-cell-truncate" title="{{ item.title }}">{{ item.title }}</div></td>
+                    <td><div class="table-cell-truncate" title="{{ item.asset_label }}">{{ item.asset_label }}</div></td>
+                    <td><span class="text-nowrap">{{ item.due_date|date:"d.m.Y"|default:"-" }}</span></td>
                     <td><span class="badge {{ item.status_code|due_badge_class }}">{{ item.status_label }}</span></td>
                     <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ item.detail_url }}">{% trans "Details" %}</a></td>
                   </tr>
                 {% empty %}
-                  <tr class="{{ item.status_code|due_row_class }}">
+                  <tr class="empty-state-row">
                     <td colspan="6" class="text-center py-4 text-secondary">{% trans "Keine überfälligen Einträge vorhanden." %}</td>
                   </tr>
                 {% endfor %}
@@ -101,16 +101,16 @@
               </thead>
               <tbody>
                 {% for item in upcoming_items %}
-                  <tr class="{{ task|task_row_class }}">
+                  <tr class="{{ item.status_code|due_row_class }}">
                     <td>{{ item.category_label }}</td>
-                    <td class="fw-semibold">{{ item.title }}</td>
-                    <td>{{ item.asset_label }}</td>
-                    <td>{{ item.due_date|date:"d.m.Y"|default:"-" }}</td>
+                    <td class="fw-semibold"><div class="table-cell-truncate" title="{{ item.title }}">{{ item.title }}</div></td>
+                    <td><div class="table-cell-truncate" title="{{ item.asset_label }}">{{ item.asset_label }}</div></td>
+                    <td><span class="text-nowrap">{{ item.due_date|date:"d.m.Y"|default:"-" }}</span></td>
                     <td><span class="badge {{ item.status_code|due_badge_class }}">{{ item.status_label }}</span></td>
                     <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ item.detail_url }}">{% trans "Details" %}</a></td>
                   </tr>
                 {% empty %}
-                  <tr>
+                  <tr class="empty-state-row">
                     <td colspan="6" class="text-center py-4 text-secondary">{% trans "Keine bald fälligen Einträge vorhanden." %}</td>
                   </tr>
                 {% endfor %}
@@ -144,19 +144,19 @@
               </thead>
               <tbody>
                 {% for task in open_tasks %}
-                  <tr>
-                    <td class="fw-semibold">{{ task.title }}</td>
-                    <td>{{ task.asset_label }}</td>
-                    <td>{{ task.due_date|date:"d.m.Y"|default:"-" }}</td>
-                    <td>{{ task.priority_label }}</td>
+                  <tr class="{{ task|task_row_class }}">
+                    <td class="fw-semibold"><div class="table-cell-truncate" title="{{ task.title }}">{{ task.title }}</div></td>
+                    <td><div class="table-cell-truncate" title="{{ task.asset_label }}">{{ task.asset_label }}</div></td>
+                    <td><span class="text-nowrap">{{ task.due_date|date:"d.m.Y"|default:"-" }}</span></td>
+                    <td><span class="badge text-bg-light border">{{ task.priority_label }}</span></td>
                     <td>
                       <span class="badge {{ task|task_badge_class }}">{{ task|task_status_label }}</span>
                     </td>
-                    <td>{{ task.responsible_label }}</td>
+                    <td><div class="table-cell-truncate" title="{{ task.responsible_label }}">{{ task.responsible_label }}</div></td>
                     <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ task.detail_url }}">{% trans "Details" %}</a></td>
                   </tr>
                 {% empty %}
-                  <tr>
+                  <tr class="empty-state-row">
                     <td colspan="7" class="text-center py-4 text-secondary">{% trans "Keine offenen Maßnahmen vorhanden." %}</td>
                   </tr>
                 {% endfor %}
@@ -183,7 +183,7 @@
               <ul class="list-group list-group-flush mb-3">
                 {% for item in due_soon_maintenance_items %}
                   <li class="list-group-item px-0 d-flex justify-content-between gap-3">
-                    <a class="text-decoration-none" href="{{ item.detail_url }}">{{ item.title }}</a>
+                    <a class="text-decoration-none table-cell-truncate" href="{{ item.detail_url }}" title="{{ item.title }}">{{ item.title }}</a>
                     <span class="small text-secondary">{{ item.due_date|date:"d.m.Y" }}</span>
                   </li>
                 {% empty %}
@@ -194,7 +194,7 @@
               <ul class="list-group list-group-flush">
                 {% for item in overdue_maintenance_items %}
                   <li class="list-group-item px-0 d-flex justify-content-between gap-3">
-                    <a class="text-decoration-none" href="{{ item.detail_url }}">{{ item.title }}</a>
+                    <a class="text-decoration-none table-cell-truncate" href="{{ item.detail_url }}" title="{{ item.title }}">{{ item.title }}</a>
                     <span class="small text-danger">{{ item.due_date|date:"d.m.Y" }}</span>
                   </li>
                 {% empty %}
@@ -208,7 +208,7 @@
               <ul class="list-group list-group-flush mb-3">
                 {% for item in due_soon_qualification_items %}
                   <li class="list-group-item px-0 d-flex justify-content-between gap-3">
-                    <a class="text-decoration-none" href="{{ item.detail_url }}">{{ item.title }}</a>
+                    <a class="text-decoration-none table-cell-truncate" href="{{ item.detail_url }}" title="{{ item.title }}">{{ item.title }}</a>
                     <span class="small text-secondary">{{ item.due_date|date:"d.m.Y" }}</span>
                   </li>
                 {% empty %}
@@ -219,7 +219,7 @@
               <ul class="list-group list-group-flush">
                 {% for item in overdue_qualification_items %}
                   <li class="list-group-item px-0 d-flex justify-content-between gap-3">
-                    <a class="text-decoration-none" href="{{ item.detail_url }}">{{ item.title }}</a>
+                    <a class="text-decoration-none table-cell-truncate" href="{{ item.detail_url }}" title="{{ item.title }}">{{ item.title }}</a>
                     <span class="small text-danger">{{ item.due_date|date:"d.m.Y" }}</span>
                   </li>
                 {% empty %}
@@ -245,8 +245,8 @@
                 <div class="d-flex justify-content-between align-items-start gap-3">
                   <div>
                     <div class="small text-secondary">{{ item.category_label }}</div>
-                    <div class="fw-semibold">{{ item.title }}</div>
-                    <div class="small text-secondary">{{ item.asset_label }}</div>
+                    <div class="fw-semibold table-cell-truncate" title="{{ item.title }}">{{ item.title }}</div>
+                    <div class="small text-secondary table-cell-truncate" title="{{ item.asset_label }}">{{ item.asset_label }}</div>
                   </div>
                   <div class="small text-nowrap text-secondary">{{ item.updated_at|date:"d.m.Y H:i" }}</div>
                 </div>

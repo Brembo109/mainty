@@ -4,8 +4,15 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from accounts.mixins import RoleRequiredMixin
-from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER, has_role
+from accounts.mixins import PermissionRequiredMixin
+from accounts.permissions import (
+    AUDIT_VIEW,
+    CONTRACTS_ADD,
+    CONTRACTS_CHANGE,
+    CONTRACTS_DELETE,
+    CONTRACTS_VIEW,
+    user_has_permissions,
+)
 from audit.services import get_audit_entries_for_instance
 from core.exports import ListExportMixin, stringify_export_value
 from core.ui import count_active_filters
@@ -14,16 +21,20 @@ from .forms import MaintenanceContractForm
 from .models import MaintenanceContract
 
 
-class ContractAccessMixin(RoleRequiredMixin):
-    allowed_roles = (ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER)
+class ContractAccessMixin(PermissionRequiredMixin):
+    required_permissions = CONTRACTS_VIEW
 
 
-class ContractEditMixin(RoleRequiredMixin):
-    allowed_roles = (ROLE_ADMIN, ROLE_EDITOR)
+class ContractCreateMixin(PermissionRequiredMixin):
+    required_permissions = CONTRACTS_ADD
 
 
-class ContractDeleteMixin(RoleRequiredMixin):
-    allowed_roles = (ROLE_ADMIN,)
+class ContractUpdateMixin(PermissionRequiredMixin):
+    required_permissions = CONTRACTS_CHANGE
+
+
+class ContractDeleteMixin(PermissionRequiredMixin):
+    required_permissions = CONTRACTS_DELETE
 
 
 class MaintenanceContractListView(ContractAccessMixin, ListExportMixin, ListView):
@@ -159,14 +170,14 @@ class MaintenanceContractDetailView(ContractAccessMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["audit_entries"] = get_audit_entries_for_instance(self.object, limit=10)
-        context["audit_model_name"] = self.object.__class__.__name__
-        context["audit_object_id"] = self.object.pk
-        context["can_delete_contract"] = self.request.user.is_superuser or has_role(self.request.user, ROLE_ADMIN)
+        if user_has_permissions(self.request.user, AUDIT_VIEW):
+            context["audit_entries"] = get_audit_entries_for_instance(self.object, limit=10)
+            context["audit_model_name"] = self.object.__class__.__name__
+            context["audit_object_id"] = self.object.pk
         return context
 
 
-class MaintenanceContractCreateView(ContractEditMixin, CreateView):
+class MaintenanceContractCreateView(ContractCreateMixin, CreateView):
     model = MaintenanceContract
     form_class = MaintenanceContractForm
     template_name = "contracts/contract_form.html"
@@ -183,6 +194,8 @@ class MaintenanceContractCreateView(ContractEditMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
+        if not user_has_permissions(self.request.user, CONTRACTS_VIEW):
+            return reverse("contracts:list")
         return reverse("contracts:detail", kwargs={"pk": self.object.pk})
 
     def get_context_data(self, **kwargs):
@@ -197,7 +210,7 @@ class MaintenanceContractCreateView(ContractEditMixin, CreateView):
         return context
 
 
-class MaintenanceContractUpdateView(ContractEditMixin, UpdateView):
+class MaintenanceContractUpdateView(ContractUpdateMixin, UpdateView):
     model = MaintenanceContract
     form_class = MaintenanceContractForm
     template_name = "contracts/contract_form.html"
@@ -210,6 +223,8 @@ class MaintenanceContractUpdateView(ContractEditMixin, UpdateView):
         return super().form_valid(form)
 
     def get_success_url(self):
+        if not user_has_permissions(self.request.user, CONTRACTS_VIEW):
+            return reverse("contracts:list")
         return reverse("contracts:detail", kwargs={"pk": self.object.pk})
 
     def get_context_data(self, **kwargs):

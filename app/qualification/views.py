@@ -4,8 +4,16 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
-from accounts.mixins import RoleRequiredMixin
-from accounts.roles import ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER
+from accounts.mixins import PermissionRequiredMixin
+from accounts.permissions import (
+    AUDIT_VIEW,
+    QUALIFICATION_EVENT_ADD,
+    QUALIFICATION_EVENT_CHANGE,
+    QUALIFICATION_PLAN_ADD,
+    QUALIFICATION_PLAN_CHANGE,
+    QUALIFICATION_PLAN_VIEW,
+    user_has_permissions,
+)
 from audit.services import get_audit_entries_for_instance
 from core.exports import ListExportMixin, stringify_export_value
 from core.models import SystemSettings
@@ -15,12 +23,24 @@ from .forms import QualificationEventForm, QualificationPlanForm
 from .models import QualificationEvent, QualificationPlan
 
 
-class QualificationAccessMixin(RoleRequiredMixin):
-    allowed_roles = (ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER)
+class QualificationAccessMixin(PermissionRequiredMixin):
+    required_permissions = QUALIFICATION_PLAN_VIEW
 
 
-class QualificationEditMixin(RoleRequiredMixin):
-    allowed_roles = (ROLE_ADMIN, ROLE_EDITOR)
+class QualificationPlanCreateMixin(PermissionRequiredMixin):
+    required_permissions = QUALIFICATION_PLAN_ADD
+
+
+class QualificationPlanUpdateMixin(PermissionRequiredMixin):
+    required_permissions = QUALIFICATION_PLAN_CHANGE
+
+
+class QualificationEventCreateMixin(PermissionRequiredMixin):
+    required_permissions = QUALIFICATION_EVENT_ADD
+
+
+class QualificationEventUpdateMixin(PermissionRequiredMixin):
+    required_permissions = QUALIFICATION_EVENT_CHANGE
 
 
 class QualificationPlanListView(QualificationAccessMixin, ListExportMixin, ListView):
@@ -156,13 +176,14 @@ class QualificationPlanDetailView(QualificationAccessMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["event_history"] = self.object.events.all()
-        context["audit_entries"] = get_audit_entries_for_instance(self.object, limit=10)
-        context["audit_model_name"] = self.object.__class__.__name__
-        context["audit_object_id"] = self.object.pk
+        if user_has_permissions(self.request.user, AUDIT_VIEW):
+            context["audit_entries"] = get_audit_entries_for_instance(self.object, limit=10)
+            context["audit_model_name"] = self.object.__class__.__name__
+            context["audit_object_id"] = self.object.pk
         return context
 
 
-class QualificationPlanCreateView(QualificationEditMixin, CreateView):
+class QualificationPlanCreateView(QualificationPlanCreateMixin, CreateView):
     model = QualificationPlan
     form_class = QualificationPlanForm
     template_name = "qualification/plan_form.html"
@@ -183,6 +204,8 @@ class QualificationPlanCreateView(QualificationEditMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
+        if not user_has_permissions(self.request.user, QUALIFICATION_PLAN_VIEW):
+            return reverse("qualification:plan-list")
         return reverse("qualification:plan-detail", kwargs={"pk": self.object.pk})
 
     def get_context_data(self, **kwargs):
@@ -197,7 +220,7 @@ class QualificationPlanCreateView(QualificationEditMixin, CreateView):
         return context
 
 
-class QualificationPlanUpdateView(QualificationEditMixin, UpdateView):
+class QualificationPlanUpdateView(QualificationPlanUpdateMixin, UpdateView):
     model = QualificationPlan
     form_class = QualificationPlanForm
     template_name = "qualification/plan_form.html"
@@ -207,6 +230,8 @@ class QualificationPlanUpdateView(QualificationEditMixin, UpdateView):
         return super().form_valid(form)
 
     def get_success_url(self):
+        if not user_has_permissions(self.request.user, QUALIFICATION_PLAN_VIEW):
+            return reverse("qualification:plan-list")
         return reverse("qualification:plan-detail", kwargs={"pk": self.object.pk})
 
     def get_context_data(self, **kwargs):
@@ -221,7 +246,7 @@ class QualificationPlanUpdateView(QualificationEditMixin, UpdateView):
         return context
 
 
-class QualificationEventCreateView(QualificationEditMixin, CreateView):
+class QualificationEventCreateView(QualificationEventCreateMixin, CreateView):
     model = QualificationEvent
     form_class = QualificationEventForm
     template_name = "qualification/event_form.html"
@@ -236,6 +261,8 @@ class QualificationEventCreateView(QualificationEditMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
+        if not user_has_permissions(self.request.user, QUALIFICATION_PLAN_VIEW):
+            return reverse("qualification:plan-list")
         return reverse("qualification:plan-detail", kwargs={"pk": self.plan.pk})
 
     def get_context_data(self, **kwargs):
@@ -251,7 +278,7 @@ class QualificationEventCreateView(QualificationEditMixin, CreateView):
         return context
 
 
-class QualificationEventUpdateView(QualificationEditMixin, UpdateView):
+class QualificationEventUpdateView(QualificationEventUpdateMixin, UpdateView):
     model = QualificationEvent
     form_class = QualificationEventForm
     template_name = "qualification/event_form.html"
@@ -261,6 +288,8 @@ class QualificationEventUpdateView(QualificationEditMixin, UpdateView):
         return super().form_valid(form)
 
     def get_success_url(self):
+        if not user_has_permissions(self.request.user, QUALIFICATION_PLAN_VIEW):
+            return reverse("qualification:plan-list")
         return reverse("qualification:plan-detail", kwargs={"pk": self.object.plan.pk})
 
     def get_context_data(self, **kwargs):

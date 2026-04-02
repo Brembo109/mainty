@@ -9,14 +9,14 @@
       <h1 class="h2 mb-1">{% trans "Maßnahmen" %}</h1>
       <p class="text-secondary mb-0">{% trans "Operative Aufgaben und Maßnahmen für Anlagen und interne Abläufe." %}</p>
     </div>
-    {% if can_access_editor_area %}
+    {% if can_add_tasks %}
       <a class="btn btn-primary" href="{% url 'tasks:create' %}">{% trans "Maßnahme anlegen" %}</a>
     {% endif %}
   </div>
 
   <div class="card border-0 shadow-sm mb-4 filter-panel">
     <div class="card-body p-4">
-      <form method="get" class="row g-3 align-items-end">
+      <form method="get" class="row g-3 align-items-end" data-persist-filters data-persist-key="tasks-list">
         <div class="col-12 col-xl-4">
           <label class="form-label" for="searchInput">{% trans "Suche" %}</label>
           <input class="form-control {% if search_query %}filter-active{% endif %}" id="searchInput" type="search" name="q" value="{{ search_query }}" placeholder="{% trans 'Suche nach Titel, Anlage oder Benutzer ...' %}" />
@@ -75,7 +75,7 @@
         </div>
         <div class="col-12 d-flex gap-2">
           <button class="btn btn-primary" type="submit">{% trans "Filter anwenden" %}</button>
-          <a class="btn btn-outline-secondary" href="{% url 'tasks:list' %}">{% trans "Zurücksetzen" %}</a>
+          <a class="btn btn-outline-secondary" data-reset-filters="tasks-list" href="{% url 'tasks:list' %}">{% trans "Zurücksetzen" %}</a>
         </div>
       </form>
     </div>
@@ -103,7 +103,7 @@
           {% for task in tasks %}
             <tr class="{{ task|task_row_class }}">
               <td>
-                <div class="fw-semibold">{{ task.title }}</div>
+                <div class="fw-semibold table-cell-truncate" title="{{ task.title }}">{{ task.title }}</div>
                 {% if task.is_overdue %}
                   <div class="small text-danger">{% trans "Überfällig" %}</div>
                 {% endif %}
@@ -118,19 +118,19 @@
               <td>{{ task.due_date|date:"d.m.Y"|default:"-" }}</td>
               <td>{{ task.get_priority_display }}</td>
               <td><span class="badge {{ task|task_badge_class }}">{{ task|task_status_label }}</span></td>
-              <td>{{ task.responsible_user.username|default:"-" }}</td>
+              <td><div class="table-cell-truncate" title="{{ task.responsible_user.username|default:'-' }}">{{ task.responsible_user.username|default:"-" }}</div></td>
               <td>{{ task.completed_at|date:"d.m.Y H:i"|default:"-" }}</td>
               <td class="text-end">
-                <div class="d-flex justify-content-end gap-2">
+                <div class="table-actions">
                   <a class="btn btn-sm btn-outline-primary" href="{% url 'tasks:detail' task.pk %}">{% trans "Details" %}</a>
-                  {% if can_access_editor_area %}
+                  {% if can_change_tasks %}
                     <a class="btn btn-sm btn-outline-secondary" href="{% url 'tasks:edit' task.pk %}">{% trans "Bearbeiten" %}</a>
                   {% endif %}
                 </div>
               </td>
             </tr>
           {% empty %}
-            <tr>
+            <tr class="empty-state-row">
               <td colspan="8" class="text-center py-4 text-secondary">{% trans "Keine Maßnahmen für die aktuelle Filterung gefunden." %}</td>
             </tr>
           {% endfor %}

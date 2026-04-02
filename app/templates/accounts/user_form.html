@@ -12,50 +12,102 @@
     <a class="btn btn-outline-secondary" href="{{ cancel_url }}">{% trans "Zur Liste" %}</a>
   </div>
 
-  <div class="card border-0 shadow-sm">
+  <div class="card border-0 shadow-sm form-shell">
     <div class="card-body p-4 p-lg-5">
       <form method="post" novalidate>
         {% csrf_token %}
         {% if form.non_field_errors %}
-          <div class="alert alert-danger">
+          <div class="alert alert-danger app-alert">
             {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
           </div>
         {% endif %}
-
-        <div class="row g-4">
-          <div class="col-md-6">{% include "includes/form_field.html" with field=form.first_name %}</div>
-          <div class="col-md-6">{% include "includes/form_field.html" with field=form.last_name %}</div>
-          <div class="col-md-6">{% include "includes/form_field.html" with field=form.username %}</div>
-          <div class="col-md-6">{% include "includes/form_field.html" with field=form.email %}</div>
-          <div class="col-md-4">{% include "includes/form_field.html" with field=form.user_code %}</div>
-          <div class="col-md-4">{% include "includes/form_field.html" with field=form.role %}</div>
-          <div class="col-md-4">
-            <label class="form-label d-block">{% trans "Status" %}</label>
-            <div class="form-check mt-2">
-              {{ form.is_active }}
-              <label class="form-check-label" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
-            </div>
-            {% if form.is_active.errors %}
-              <div class="invalid-feedback d-block">
-                {% for error in form.is_active.errors %}<div>{{ error }}</div>{% endfor %}
-              </div>
-            {% endif %}
-          </div>
-          {% if form.password1 %}
-            <div class="col-md-6">{% include "includes/form_field.html" with field=form.password1 %}</div>
-            <div class="col-md-6">{% include "includes/form_field.html" with field=form.password2 %}</div>
-          {% endif %}
+        <div class="form-intro">
+          <p class="mb-1">{% trans "Alle mit * markierten Felder sind Pflichtfelder." %}</p>
+          <div class="form-required-note">{% trans "* Pflichtfeld" %}</div>
         </div>
 
-        <div class="d-flex gap-2 mt-4">
-          <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
-          <a class="btn btn-outline-secondary" href="{{ cancel_url }}">{% trans "Abbrechen" %}</a>
+        <section class="form-section">
+          <h2 class="form-section-title">{% trans "Stammdaten" %}</h2>
+          <div class="row g-4">
+            <div class="col-md-6">{% include "includes/form_field.html" with field=form.first_name %}</div>
+            <div class="col-md-6">{% include "includes/form_field.html" with field=form.last_name %}</div>
+            <div class="col-md-6">{% include "includes/form_field.html" with field=form.username %}</div>
+            <div class="col-md-6">{% include "includes/form_field.html" with field=form.email %}</div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2 class="form-section-title">{% trans "Rolle und Status" %}</h2>
+          <div class="row g-4">
+            <div class="col-md-4">{% include "includes/form_field.html" with field=form.user_code %}</div>
+            <div class="col-md-4">{% include "includes/form_field.html" with field=form.role %}</div>
+            <div class="col-md-4">
+              <div class="form-field{% if form.is_active.errors %} has-error{% endif %}">
+                <label class="form-label d-block">{% trans "Status" %}</label>
+                <div class="form-check mt-2">
+                  {{ form.is_active }}
+                  <label class="form-check-label" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+                </div>
+                {% if form.is_active.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.is_active.errors %}<div>{{ error }}</div>{% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% if object %}
+            <div class="mt-4 rounded-3 border p-3 bg-light-subtle">
+              <div class="small text-secondary mb-2">
+                {% trans "Kontostatus und Loginstatus sind getrennt: Ein aktiver Benutzer kann trotzdem vorübergehend für die Anmeldung gesperrt sein." %}
+              </div>
+              <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div>
+                  <div class="small text-secondary text-uppercase">{% trans "Anmeldeschutz" %}</div>
+                  {% if lockout_status.is_locked %}
+                    <div class="fw-semibold text-danger">{% trans "Login ist aktuell gesperrt." %}</div>
+                    <div class="small text-secondary">
+                      {% blocktrans with count=lockout_status.failure_count timestamp=lockout_status.last_attempt|date:"d.m.Y H:i" %}Der Benutzer kann sich derzeit nicht anmelden. {{ count }} Fehlversuche, zuletzt {{ timestamp }}{% endblocktrans %}
+                    </div>
+                  {% else %}
+                    <div class="fw-semibold">{% trans "Login ist freigegeben" %}</div>
+                    <div class="small text-secondary">{% trans "Der Benutzer kann sich aktuell anmelden, sofern das Konto aktiv ist." %}</div>
+                  {% endif %}
+                </div>
+                {% if lockout_status.is_locked %}
+                  <form method="post" action="{% url 'accounts:user-unlock' object.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                    <button class="btn btn-outline-danger" type="submit">{% trans "Benutzer entsperren" %}</button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+        </section>
+        {% if form.password1 %}
+          <section class="form-section">
+            <h2 class="form-section-title">{% trans "Zugangsdaten" %}</h2>
+            <div class="row g-4">
+              <div class="col-md-6">{% include "includes/form_field.html" with field=form.password1 %}</div>
+              <div class="col-md-6">{% include "includes/form_field.html" with field=form.password2 %}</div>
+            </div>
+          </section>
+        {% endif %}
+
+        <div class="form-actions">
+          <div class="form-actions-primary">
+            <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
+          </div>
+          <div class="form-actions-secondary">
+            <a class="btn btn-outline-secondary" href="{{ cancel_url }}">{% trans "Abbrechen" %}</a>
+          </div>
         </div>
       </form>
     </div>
   </div>
 
-  {% if audit_entries %}
+  {% if can_view_audit and audit_entries %}
     <div class="mt-4">
       {% include "audit/partials/object_history.html" %}
     </div>
