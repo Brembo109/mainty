@@ -253,27 +253,31 @@ small.text-secondary {
 .sidebar-nav-link {
   display: flex;
   align-items: center;
-  padding: 0.5rem 0.75rem;
+  padding: 0.45rem 0.75rem;
   border-radius: 6px;
-  color: var(--mainty-sidebar-text);
+  color: rgba(255, 255, 255, 0.88);
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
   transition: background-color 0.12s ease, color 0.12s ease;
-  margin-bottom: 1px;
+  margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  background-color: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .sidebar-nav-link:hover,
 .sidebar-nav-link:focus-visible {
-  background-color: var(--mainty-sidebar-hover);
+  background-color: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.15);
   color: #fff;
 }
 
 .sidebar-nav-link.active {
-  background-color: var(--mainty-sidebar-active);
+  background-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.2);
   color: #fff;
   font-weight: 600;
 }
