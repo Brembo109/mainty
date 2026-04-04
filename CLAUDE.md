@@ -115,6 +115,19 @@ Key variables (see `.env.example` for full list):
 /admin/            → Django admin
 ```
 
+## Design Rules
+
+When making any UI/frontend changes:
+
+- **Interview first**: Use `AskUserQuestion` to interview the user about their design vision before implementing — capture exact preferences before writing any CSS or templates.
+- **Skills**: Use the `frontend-design` skill for all UI decisions; use `ui-ux-pro-max` for design system generation.
+- **Component inspiration**: Use 21st.dev for component ideas if suggested by the user.
+- **No generic AI aesthetics**: Avoid default Bootstrap look, generic gradients, glassmorphism, and cookie-cutter SaaS patterns.
+- **Bold, distinctive choices**: Make deliberate design decisions — spacing, typography scale, color — rather than safe defaults.
+- **Performance**: Keep Core Web Vitals in mind — no heavy CSS effects, no large JS bundles, lazy-load where appropriate.
+
+The established design system is documented in `memory/project_design_system.md` (Deep Navy `#1e3a5f`, Inter font, fixed sidebar, compact tables, system-preference dark mode).
+
 ## Infrastructure Notes
 
 - **Entrypoint** (`docker/entrypoint.sh`): runs `migrate` and `collectstatic` on every container start.
