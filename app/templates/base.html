@@ -9,9 +9,14 @@
     <title>{% block title %}mainty{% endblock %}</title>
     <script>
       (function () {
+        // Theme
         var saved = localStorage.getItem("mainty-theme");
         var theme = saved ? saved : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
         document.documentElement.setAttribute("data-bs-theme", theme);
+        // Sidebar collapsed state (desktop only)
+        if (window.innerWidth >= 992 && localStorage.getItem("mainty-sidebar-collapsed") === "1") {
+          document.documentElement.classList.add("sidebar-collapsed");
+        }
       })();
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -59,7 +64,6 @@
           data-theme-toggle
           aria-label="{% trans 'Darstellung wechseln' %}"
           title="{% trans 'Darstellung wechseln' %}"
-          style="color:rgba(255,255,255,0.6);font-size:1rem;"
         ><span data-theme-icon aria-hidden="true">☀</span></button>
       </div>
     </header>
@@ -73,15 +77,35 @@
     >
       <div class="sidebar-header">
         <a class="sidebar-brand" href="{% url 'core:dashboard' %}">
-          <img src="{% static app_logo_static_path %}" alt="mainty" class="sidebar-logo" width="26" height="26" />
-          <span>mainty</span>
+          <img src="{% static app_logo_static_path %}" alt="mainty" class="sidebar-logo" width="24" height="24" />
+          <span class="sidebar-brand-text">mainty</span>
         </a>
         <button class="sidebar-close d-lg-none" type="button" data-bs-dismiss="offcanvas" aria-label="{% trans 'Schließen' %}">&#x2715;</button>
+        {# Collapse toggle — desktop only #}
+        <button
+          class="sidebar-collapse-toggle d-none d-lg-flex"
+          id="sidebarToggleCollapse"
+          type="button"
+          aria-label="{% trans 'Sidebar ein-/ausblenden' %}"
+          title="{% trans 'Sidebar ein-/ausblenden' %}"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
       </div>
 
       <nav class="sidebar-nav" aria-label="{% trans 'Navigation' %}">
+
         {% if can_view_dashboard %}
-          <a class="sidebar-nav-link {% nav_link_active 'core' %}" href="{% url 'core:dashboard' %}">{% trans "Dashboard" %}</a>
+          <a class="sidebar-nav-link {% nav_link_active 'core' %}" href="{% url 'core:dashboard' %}" data-label="{% trans 'Dashboard' %}">
+            <span class="nav-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M2 4a2 2 0 012-2h3a2 2 0 012 2v3a2 2 0 01-2 2H4a2 2 0 01-2-2V4zM2 13a2 2 0 012-2h3a2 2 0 012 2v3a2 2 0 01-2 2H4a2 2 0 01-2-2v-3zM11 4a2 2 0 012-2h3a2 2 0 012 2v3a2 2 0 01-2 2h-3a2 2 0 01-2-2V4zM11 13a2 2 0 012-2h3a2 2 0 012 2v3a2 2 0 01-2 2h-3a2 2 0 01-2-2v-3z"/>
+              </svg>
+            </span>
+            <span class="nav-label">{% trans "Dashboard" %}</span>
+          </a>
         {% endif %}
 
         {% if can_view_assets or can_view_contracts or can_view_maintenance_plans or can_view_qualification_plans or can_view_tasks %}
@@ -89,19 +113,59 @@
         {% endif %}
 
         {% if can_view_assets %}
-          <a class="sidebar-nav-link {% nav_link_active 'assets' %}" href="{% url 'assets:list' %}">{% trans "Geräte" %}</a>
+          <a class="sidebar-nav-link {% nav_link_active 'assets' %}" href="{% url 'assets:list' %}" data-label="{% trans 'Geräte' %}">
+            <span class="nav-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M14.5 2A2.5 2.5 0 0112 4.5v11a2.5 2.5 0 005 0v-11A2.5 2.5 0 0014.5 2zM3.5 7A2.5 2.5 0 001 9.5v6A2.5 2.5 0 003.5 18h4A2.5 2.5 0 0010 15.5v-6A2.5 2.5 0 007.5 7h-4z" clip-rule="evenodd"/>
+              </svg>
+            </span>
+            <span class="nav-label">{% trans "Geräte" %}</span>
+          </a>
         {% endif %}
+
         {% if can_view_maintenance_plans %}
-          <a class="sidebar-nav-link {% nav_link_active 'maintenance' %}" href="{% url 'maintenance:plan-list' %}">{% trans "Wartung" %}</a>
+          <a class="sidebar-nav-link {% nav_link_active 'maintenance' %}" href="{% url 'maintenance:plan-list' %}" data-label="{% trans 'Wartung' %}">
+            <span class="nav-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M14.5 2.343l-.11.001a4.5 4.5 0 00-3.992 6.023L3.697 15.07a1.5 1.5 0 102.122 2.122l6.703-6.702a4.5 4.5 0 006.023-3.992l.001-.11a.5.5 0 00-.849-.356l-2.15 2.15a1 1 0 01-1.415-1.415l2.15-2.15A.5.5 0 0014.5 2.343z" clip-rule="evenodd"/>
+              </svg>
+            </span>
+            <span class="nav-label">{% trans "Wartung" %}</span>
+          </a>
         {% endif %}
+
         {% if can_view_qualification_plans %}
-          <a class="sidebar-nav-link {% nav_link_active 'qualification' %}" href="{% url 'qualification:plan-list' %}">{% trans "Qualifizierung" %}</a>
+          <a class="sidebar-nav-link {% nav_link_active 'qualification' %}" href="{% url 'qualification:plan-list' %}" data-label="{% trans 'Qualifizierung' %}">
+            <span class="nav-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+              </svg>
+            </span>
+            <span class="nav-label">{% trans "Qualifizierung" %}</span>
+          </a>
         {% endif %}
+
         {% if can_view_contracts %}
-          <a class="sidebar-nav-link {% nav_link_active 'contracts' %}" href="{% url 'contracts:list' %}">{% trans "Verträge" %}</a>
+          <a class="sidebar-nav-link {% nav_link_active 'contracts' %}" href="{% url 'contracts:list' %}" data-label="{% trans 'Verträge' %}">
+            <span class="nav-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
+              </svg>
+            </span>
+            <span class="nav-label">{% trans "Verträge" %}</span>
+          </a>
         {% endif %}
+
         {% if can_view_tasks %}
-          <a class="sidebar-nav-link {% nav_link_active 'tasks' %}" href="{% url 'tasks:list' %}">{% trans "Maßnahmen" %}</a>
+          <a class="sidebar-nav-link {% nav_link_active 'tasks' %}" href="{% url 'tasks:list' %}" data-label="{% trans 'Maßnahmen' %}">
+            <span class="nav-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+            </span>
+            <span class="nav-label">{% trans "Maßnahmen" %}</span>
+          </a>
         {% endif %}
 
         {% if can_view_audit or can_manage_users or can_manage_roles or can_manage_settings %}
@@ -109,17 +173,49 @@
         {% endif %}
 
         {% if can_view_audit %}
-          <a class="sidebar-nav-link {% nav_link_active 'audit' %}" href="{% url 'audit:list' %}">{% trans "Audit" %}</a>
+          <a class="sidebar-nav-link {% nav_link_active 'audit' %}" href="{% url 'audit:list' %}" data-label="{% trans 'Audit' %}">
+            <span class="nav-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+              </svg>
+            </span>
+            <span class="nav-label">{% trans "Audit" %}</span>
+          </a>
         {% endif %}
+
         {% if can_manage_users %}
-          <a class="sidebar-nav-link {% nav_link_active 'accounts:user-*' %}" href="{% url 'accounts:user-list' %}">{% trans "Benutzer" %}</a>
+          <a class="sidebar-nav-link {% nav_link_active 'accounts:user-*' %}" href="{% url 'accounts:user-list' %}" data-label="{% trans 'Benutzer' %}">
+            <span class="nav-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+              </svg>
+            </span>
+            <span class="nav-label">{% trans "Benutzer" %}</span>
+          </a>
         {% endif %}
+
         {% if can_manage_roles %}
-          <a class="sidebar-nav-link {% nav_link_active 'accounts:permission-*' %}" href="{% url 'accounts:permission-matrix' %}">{% trans "Rollen & Rechte" %}</a>
+          <a class="sidebar-nav-link {% nav_link_active 'accounts:permission-*' %}" href="{% url 'accounts:permission-matrix' %}" data-label="{% trans 'Rollen & Rechte' %}">
+            <span class="nav-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+            </span>
+            <span class="nav-label">{% trans "Rollen & Rechte" %}</span>
+          </a>
         {% endif %}
+
         {% if can_manage_settings %}
-          <a class="sidebar-nav-link {% nav_link_active 'core:settings' %}" href="{% url 'core:settings' %}">{% trans "Einstellungen" %}</a>
+          <a class="sidebar-nav-link {% nav_link_active 'core:settings' %}" href="{% url 'core:settings' %}" data-label="{% trans 'Einstellungen' %}">
+            <span class="nav-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+              </svg>
+            </span>
+            <span class="nav-label">{% trans "Einstellungen" %}</span>
+          </a>
         {% endif %}
+
       </nav>
 
       <div class="sidebar-footer">
@@ -197,17 +293,14 @@
           });
         }
 
-        // Follow system changes if no manual override
         window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function (e) {
           if (!localStorage.getItem("mainty-theme")) {
             applyTheme(e.matches ? "dark" : "light", false);
           }
         });
 
-        // Sync icons on load
         applyTheme(document.documentElement.getAttribute("data-bs-theme") || "light", false);
 
-        // Toggle buttons
         document.querySelectorAll("[data-theme-toggle]").forEach(function (btn) {
           btn.addEventListener("click", function () {
             var next = document.documentElement.getAttribute("data-bs-theme") === "dark" ? "light" : "dark";
@@ -217,6 +310,18 @@
       })();
     </script>
     <script>
+      // ── Collapsible sidebar ──────────────────────────────────────
+      (function () {
+        var btn = document.getElementById("sidebarToggleCollapse");
+        if (!btn) return;
+        btn.addEventListener("click", function () {
+          var isCollapsed = document.documentElement.classList.toggle("sidebar-collapsed");
+          localStorage.setItem("mainty-sidebar-collapsed", isCollapsed ? "1" : "0");
+        });
+      })();
+    </script>
+    <script>
+      // ── Persist filters ──────────────────────────────────────────
       (function () {
         var search = window.location.search || "";
         document.querySelectorAll("form[data-persist-filters]").forEach(function (form) {
